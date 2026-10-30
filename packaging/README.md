@@ -115,7 +115,7 @@ While the Jukebox menu is open, the **SETTINGS / 设置** button (next to LANGUA
 - **TEXT / 文字**: text color, font size, spacing, stroke color/width, glow color/size/alpha, glow on/off, font family
 - **MOTION / 动态**: shake intensity/speed, fade speed, rise speed, **typewriter on/off + chars per second**, perspective + X/Y strength, lyrics on/off, replace original subtitles
 - **VISUAL / 频谱**: audio visualizer on/off, wave size, max extent (% of screen), position (BOTTOM / TOP / LEFT / RIGHT), bar density (8–256), gradient range (0–1), gradient speed, gradient mode (FIXED 2 / RANGE x~y / MULTI RGB), colour A RGB, colour B RGB, multi RGB (space separated), X mirror — plus an in-panel usage note
-- RESET / CLOSE
+- RESET PAGE (resets only the currently open page) / CLOSE
 
 Every change is written to `lyric_config.json` immediately; the lyric style refreshes within a second. (`replace_original` takes full effect after re-entering Cyber Grind; font family needs a restart.)
 
@@ -125,7 +125,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - **TEXT / 文字**：文字颜色、字号、字距、描边颜色/宽度、辉光颜色/大小/透明度、辉光开关、字体
 - **MOTION / 动态**：抖动强度/速度、淡入速度、上飘速度、**逐字显示开关 + 每秒字数**、透视与 X/Y 强度、歌词层开关、替换原版字幕
 - **VISUAL / 频谱**：音频可视化开关、波动大小、最大幅度（屏幕百分比）、显示位置（底部/顶部/左侧/右侧）、频谱密度（8–256）、渐变范围（0–1）、渐变强度（速度）、渐变模式（固定双色 / 区间渐变 / 多色渐变）、颜色 A RGB、颜色 B RGB、多色 RGB（空格分隔）、X 轴镜像，面板内附使用说明
-- 重置 / 关闭
+- 重置本页（只重置当前打开的页面）/ 关闭
 
 每次改动都会立刻写回 `lyric_config.json`，歌词样式 1 秒内刷新。（`replace_original` 需要重新进入 Cyber Grind 才完全生效；字体需要重启。）
 

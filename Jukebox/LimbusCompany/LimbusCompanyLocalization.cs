@@ -356,9 +356,9 @@ public class LimbusCompanyLocalization : MonoBehaviour
             info.enableWordWrapping = true;
         }
 
-        CreateButtonAt(rect, "Reset", L("RESET", "重置"), new Vector2(-110f, -286f), new Vector2(180f, 36f), () =>
+        CreateButtonAt(rect, "Reset", L("RESET PAGE", "重置本页"), new Vector2(-110f, -286f), new Vector2(180f, 36f), () =>
         {
-            ResetDefaults();
+            ResetCurrentPage();
             SaveAndRefresh();
         });
         CreateButtonAt(rect, "Close", L("CLOSE", "关闭"), new Vector2(110f, -286f), new Vector2(180f, 36f), () =>
@@ -727,41 +727,93 @@ public class LimbusCompanyLocalization : MonoBehaviour
         return IsChinese() ? (value ? "开" : "关") : (value ? "ON" : "OFF");
     }
 
-    private static void ResetDefaults()
+    /// <summary>只重置当前页面的设置。</summary>
+    private void ResetCurrentPage()
     {
         var s = LimbusCompanyLyrics.Settings;
         if (s == null)
             return;
 
-        s.Enabled = true;
-        s.ReplaceOriginal = true;
-        s.GlowEnabled = true;
-        s.RandomPosition = true;
-        s.RandomAngle = true;
+        switch (_page)
+        {
+            case 0:
+                ResetLayout(s);
+                break;
+            case 1:
+                ResetText(s);
+                break;
+            case 2:
+                ResetMotion(s);
+                break;
+            case 3:
+                ResetTranslation(s);
+                break;
+            default:
+                ResetVisualizer(s);
+                break;
+        }
+    }
+
+    private static void ResetLayout(LimbusCompanyLyricsSettings s)
+    {
         s.PosXMin = 0f;
         s.PosXMax = 100f;
         s.PosYMin = 0f;
         s.PosYMax = 100f;
         s.PositionAnchor = "random";
-        s.FontSize = 40f;
-        s.GlowAlpha = 23f;
-        s.ShakeIntensity = 1f;
-        s.FadeSpeed = 6f;
-        s.RiseSpeed = 0f;
-        s.AngleMax = 10f;
+        s.RandomPosition = true;
+        s.RandomAngle = true;
+        s.Zoom = 100f;
         s.AngleMin = -10f;
-        s.AntiOverlapMode = "strict";
+        s.AngleMax = 10f;
+        s.Delay = 0;
         s.AvoidWindow = 6f;
         s.AvoidGap = 30f;
         s.AvoidStep = 10f;
-        s.CustomOffsetX = 0f;
-        s.CustomOffsetY = -140f;
+    }
+
+    private static void ResetText(LimbusCompanyLyricsSettings s)
+    {
+        s.TextColor = "#fffeef";
+        s.StrokeColor = "#d8a523";
+        s.StrokeWidth = 0.6f;
+        s.Spacing = 4f;
+        s.GlowColor = "#d8a523";
+        s.GlowEnabled = true;
+        s.GlowSize = 13f;
+        s.GlowAlpha = 23f;
+        s.FontSize = 40f;
+        s.FontFamily = "等线 Light";
+    }
+
+    private static void ResetMotion(LimbusCompanyLyricsSettings s)
+    {
+        s.ShakeIntensity = 1f;
+        s.ShakeSpeed = 119f;
+        s.FadeSpeed = 6f;
+        s.RiseSpeed = 0f;
         s.TypewriterEnabled = false;
         s.TypewriterSpeed = 12f;
+        s.PerspectiveEnabled = true;
+        s.PerspXStrength = 10f;
+        s.PerspYStrength = 0f;
+        s.Enabled = true;
+        s.ReplaceOriginal = true;
+    }
+
+    private static void ResetTranslation(LimbusCompanyLyricsSettings s)
+    {
         s.TranslationEnabled = true;
         s.TranslationFontSize = 0f;
         s.TranslationScale = 0.75f;
         s.TranslationColor = "#d8d8d8";
+        s.AntiOverlapMode = "strict";
+        s.CustomOffsetX = 0f;
+        s.CustomOffsetY = -140f;
+    }
+
+    private static void ResetVisualizer(LimbusCompanyLyricsSettings s)
+    {
         s.VisualizerEnabled = false;
         s.VisualizerAmplitude = 1f;
         s.VisualizerSize = 50f;
