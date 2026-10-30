@@ -2,14 +2,16 @@ GitHub / 开源地址：https://github.com/klkq6r33n/LCCBmusic
 
 [EN]
 NOTICE: Disable Flazhik-CybergrindMusicExplorer (this fork reuses its plugin GUID).
-Install: put Track.srt next to Track.mp3. Optional translation: also add Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt. Both lines are shown at different, non-overlapping positions.
+Install: install this zip with r2modman / Thunderstore Mod Manager, or extract it into the ULTRAKILL folder (runtime files live under BepInEx/plugins/Claude-JukeboxLimbusCompany/).
+Lyrics: put Track.srt next to Track.mp3. Optional translation: also add Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt. Both lines are shown at different, non-overlapping positions.
 UI: default language is English. In the Jukebox menu (F4) use LANGUAGE to switch to Chinese and SETTINGS for precise numeric inputs (position, color, font size, motion, translation).
 Safety: lyrics are clamped on-screen and never overlap each other.
 Special thanks to greycsont for the ULTRAKILL font, and to Flazhik and the Jukebox / CybergrindMusicExplorer team for the original mod and source code this fork is based on.
 
 [中文]
 注意：必须禁用 Flazhik-CybergrindMusicExplorer（本 fork 沿用其插件 GUID）。
-安装：把 Track.srt 放在 Track.mp3 同目录。可选翻译：再放 Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt，两行歌词会在不同且不重叠的位置同时显示。
+安装：用 r2modman / Thunderstore Mod Manager 安装本 zip，或直接解压到 ULTRAKILL 游戏根目录（运行文件位于 BepInEx/plugins/Claude-JukeboxLimbusCompany/）。
+歌词：把 Track.srt 放在 Track.mp3 同目录。可选翻译：再放 Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt，两行歌词会在不同且不重叠的位置同时显示。
 界面：默认英文。在 Jukebox 菜单（F4）用 LANGUAGE 切换中文，用 SETTINGS 精确填写位置、颜色、字号、动态与翻译。
 防重叠/防出屏：歌词自动限制在屏幕内，且不会互相交叠。
 特别感谢 greycsont 提供的 ULTRAKILL 字体，以及 Flazhik 与 Jukebox / CybergrindMusicExplorer 团队提供的原型 mod 与源码。
@@ -37,6 +39,10 @@ It replaces Jukebox's built-in Cyber Grind subtitle rendering with a LimbusCompa
 ---
 
 ## Contents / 内容
+
+`manifest.json`, `icon.png` and `README.md` stay at the zip root; all runtime files below are packaged under `BepInEx/plugins/Claude-JukeboxLimbusCompany/`.
+
+`manifest.json`、`icon.png`、`README.md` 位于 zip 根目录；下列运行文件均在 `BepInEx/plugins/Claude-JukeboxLimbusCompany/` 下。
 
 ```
 Jukebox.dll                  fork main assembly (plugin GUID: dev.flazhik.jukebox, display: Jukebox LimbusCompany)
