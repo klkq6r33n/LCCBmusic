@@ -2181,6 +2181,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 _bgmSubtitleTrack = SubtitleParser.FromFile(srt);
 
             var transPath = FindTranslationSidecar(srt ?? mainFile);
+            if (transPath == null && srt != null)
+                transPath = FindTranslationSidecar(mainFile);
             if (transPath != null)
                 _bgmTranslationTrack = SubtitleParser.FromFile(new FileInfo(transPath));
 
