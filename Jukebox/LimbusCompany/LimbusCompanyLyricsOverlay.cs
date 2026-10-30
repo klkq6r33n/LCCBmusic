@@ -12,6 +12,7 @@ using JukeboxCore.Subtitles;
 using JukeboxCore.Utils;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -127,6 +128,12 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     public bool BgmReplacing { get; private set; }
     public string BgmStatus { get; private set; } = "";
 
+    private GameObject _bgmPanel;
+    private TextMeshProUGUI _bgmPanelText;
+    private bool _bgmPanelOpen;
+    private string[] _bgmTracks = Array.Empty<string>();
+    private int _bgmIndex;
+
     private void Awake()
     {
         Instance = this;
@@ -166,6 +173,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     {
         try
         {
+            HandleBgmPanelKeys();
             PollPlayer();
             PollConfig();
             PollPanelSuppression();
@@ -265,6 +273,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         EnsureFont();
         ApplyStyle();
+        BuildBgmPanel();
     }
 
     private void EnsureFont()
@@ -415,6 +424,227 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     }
 
     // ------------------------------------------------------------------ level BGM replacement
+
+    private void BuildBgmPanel()
+    {
+        if (_canvas == null || _bgmPanel != null)
+            return;
+
+        var go = new GameObject("LimbusBgmPanel", typeof(RectTransform));
+        var rect = go.GetComponent<RectTransform>();
+        rect.SetParent(_canvas.transform, false);
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = new Vector2(740f, 320f);
+        rect.anchoredPosition = Vector2.zero;
+
+        var image = go.AddComponent<Image>();
+        image.color = new Color(0f, 0f, 0f, 0.86f);
+        image.raycastTarget = false;
+
+        var outline = go.AddComponent<Outline>();
+        outline.effectColor = new Color(0.847f, 0.647f, 0.137f, 1f);
+        outline.effectDistance = new Vector2(2f, -2f);
+
+        var textGo = new GameObject("BgmText", typeof(RectTransform));
+        var textRect = textGo.GetComponent<RectTransform>();
+        textRect.SetParent(rect, false);
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(26f, 20f);
+        textRect.offsetMax = new Vector2(-26f, -20f);
+
+        var text = textGo.AddComponent<TextMeshProUGUI>();
+        text.font = LimbusCompanyFonts.Resolve();
+        text.fontSize = 16f;
+        text.color = new Color(1f, 0.996f, 0.937f, 1f);
+        text.alignment = TextAlignmentOptions.TopLeft;
+        text.enableWordWrapping = true;
+        text.overflowMode = TextOverflowModes.Overflow;
+        text.raycastTarget = false;
+        text.text = string.Empty;
+
+        _bgmPanelText = text;
+        _bgmPanel = go;
+        go.SetActive(false);
+    }
+
+    private void HandleBgmPanelKeys()
+    {
+        var keyboard = Keyboard.current;
+        if (keyboard == null)
+            return;
+
+        if (keyboard.f5Key.wasPressedThisFrame)
+        {
+            ToggleBgmPanel();
+            return;
+        }
+
+        if (!_bgmPanelOpen)
+            return;
+
+        if (keyboard.escapeKey.wasPressedThisFrame)
+        {
+            CloseBgmPanel();
+            return;
+        }
+
+        if (keyboard.leftBracketKey.wasPressedThisFrame || keyboard.leftArrowKey.wasPressedThisFrame)
+            CycleBgmTrack(-1);
+
+        if (keyboard.rightBracketKey.wasPressedThisFrame || keyboard.rightArrowKey.wasPressedThisFrame)
+            CycleBgmTrack(1);
+
+        if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame)
+            ApplySelectedBgmTrack();
+
+        if (keyboard.backspaceKey.wasPressedThisFrame)
+        {
+            StopBgmReplacement();
+            UpdateBgmPanelText();
+        }
+    }
+
+    private void ToggleBgmPanel()
+    {
+        if (_bgmPanel == null)
+            BuildBgmPanel();
+
+        _bgmPanelOpen = !_bgmPanelOpen;
+        if (_bgmPanelOpen)
+            RefreshBgmTracks();
+
+        if (_bgmPanel != null)
+            _bgmPanel.SetActive(_bgmPanelOpen);
+
+        UpdateBgmPanelText();
+    }
+
+    private void CloseBgmPanel()
+    {
+        _bgmPanelOpen = false;
+        if (_bgmPanel != null)
+            _bgmPanel.SetActive(false);
+    }
+
+    private void RefreshBgmTracks()
+    {
+        var tracks = new List<string>();
+        try
+        {
+            var root = PathsUtils.MusicPath;
+            if (Directory.Exists(root))
+            {
+                foreach (var file in Directory.GetFiles(root, "*", SearchOption.AllDirectories))
+                {
+                    var extension = Path.GetExtension(file).ToLowerInvariant();
+                    if (extension == ".mp3" || extension == ".ogg" || extension == ".wav")
+                        tracks.Add(file.Substring(root.Length + 1));
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("读取 Cybergrind/Music 失败: " + e.Message);
+        }
+
+        tracks.Sort(StringComparer.OrdinalIgnoreCase);
+        _bgmTracks = tracks.ToArray();
+        _bgmIndex = 0;
+
+        if (_bgmTracks.Length > 0)
+        {
+            var settings = LimbusCompanyLyrics.Settings;
+            var index = settings != null ? Array.IndexOf(_bgmTracks, settings.BgmTrack) : -1;
+            if (index >= 0)
+                _bgmIndex = index;
+            else if (settings != null)
+                settings.BgmTrack = _bgmTracks[0];
+        }
+    }
+
+    private void CycleBgmTrack(int delta)
+    {
+        if (_bgmTracks.Length == 0)
+            return;
+
+        _bgmIndex = (_bgmIndex + delta + _bgmTracks.Length) % _bgmTracks.Length;
+        var settings = LimbusCompanyLyrics.Settings;
+        if (settings != null)
+            settings.BgmTrack = _bgmTracks[_bgmIndex];
+        UpdateBgmPanelText();
+    }
+
+    private void ApplySelectedBgmTrack()
+    {
+        if (_bgmTracks.Length == 0)
+            return;
+
+        var track = _bgmTracks[_bgmIndex];
+        var settings = LimbusCompanyLyrics.Settings;
+        if (settings != null)
+        {
+            settings.BgmTrack = track;
+            LimbusCompanyLyrics.SaveAllSettings();
+        }
+
+        StartBgmReplacement(track);
+        UpdateBgmPanelText();
+    }
+
+    private void UpdateBgmPanelText()
+    {
+        if (_bgmPanelText == null)
+            return;
+
+        var settings = LimbusCompanyLyrics.Settings;
+        var zh = settings != null && settings.Language == "zh";
+        var builder = new StringBuilder();
+
+        builder.AppendLine(zh ? "关卡 BGM / LEVEL BGM" : "LEVEL BGM / 关卡 BGM");
+
+        if (_bgmTracks.Length == 0)
+            builder.AppendLine(zh ? "Cybergrind/Music 中没有音频文件。" : "No audio files in Cybergrind/Music.");
+        else
+            builder.AppendLine((zh ? "曲目 / Track: " : "Track / 曲目: ") + ShortName(_bgmTracks[_bgmIndex]));
+
+        builder.AppendLine(zh ? "[ ] 或 ← →：切换曲目" : "[ ] or left/right: change track");
+        builder.AppendLine(zh ? "[Enter]：取代关卡 BGM" : "[Enter]: replace level BGM");
+        builder.AppendLine(zh ? "[Backspace]：归还原 BGM" : "[Backspace]: restore level BGM");
+        builder.AppendLine(zh ? "[F5]：关闭" : "[F5]: close");
+        builder.AppendLine((zh ? "状态 / Status: " : "Status / 状态: ") + BgmStatusText(zh));
+
+        _bgmPanelText.text = builder.ToString();
+    }
+
+    private string BgmStatusText(bool zh)
+    {
+        if (BgmReplacing)
+        {
+            var current = _bgmTracks.Length > 0
+                ? _bgmTracks[_bgmIndex]
+                : LimbusCompanyLyrics.Settings?.BgmTrack;
+            return (zh ? "正在取代：" : "Replacing: ") + ShortName(current);
+        }
+
+        if (!string.IsNullOrEmpty(BgmStatus))
+            return BgmStatus;
+
+        return zh ? "当前为关卡原 BGM" : "Level BGM active";
+    }
+
+    private static string ShortName(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return "-";
+
+        var name = Path.GetFileName(path);
+        if (string.IsNullOrEmpty(name))
+            name = path;
+        return name.Length <= 56 ? name : name.Substring(0, 53) + "...";
+    }
 
     private AudioSource EnsureBgmSource()
     {

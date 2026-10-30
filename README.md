@@ -31,7 +31,7 @@ This repository is **source only**. Release packages (DLLs, `Assets/`, ffmpeg/yt
 - Independent font sizes for main/translation; ULTRAKILL font for Latin lines, dynamic CJK font for Japanese/Chinese.
 - Typewriter, fade, shake, rise, perspective, random rotation, custom colors/stroke/glow.
 - Audio visualizer: time-driven hue gradient, bar density, size, position (bottom/top/left/right), X mirror, black outline, own canvas below the game UI.
-- Level BGM replacement: pick any `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` to replace the current level music; restoring resumes the level BGM from the exact paused position. The visualizer follows both the replacement and the level music.
+- Level BGM replacement (standalone **F5** panel, independent of the Cyber Grind menu): pick any `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` to replace the current level music; restoring resumes the level BGM from the exact paused position. The visualizer follows both the replacement and the level music.
 - In-menu LANGUAGE (English default / 中文) and SETTINGS panel with numeric inputs.
 - NFKC text normalization (fixes compatibility ideographs such as U+F9EC) and diagnostic logging.
 
