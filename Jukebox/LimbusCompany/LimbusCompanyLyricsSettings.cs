@@ -78,10 +78,13 @@ public class LimbusCompanyLyricsSettings
     public string VisualizerPosition = "bottom";
 
     /// <summary>柱状条数量（频谱密度）。</summary>
-    public int VisualizerBars = 48;
+    public int VisualizerBars = 96;
 
     /// <summary>渐变范围（0=整排同色，1=整排铺满色相段）；色相随时间流动，不随音量变化。</summary>
     public float VisualizerGradientRange = 1f;
+
+    /// <summary>渐变强度 = 渐变速度（每秒相位推进量）。</summary>
+    public float VisualizerGradientSpeed = 0.08f;
 
     /// <summary>fixed2（固定双色）/ range（x~y 动态）/ multi（多 RGB 色标）。</summary>
     public string VisualizerGradientMode = "range";
@@ -208,10 +211,11 @@ public class LimbusCompanyLyricsSettings
         VisualizerAmplitude = Mathf.Clamp(GetFloat(s, "visualizer_amplitude", VisualizerAmplitude), 0.1f, 5f);
         VisualizerSize = Mathf.Clamp(GetFloat(s, "visualizer_size", VisualizerSize), 5f, 50f);
         VisualizerPosition = NormalizePosition(GetString(s, "visualizer_position", VisualizerPosition));
-        VisualizerBars = Mathf.Clamp((int)GetFloat(s, "visualizer_bars", VisualizerBars), 8, 128);
+        VisualizerBars = Mathf.Clamp((int)GetFloat(s, "visualizer_bars", VisualizerBars), 8, 256);
         var legacyGradient = GetBool(s, "visualizer_gradient", true);
         VisualizerGradientRange = Mathf.Clamp(
             GetFloat(s, "visualizer_gradient_range", legacyGradient ? VisualizerGradientRange : 0f), 0f, 1f);
+        VisualizerGradientSpeed = Mathf.Clamp(GetFloat(s, "visualizer_gradient_speed", VisualizerGradientSpeed), 0f, 2f);
         VisualizerGradientMode = NormalizeGradientMode(GetString(s, "visualizer_gradient_mode", VisualizerGradientMode));
         VisualizerColorA = GetString(s, "visualizer_color_a", VisualizerColorA);
         VisualizerColorB = GetString(s, "visualizer_color_b", VisualizerColorB);

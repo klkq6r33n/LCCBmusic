@@ -269,7 +269,8 @@ public class LimbusCompanyLocalization : MonoBehaviour
             () => SwitchPage(4));
 
         var y = 188f;
-        const float step = 34f;
+        // VISUAL has more rows (gradient modes/RGB); use a slightly tighter spacing.
+        var step = _page == 4 ? 30f : 34f;
 
         if (_page == 0)
         {
@@ -338,8 +339,9 @@ public class LimbusCompanyLocalization : MonoBehaviour
             AddInputRow(rect, ref y, step, L("Wave size (x)", "波动大小 (倍)"), F(S.VisualizerAmplitude), v => S.VisualizerAmplitude = Mathf.Clamp(v, 0.1f, 5f));
             AddInputRow(rect, ref y, step, L("Max extent (% screen)", "最大幅度 (屏幕%)"), F(S.VisualizerSize), v => S.VisualizerSize = Mathf.Clamp(v, 5f, 50f));
             AddValueRow(rect, ref y, step, L("Position", "显示位置"), VisualizerPositionText(S.VisualizerPosition), () => S.VisualizerPosition = NextVisualizerPosition(S.VisualizerPosition));
-            AddInputRow(rect, ref y, step, L("Bar density (8-128)", "频谱密度 (8-128)"), Mathf.RoundToInt(S.VisualizerBars).ToString(CultureInfo.InvariantCulture), v => S.VisualizerBars = Mathf.Clamp(Mathf.RoundToInt(v), 8, 128));
+            AddInputRow(rect, ref y, step, L("Bar density (8-256)", "频谱密度 (8-256)"), Mathf.RoundToInt(S.VisualizerBars).ToString(CultureInfo.InvariantCulture), v => S.VisualizerBars = Mathf.Clamp(Mathf.RoundToInt(v), 8, 256));
             AddInputRow(rect, ref y, step, L("Gradient range (0-1)", "渐变范围 (0-1)"), F(S.VisualizerGradientRange), v => S.VisualizerGradientRange = Mathf.Clamp(v, 0f, 1f));
+            AddInputRow(rect, ref y, step, L("Gradient speed", "渐变强度 (速度)"), F(S.VisualizerGradientSpeed), v => S.VisualizerGradientSpeed = Mathf.Clamp(v, 0f, 2f));
             AddValueRow(rect, ref y, step, L("Gradient mode", "渐变模式"), GradientModeText(S.VisualizerGradientMode),
                 () => S.VisualizerGradientMode = NextGradientMode(S.VisualizerGradientMode));
             AddTextRow(rect, ref y, step, L("Color A RGB", "颜色 A RGB"), S.VisualizerColorA, v => S.VisualizerColorA = NormalizeRgbText(v, S.VisualizerColorA));
@@ -348,9 +350,9 @@ public class LimbusCompanyLocalization : MonoBehaviour
             AddToggleRow(rect, ref y, step, L("X mirror", "X 轴镜像"), () => S.VisualizerMirrorX, () => S.VisualizerMirrorX = !S.VisualizerMirrorX);
 
             var info = CreateLabelObject(rect, "VisInfo",
-                L("Bars react to the current Jukebox track.\nDefault position: BOTTOM. Max extent is capped at 50% of the screen height (or width for LEFT/RIGHT).",
-                  "柱状频谱跟随当前 Jukebox 曲目。\n默认位置：底部。最大幅度限制为屏幕高度（左右时为宽度）的 50%。"),
-                new Vector2(0f, -208f), new Vector2(470f, 80f), 13f, TextAlignmentOptions.TopLeft);
+                L("Modes: FIXED 2 = A→B flow; RANGE = A↔B sweep; MULTI = RGB stops.\nRGB: R,G,B using ',' or '，'. Multi colors are separated by spaces.\nRange 0 = solid A; Gradient speed = animation speed.",
+                  "模式：FIXED 2=双色流动；RANGE=双色来回；MULTI=多色色标。\nRGB 格式：R,G,B，用 , 或 ， 分隔；多色之间用空格。\n渐变范围 0=颜色 A 单色；渐变强度=渐变速度。"),
+                new Vector2(0f, -205f), new Vector2(480f, 82f), 11.5f, TextAlignmentOptions.TopLeft);
             info.enableWordWrapping = true;
         }
 
@@ -764,8 +766,9 @@ public class LimbusCompanyLocalization : MonoBehaviour
         s.VisualizerAmplitude = 1f;
         s.VisualizerSize = 50f;
         s.VisualizerPosition = "bottom";
-        s.VisualizerBars = 48;
+        s.VisualizerBars = 96;
         s.VisualizerGradientRange = 1f;
+        s.VisualizerGradientSpeed = 0.08f;
         s.VisualizerGradientMode = "range";
         s.VisualizerColorA = "216,165,35";
         s.VisualizerColorB = "0,229,255";

@@ -20,7 +20,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 {
     private Canvas _canvas;
     private GameObject _visRoot;
-    private readonly Image[] _visBars = new Image[128];
+    private readonly Image[] _visBars = new Image[256];
     private readonly float[] _spectrum = new float[512];
     private CanvasGroup _group;
     private RectTransform _rect;
@@ -444,7 +444,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             else
             {
                 // 所有模式都像区间渐变一样：每根柱子有自己的相位，颜色随时间变化。
-                var phase = Mathf.Repeat(Time.unscaledTime * 0.08f + spread * range, 1f);
+                var speed = Mathf.Clamp(s.VisualizerGradientSpeed, 0f, 2f);
+                var phase = Mathf.Repeat(Time.unscaledTime * speed + spread * range, 1f);
 
                 if (mode == "multi")
                 {
