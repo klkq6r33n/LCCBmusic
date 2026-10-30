@@ -145,8 +145,11 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private string _menuPreviewArtist;
     private string _bgmLastStatusText;
     private bool _bgmPanelOpen;
+    private string[] _bgmAllTracks = Array.Empty<string>();
     private string[] _bgmTracks = Array.Empty<string>();
     private int _bgmIndex;
+    private int _bgmSourceFilter; // 0 all, 1 ULTRAKILL-OST
+    private const string OstFolderName = "ULTRAKILL-OST";
     private int _bgmRebindStage; // 0 none, 1 choose action, 2 wait key
     private int _bgmRebindAction;
     private int _bgmPage; // 0 music, 1 settings, 2 display
@@ -791,40 +794,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             ? relativePath
             : Path.Combine(PathsUtils.MusicPath, relativePath);
 
-        Sprite cover = null;
-
-        try
-        {
-            var directory = Path.GetDirectoryName(fullPath);
-            var baseName = Path.GetFileNameWithoutExtension(fullPath);
-            if (!string.IsNullOrEmpty(directory))
-            {
-                var candidates = new[]
-                {
-                    Path.Combine(directory, baseName + ".png"),
-                    Path.Combine(directory, baseName + ".jpg"),
-                    Path.Combine(directory, baseName + ".jpeg"),
-                    Path.Combine(directory, "cover.png"),
-                    Path.Combine(directory, "cover.jpg"),
-                    Path.Combine(directory, "folder.png"),
-                    Path.Combine(directory, "folder.jpg")
-                };
-
-                foreach (var candidate in candidates)
-                {
-                    if (!File.Exists(candidate))
-                        continue;
-
-                    cover = CreateSpriteFromFile(candidate);
-                    if (cover != null)
-                        break;
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            LimbusCompanyLyrics.Log?.LogWarning("读取预览曲绘失败: " + e.Message);
-        }
+        var cover = LoadFolderCover(fullPath);
 
         try
         {
@@ -841,8 +811,16 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 if (!string.IsNullOrEmpty(performer))
                     _menuPreviewArtist = performer;
 
-                if (cover == null && tag.Pictures != null && tag.Pictures.Length > 0)
-                    cover = CreateSprite(tag.Pictures[0].Data.Data);
+                var pictures = tag.Pictures;
+                LimbusCompanyLyrics.Log?.LogInfo(
+                    $"预览标签: {Path.GetFileName(fullPath)} pictures={pictures?.Length ?? 0} folderCover={(cover != null)}");
+
+                if (cover == null && pictures != null && pictures.Length > 0)
+                {
+                    cover = CreateSprite(pictures[0].Data.Data);
+                    LimbusCompanyLyrics.Log?.LogInfo("预览曲绘(ID3): " + Path.GetFileName(fullPath)
+                        + " bytes=" + pictures[0].Data.Data.Length + " sprite=" + (cover != null));
+                }
             }
         }
         catch (Exception e)
@@ -862,10 +840,22 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
     private void BuildBgmMusicPage(RectTransform parent)
     {
+        CreateUiButton(parent, IsZh ? "全部" : "ALL", new Vector2(-170f, 288f), new Vector2(140f, 30f),
+            () => SetBgmSourceFilter(0), 14f,
+            _bgmSourceFilter == 0 ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
+        CreateUiButton(parent, OstFolderName, new Vector2(20f, 288f), new Vector2(240f, 30f),
+            () => SetBgmSourceFilter(1), 14f,
+            _bgmSourceFilter == 1 ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
+
         if (_bgmTracks.Length == 0)
         {
-            CreateUiLabel(parent, IsZh ? "Cybergrind/Music 中没有音频文件。" : "No audio files in Cybergrind/Music.",
-                new Vector2(0f, 120f), new Vector2(800f, 40f), 20f, TextAlignmentOptions.Center);
+            var message = _bgmSourceFilter == 1
+                ? (IsZh
+                    ? "ULTRAKILL-OST 文件夹为空。\n把官方歌曲放进 Cybergrind/Music/ULTRAKILL-OST。"
+                    : "ULTRAKILL-OST is empty.\nPut official songs in Cybergrind/Music/ULTRAKILL-OST.")
+                : (IsZh ? "Cybergrind/Music 中没有音频文件。" : "No audio files in Cybergrind/Music.");
+            CreateUiLabel(parent, message, new Vector2(0f, 120f), new Vector2(600f, 80f), 17f,
+                TextAlignmentOptions.Center, true);
             CreateUiButton(parent, IsZh ? "归还原 BGM" : "RESTORE BGM", new Vector2(0f, -300f),
                 new Vector2(260f, 44f), RestoreBgmFromUi, 16f);
             return;
@@ -1586,6 +1576,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         _bgmPanelOpen = true;
         _bgmPage = 0;
         _bgmListOffset = 0;
+        _bgmSourceFilter = 0;
         RefreshBgmTracks();
         EnsureMouseEventSystem();
 
@@ -1648,19 +1639,60 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             LimbusCompanyLyrics.Log?.LogWarning("读取 Cybergrind/Music 失败: " + e.Message);
         }
 
-        tracks.Sort(StringComparer.OrdinalIgnoreCase);
-        _bgmTracks = tracks.ToArray();
-        _bgmIndex = 0;
-
-        if (_bgmTracks.Length > 0)
+        try
         {
-            var settings = LimbusCompanyLyrics.Settings;
-            var index = settings != null ? Array.IndexOf(_bgmTracks, settings.BgmTrack) : -1;
-            if (index >= 0)
-                _bgmIndex = index;
-            else if (settings != null)
-                settings.BgmTrack = _bgmTracks[0];
+            // 为官方歌曲准备一个固定分类文件夹（没有就创建）。
+            Directory.CreateDirectory(Path.Combine(PathsUtils.MusicPath, OstFolderName));
         }
+        catch (Exception)
+        {
+            // 游戏目录不可写时忽略。
+        }
+
+        tracks.Sort(StringComparer.OrdinalIgnoreCase);
+        _bgmAllTracks = tracks.ToArray();
+        ApplyBgmSourceFilter();
+    }
+
+    private static bool IsOstTrack(string relativePath)
+    {
+        return relativePath.StartsWith(OstFolderName + "\\", StringComparison.OrdinalIgnoreCase) ||
+               relativePath.StartsWith(OstFolderName + "/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void ApplyBgmSourceFilter()
+    {
+        if (_bgmSourceFilter == 1)
+        {
+            var filtered = new List<string>();
+            foreach (var track in _bgmAllTracks)
+                if (IsOstTrack(track))
+                    filtered.Add(track);
+            _bgmTracks = filtered.ToArray();
+        }
+        else
+        {
+            _bgmTracks = _bgmAllTracks;
+        }
+
+        _bgmIndex = 0;
+        if (_bgmTracks.Length == 0)
+            return;
+
+        var settings = LimbusCompanyLyrics.Settings;
+        var index = settings != null ? Array.IndexOf(_bgmTracks, settings.BgmTrack) : -1;
+        if (index >= 0)
+            _bgmIndex = index;
+        else if (settings != null)
+            settings.BgmTrack = _bgmTracks[0];
+    }
+
+    private void SetBgmSourceFilter(int filter)
+    {
+        _bgmSourceFilter = filter;
+        ApplyBgmSourceFilter();
+        _bgmListOffset = 0;
+        RebuildBgmPanelUi();
     }
 
     private void CycleBgmTrack(int delta)
@@ -2019,40 +2051,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         _bgmInfoTitle = Path.GetFileNameWithoutExtension(path);
         _bgmInfoArtist = string.Empty;
 
-        Sprite cover = null;
-
-        try
-        {
-            var directory = Path.GetDirectoryName(path);
-            var baseName = Path.GetFileNameWithoutExtension(path);
-            if (!string.IsNullOrEmpty(directory))
-            {
-                var candidates = new[]
-                {
-                    Path.Combine(directory, baseName + ".png"),
-                    Path.Combine(directory, baseName + ".jpg"),
-                    Path.Combine(directory, baseName + ".jpeg"),
-                    Path.Combine(directory, "cover.png"),
-                    Path.Combine(directory, "cover.jpg"),
-                    Path.Combine(directory, "folder.png"),
-                    Path.Combine(directory, "folder.jpg")
-                };
-
-                foreach (var candidate in candidates)
-                {
-                    if (!File.Exists(candidate))
-                        continue;
-
-                    cover = CreateSpriteFromFile(candidate);
-                    if (cover != null)
-                        break;
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            LimbusCompanyLyrics.Log?.LogWarning("读取曲绘文件失败: " + e.Message);
-        }
+        var cover = LoadFolderCover(path);
 
         try
         {
@@ -2069,8 +2068,16 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 if (!string.IsNullOrEmpty(performer))
                     _bgmInfoArtist = performer;
 
-                if (cover == null && tag.Pictures != null && tag.Pictures.Length > 0)
-                    cover = CreateSprite(tag.Pictures[0].Data.Data);
+                var pictures = tag.Pictures;
+                LimbusCompanyLyrics.Log?.LogInfo(
+                    $"曲绘标签: {Path.GetFileName(path)} pictures={pictures?.Length ?? 0} folderCover={(cover != null)}");
+
+                if (cover == null && pictures != null && pictures.Length > 0)
+                {
+                    cover = CreateSprite(pictures[0].Data.Data);
+                    LimbusCompanyLyrics.Log?.LogInfo("曲绘来源(ID3): " + Path.GetFileName(path)
+                        + " bytes=" + pictures[0].Data.Data.Length + " sprite=" + (cover != null));
+                }
             }
         }
         catch (Exception e)
@@ -2103,6 +2110,76 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         }
     }
 
+    private static readonly string[] CoverFileNames =
+    {
+        "cover", "folder", "front", "album", "artwork", "albumart", "thumb", "jacket", "pak"
+    };
+
+    /// <summary>在歌曲文件夹里寻找封面：同名图片 → 常见封面名 → 目录内任意图片。</summary>
+    private Sprite LoadFolderCover(string audioPath)
+    {
+        try
+        {
+            var directory = Path.GetDirectoryName(audioPath);
+            var baseName = Path.GetFileNameWithoutExtension(audioPath);
+            if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
+                return null;
+
+            var extensions = new[] { ".png", ".jpg", ".jpeg" };
+            foreach (var extension in extensions)
+            {
+                var direct = Path.Combine(directory, baseName + extension);
+                if (File.Exists(direct))
+                {
+                    var sprite = CreateSpriteFromFile(direct);
+                    if (sprite != null)
+                    {
+                        LimbusCompanyLyrics.Log?.LogInfo("曲绘来源(同名): " + direct);
+                        return sprite;
+                    }
+                }
+            }
+
+            foreach (var name in CoverFileNames)
+            {
+                foreach (var extension in extensions)
+                {
+                    var candidate = Path.Combine(directory, name + extension);
+                    if (!File.Exists(candidate))
+                        continue;
+
+                    var sprite = CreateSpriteFromFile(candidate);
+                    if (sprite != null)
+                    {
+                        LimbusCompanyLyrics.Log?.LogInfo("曲绘来源(封面名): " + candidate);
+                        return sprite;
+                    }
+                }
+            }
+
+            foreach (var extension in extensions)
+            {
+                var files = Directory.GetFiles(directory, "*" + extension);
+                Array.Sort(files, StringComparer.OrdinalIgnoreCase);
+                foreach (var file in files)
+                {
+                    var sprite = CreateSpriteFromFile(file);
+                    if (sprite != null)
+                    {
+                        LimbusCompanyLyrics.Log?.LogInfo("曲绘来源(目录图片): " + file);
+                        return sprite;
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("读取曲绘文件失败: " + e.Message);
+        }
+
+        return null;
+    }
+
     private static Sprite CreateSpriteFromFile(string path)
     {
         try
@@ -2123,18 +2200,21 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         Texture2D texture = null;
         try
         {
-            texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            texture = new Texture2D(2, 2);
             if (!texture.LoadImage(data))
             {
+                LimbusCompanyLyrics.Log?.LogWarning("曲绘解码失败: LoadImage=false, bytes=" + (data?.Length ?? 0));
                 Destroy(texture);
                 return null;
             }
 
             texture.wrapMode = TextureWrapMode.Clamp;
+            LimbusCompanyLyrics.Log?.LogInfo($"曲绘解码成功: {texture.width}x{texture.height}, bytes={data.Length}");
             return Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            LimbusCompanyLyrics.Log?.LogWarning("曲绘解码异常: " + e.Message);
             if (texture != null)
                 Destroy(texture);
             return null;

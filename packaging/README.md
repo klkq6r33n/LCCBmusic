@@ -166,7 +166,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 ### Level BGM replacement / 关卡 BGM 取代
 
 - Press **F5** in any level to open the mouse menu. It is separate from the Cyber Grind menu: **F4 works only in the Cyber Grind, F5 only in levels.** Opening the menu pauses the game and unlocks the cursor.
-- **MUSIC**: lists every `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` recursively (page buttons at the bottom); click a track to select it, then **REPLACE LEVEL BGM** or **RESTORE BGM**.
+- **MUSIC**: lists every `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` recursively (page buttons at the bottom); click a track to select it, then **REPLACE LEVEL BGM** or **RESTORE BGM**. The **ALL / ULTRAKILL-OST** buttons switch between the full library and a dedicated `Cybergrind/Music/ULTRAKILL-OST` category (created automatically) for official songs.
 - **SETTINGS**: the same LAYOUT / TEXT / MOTION / TRANS / VISUAL pages as the in-Cyber-Grind menu, fully mouse-driven (inputs, toggles, per-page reset).
 - **DISPLAY**: switch **中文 / ENGLISH**, toggle lyrics and the now-playing frame, move/resize the cover and title, and click any key binding to rebind it (press the new key, Esc cancels).
 - Keyboard shortcuts still work: `[` / `]` or **← / →** change track, **Enter** replaces, **Backspace** restores, **L** lyrics, **N** cover, **G** language, **K** rebind (1–8), **P** position, **Esc** closes, **F5** toggles.
@@ -176,7 +176,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - Only local files are used; the CGME Downloader is still unsupported.
 
 - 在任意关卡中按 **F5** 打开鼠标菜单。它与血宫菜单分开：**F4 只在血宫可用，F5 只在关卡可用。** 打开时暂停游戏并解锁鼠标。
-- **MUSIC**：递归列出 `Cybergrind/Music` 下所有 `.mp3` / `.ogg` / `.wav`（底部翻页）；点击曲目选中，再点 **取代关卡 BGM** 或 **归还原 BGM**。
+- **MUSIC**：递归列出 `Cybergrind/Music` 下所有 `.mp3` / `.ogg` / `.wav`（底部翻页）；点击曲目选中，再点 **取代关卡 BGM** 或 **归还原 BGM**。顶部的 **全部 / ULTRAKILL-OST** 按钮用于切换完整曲库与专门的 `Cybergrind/Music/ULTRAKILL-OST` 分类（不存在时会自动创建），官方歌曲放进该文件夹即可。
 - **SETTINGS**：与血宫内菜单相同的 位置 / 文字 / 动态 / 翻译 / 频谱 五页，全部可用鼠标操作（输入框、开关、单页重置）。
 - **DISPLAY**：切换 **中文 / English**、开关歌词与曲绘框、移动/缩放曲绘与歌名，并点击任意按键绑定后按下新键改绑（Esc 取消）。
 - 键盘快捷键仍可用：`[` / `]` 或 **← / →** 切换曲目，**Enter** 取代，**Backspace** 归还，**L** 歌词，**N** 曲绘，**G** 语言，**K** 改键（1–8），**P** 调位置，**Esc** 关闭，**F5** 开关菜单。
@@ -189,14 +189,14 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 
 - While a Jukebox song or a replaced level track is playing, one horizontal row is drawn: **cover / title / artist** (曲绘 / 曲名 / 作者). The row is **small by default**: the text size is the reference and the cover is only slightly larger than the text (about 1.3×), never the other way around. The title and artist use the **same font size**; the artist is the last item in the row.
 - The cover sits in a ULK-style bordered frame. No cover → the frame stays hollow (only the border is drawn).
-- Cover source, in order: an image with the audio file's base name (`.png` / `.jpg` / `.jpeg`), `cover.*` / `folder.*` in the same folder, then the embedded ID3 picture.
+- Cover source, in order: an image with the audio file's base name (`.png` / `.jpg` / `.jpeg`), then `cover` / `folder` / `front` / `album` / `artwork` / `albumart` / `thumb` / `jacket` / `pak` images, then **any other image in the song folder**, then the embedded ID3 picture. Decode results (including failures) are written to the BepInEx log.
 - **Mouse adjustment** (F5 → DISPLAY → **ADJUST ROW WITH MOUSE**): the menu hides, then **drag the whole row** to move it and **scroll the mouse wheel** to change its size; press **Esc** or click **DONE** to finish (the menu closes so you can see the result). The DISPLAY page also has arrow / `-` `+` / reset buttons, and keyboard **P** still works (arrows move, Shift = fine, `-` / `+` resize, P/Esc finish). Changes save immediately.
 - The **F5 right-hand preview** uses a vertical layout instead: the selected track's cover is shown **above** its title and author. The in-game row stays horizontal (`cover / title / artist`).
 - Config keys: `now_playing_enabled`, `cover_pos_x/y` (row anchor: right edge X and vertical center Y, in % of the screen), `cover_size` (**text/row size**, 10–120, default 32; the cover is about 1.3× this); `title_pos_x/y` are kept for old configs but are no longer used.
 
 - 当 Jukebox 曲目或取代的关卡曲目正在播放时，会绘制**一整行**：**曲绘 / 曲名 / 作者**。整行默认**很小**：以文字大小为基准，曲绘只比文字略大（约 1.3 倍），而不是把文字放大到曲绘那么大。曲名与作者使用**相同字号**，作者排在整行最后。
 - 曲绘外面是 ULK 风格的描边框。没有曲绘时框体镂空（只画边框）。
-- 曲绘来源依次为：与音频同名的图片（`.png` / `.jpg` / `.jpeg`）、同目录的 `cover.*` / `folder.*`、音频内嵌的 ID3 图片。
+- 曲绘来源依次为：与音频同名的图片（`.png` / `.jpg` / `.jpeg`）、`cover` / `folder` / `front` / `album` / `artwork` / `albumart` / `thumb` / `jacket` / `pak` 图片、**歌曲文件夹内任意其他图片**、最后是音频内嵌的 ID3 图片。解码结果（含失败原因）会写入 BepInEx 日志。
 - **鼠标调整**（F5 → DISPLAY → **用鼠标调整曲绘行**）：菜单会隐藏，此时**拖动整行**移动、**滚轮**改变大小，按 **Esc** 或点击 **完成** 结束（结束后菜单关闭并恢复游戏，方便立刻查看效果）。DISPLAY 页也保留方向按钮、`-` `+` 与重置按钮；键盘 **P** 仍可用（方向键移动，Shift 微调，`-` / `+` 缩放，P/Esc 结束）。改动立即保存。
 - **F5 右侧预览**使用竖排布局：选中曲目的曲绘在**上**，曲名与作者在**下**；游戏内的曲绘行仍然是横排（`曲绘 / 曲名 / 作者`）。
 - 配置项：`now_playing_enabled`、`cover_pos_x/y`（整行锚点：右边缘 X、垂直中心 Y，屏幕百分比）、`cover_size`（**文字/整行大小**，10–120，默认 32，曲绘约为它的 1.3 倍）；`title_pos_x/y` 仅为兼容旧配置保留，已不再使用。
@@ -235,9 +235,9 @@ These belong to an external player's lyric fetching / auto timing. In game, the 
 
 ## Lyrics source / 歌词来源
 
-**Songs:** this mod bundles **no audio at all**. It only reads the tracks already placed in ULTRAKILL's built-in Cyber Grind music folder — `ULTRAKILL/Cybergrind/Music` (shown as `Cybergrind/Music` below). The F5 MUSIC page lists exactly that folder recursively.
+**Songs:** this mod bundles **no audio at all**. It only reads the tracks already placed in ULTRAKILL's built-in Cyber Grind music folder — `ULTRAKILL/Cybergrind/Music` (shown as `Cybergrind/Music` below). The F5 MUSIC page lists exactly that folder recursively. For official tracks, use the **ULTRAKILL-OST** category, which maps to `Cybergrind/Music/ULTRAKILL-OST` (created automatically).
 
-**歌曲：** 本 mod **不附带任何音频**，只读取 ULTRAKILL 自带电子血宫音乐文件夹 `ULTRAKILL/Cybergrind/Music`（下文简写为 `Cybergrind/Music`）里已有的曲目；F5 的 MUSIC 页就是递归列出这个文件夹。
+**歌曲：** 本 mod **不附带任何音频**，只读取 ULTRAKILL 自带电子血宫音乐文件夹 `ULTRAKILL/Cybergrind/Music`（下文简写为 `Cybergrind/Music`）里已有的曲目；F5 的 MUSIC 页就是递归列出这个文件夹。官方歌曲使用 **ULTRAKILL-OST** 分类，对应 `Cybergrind/Music/ULTRAKILL-OST`（不存在时自动创建）。
 
 Same as the original mod: a **`.srt` file with the exact same filename** next to the audio file.
 
