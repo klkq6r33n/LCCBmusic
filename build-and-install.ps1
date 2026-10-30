@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$Profile = $env:ULTRAKILL_PROFILE,
     [switch]$NoInstall
 )
@@ -18,23 +18,26 @@ foreach ($proj in @(
     if ($LASTEXITCODE -ne 0) { throw "build failed: $proj" }
 }
 
-Write-Host "== package =="
+Write-Host "== package (Thunderstore layout) =="
+# manifest.json / icon.png / README.md stay at the zip root.
+# Runtime files live under BepInEx/plugins/ so the installer preserves the folder.
 $pkg = Join-Path $root "_pkg\$packageName"
+$runtime = Join-Path $pkg "BepInEx\plugins\$packageName"
 if (Test-Path $pkg) { Remove-Item $pkg -Recurse -Force }
-New-Item -ItemType Directory (Join-Path $pkg "Assets") -Force | Out-Null
-Copy-Item (Join-Path $root "_stage\plugins\Jukebox\*.dll") $pkg
+New-Item -ItemType Directory (Join-Path $runtime "Assets") -Force | Out-Null
+Copy-Item (Join-Path $root "_stage\plugins\Jukebox\*.dll") $runtime
 
 $thirdParty = Join-Path $root "third_party"
 if (Test-Path $thirdParty) {
     $binaries = Get-ChildItem $thirdParty -File -ErrorAction SilentlyContinue
-    if ($binaries) { $binaries | Copy-Item -Destination $pkg -Force }
+    if ($binaries) { $binaries | Copy-Item -Destination $runtime -Force }
     $assets = Join-Path $thirdParty "Assets"
-    if (Test-Path $assets) { Copy-Item (Join-Path $assets "*") (Join-Path $pkg "Assets") -Recurse -Force }
+    if (Test-Path $assets) { Copy-Item (Join-Path $assets "*") (Join-Path $runtime "Assets") -Recurse -Force }
 }
 
 Copy-Item (Join-Path $root "packaging\manifest.json"), (Join-Path $root "packaging\README.md"), (Join-Path $root "packaging\icon.png") $pkg -Force
 $fontsDir = Join-Path $root "packaging\fonts"
-if (Test-Path $fontsDir) { Copy-Item $fontsDir (Join-Path $pkg "Fonts") -Recurse -Force }
+if (Test-Path $fontsDir) { Copy-Item $fontsDir (Join-Path $runtime "Fonts") -Recurse -Force }
 
 $zip = Join-Path $root "JukeboxLimbusCompany-$version.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
@@ -59,6 +62,17 @@ Copy-Item (Join-Path $pkg "*") $cacheDir -Recurse
 
 $plugins = Join-Path $Profile "BepInEx\plugins\$packageName"
 New-Item -ItemType Directory $plugins -Force | Out-Null
-Copy-Item (Join-Path $pkg "*") $plugins -Recurse -Force
+Get-ChildItem $plugins -Force -ErrorAction SilentlyContinue | ForEach-Object {
+    Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+}
+Get-ChildItem $runtime -Force | ForEach-Object {
+    $dest = Join-Path $plugins $_.Name
+    if ($_.PSIsContainer) {
+        if (Test-Path $dest) { Remove-Item $dest -Recurse -Force -ErrorAction SilentlyContinue }
+        Copy-Item $_.FullName $dest -Recurse -Force
+    } else {
+        Copy-Item $_.FullName $dest -Force
+    }
+}
 Write-Host "installed: $plugins"
 Write-Host "Keep Flazhik-CybergrindMusicExplorer disabled in r2modman."
