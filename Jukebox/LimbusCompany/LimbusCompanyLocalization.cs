@@ -34,6 +34,9 @@ public class LimbusCompanyLocalization : MonoBehaviour
     private bool _rebuildPending;
     private int _page;
 
+    /// <summary>F5 菜单内嵌设置页时，把设置面板建到这个容器里。</summary>
+    private RectTransform _standaloneHost;
+
     private float _nextMenuScan;
     private bool _failed;
 
@@ -46,6 +49,18 @@ public class LimbusCompanyLocalization : MonoBehaviour
 
         try
         {
+            if (_standaloneHost != null)
+            {
+                if (_rebuildPending)
+                {
+                    _rebuildPending = false;
+                    if (_panelOpen)
+                        RebuildPanel();
+                }
+
+                return;
+            }
+
             if (_menu == null)
             {
                 if (Time.unscaledTime < _nextMenuScan)
@@ -208,6 +223,41 @@ public class LimbusCompanyLocalization : MonoBehaviour
         UpdateButtonLabels();
     }
 
+    // ------------------------------------------------------------------ standalone (F5 menu) mode
+
+    public bool StandaloneOpen => _standaloneHost != null && _panelOpen;
+
+    public void OpenStandalone(RectTransform host)
+    {
+        if (host == null)
+            return;
+
+        _standaloneHost = host;
+        _panelOpen = true;
+        RebuildPanel();
+    }
+
+    public void CloseStandalone()
+    {
+        _standaloneHost = null;
+        _panelOpen = false;
+        _rebuildPending = false;
+
+        if (_panel != null)
+        {
+            if (_panel)
+                _panel.SetActive(false);
+            Destroy(_panel);
+            _panel = null;
+        }
+    }
+
+    public void RefreshStandalone()
+    {
+        if (_standaloneHost != null && _panelOpen)
+            RebuildPanel();
+    }
+
     // ------------------------------------------------------------------ feature settings panel
 
     private void TogglePanel()
@@ -228,6 +278,9 @@ public class LimbusCompanyLocalization : MonoBehaviour
         }
 
         _panel = BuildPanel();
+        if (_panel == null)
+            return;
+
         _panel.transform.SetAsLastSibling();
         _panel.SetActive(true);
     }
@@ -240,9 +293,13 @@ public class LimbusCompanyLocalization : MonoBehaviour
 
     private GameObject BuildPanel()
     {
+        var parent = _standaloneHost != null ? _standaloneHost : _canvas;
+        if (parent == null)
+            return null;
+
         var panel = new GameObject("LimbusSettingsPanel", typeof(RectTransform));
         var rect = panel.GetComponent<RectTransform>();
-        rect.SetParent(_canvas, false);
+        rect.SetParent(parent, false);
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);

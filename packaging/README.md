@@ -115,7 +115,7 @@ While the Jukebox menu is open, the **SETTINGS / 设置** button (next to LANGUA
 - **TEXT / 文字**: text color, font size, spacing, stroke color/width, glow color/size/alpha, glow on/off, font family
 - **MOTION / 动态**: shake intensity/speed, fade speed, rise speed, **typewriter on/off + chars per second**, perspective + X/Y strength, lyrics on/off, replace original subtitles
 - **VISUAL / 频谱**: audio visualizer on/off, wave size, max extent (% of screen), position (BOTTOM / TOP / LEFT / RIGHT), bar density (8–256), gradient range (0–1), gradient speed, gradient mode (FIXED 2 / RANGE x~y / MULTI RGB), colour A RGB, colour B RGB, multi RGB (space separated), X mirror — plus an in-panel usage note
-- **F5** (separate from the Cyber Grind menu): opens the standalone level BGM panel in any level — choose a track from `Cybergrind/Music`, replace the current level BGM, and restore it from the exact paused point. The same panel toggles the lyrics layer and the now-playing frame, rebinds every panel key, and adjusts the cover/title position.
+- **F5 mouse menu** (levels only; the Cyber Grind uses **F4** and F5 is ignored there): a clickable menu with MUSIC / SETTINGS / DISPLAY pages — browse `Cybergrind/Music`, replace/restore the level BGM, switch the UI language, edit every lyric setting, toggle lyrics/now-playing, move the cover/title, and rebind keys. Opening it pauses the game and unlocks the cursor, like the CGME menu.
 - **Now-playing frame** (top-right by default): ULK-style bordered frame around the current track's cover art, with the title and artist underneath; when the track has no cover the frame stays hollow. Cover art is read from the audio file's ID3 tag or a same-name / `cover` / `folder` image; its position and size are adjustable.
 - RESET PAGE (resets only the currently open page) / CLOSE
 
@@ -127,7 +127,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - **TEXT / 文字**：文字颜色、字号、字距、描边颜色/宽度、辉光颜色/大小/透明度、辉光开关、字体
 - **MOTION / 动态**：抖动强度/速度、淡入速度、上飘速度、**逐字显示开关 + 每秒字数**、透视与 X/Y 强度、歌词层开关、替换原版字幕
 - **VISUAL / 频谱**：音频可视化开关、波动大小、最大幅度（屏幕百分比）、显示位置（底部/顶部/左侧/右侧）、频谱密度（8–256）、渐变范围（0–1）、渐变强度（速度）、渐变模式（固定双色 / 区间渐变 / 多色渐变）、颜色 A RGB、颜色 B RGB、多色 RGB（空格分隔）、X 轴镜像，面板内附使用说明
-- **F5**（与血宫菜单分开）：任意关卡中打开独立的关卡 BGM 面板——从 `Cybergrind/Music` 选曲、取代当前关卡 BGM，并可归还原 BGM（从暂停的准确位置继续）。同一面板还能开关歌词层、开关曲绘框、重绑所有面板按键，以及调整曲绘/歌名的位置。
+- **F5 鼠标菜单**（仅关卡可用；血宫内只用 **F4**，F5 会被忽略）：可点击的 MUSIC / SETTINGS / DISPLAY 三页——浏览 `Cybergrind/Music`、取代/归还关卡 BGM、切换界面语言、修改全部歌词设置、开关歌词/曲绘框、移动曲绘/歌名、重绑按键。打开时暂停游戏并解锁鼠标，操作方式与 CGME 菜单一致。
 - **曲绘框**（默认右上角）：ULTRAKILL 风格的描边框住当前歌曲的曲绘，下方显示歌名与歌手；没有曲绘时框体镂空。曲绘从音频文件的 ID3 标签或同名 / `cover` / `folder` 图片读取，位置和大小都可调整。
 - 重置本页（只重置当前打开的页面）/ 关闭
 
@@ -163,15 +163,21 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 
 ### Level BGM replacement / 关卡 BGM 取代
 
-- Press **F5** in any level (this is independent of the Cyber Grind Jukebox menu) to open the standalone BGM panel. It lists every `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` recursively.
-- Panel keys: `[` / `]` or **← / →** cycle the track, **Enter** replaces the level BGM, **Backspace** restores it, **L** toggles the lyrics layer, **N** toggles the now-playing frame, **K** rebinds any panel key, **P** adjusts the cover/title position, **Esc** closes, **F5** toggles the panel. Every key can be changed with **K** (choose 1–7, then press the new key); bindings are saved to `lyric_config.json`.
+- Press **F5** in any level to open the mouse menu. It is separate from the Cyber Grind menu: **F4 works only in the Cyber Grind, F5 only in levels.** Opening the menu pauses the game and unlocks the cursor.
+- **MUSIC**: lists every `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` recursively (page buttons at the bottom); click a track to select it, then **REPLACE LEVEL BGM** or **RESTORE BGM**.
+- **SETTINGS**: the same LAYOUT / TEXT / MOTION / TRANS / VISUAL pages as the in-Cyber-Grind menu, fully mouse-driven (inputs, toggles, per-page reset).
+- **DISPLAY**: switch **中文 / ENGLISH**, toggle lyrics and the now-playing frame, move/resize the cover and title, and click any key binding to rebind it (press the new key, Esc cancels).
+- Keyboard shortcuts still work: `[` / `]` or **← / →** change track, **Enter** replaces, **Backspace** restores, **L** lyrics, **N** cover, **G** language, **K** rebind (1–8), **P** position, **Esc** closes, **F5** toggles.
 - **Replace** pauses the game's level music (clean / battle / boss themes) and starts the selected track on a loop. The paused level music keeps its exact position.
 - **Restore** stops the replacement and unpauses the level music, which continues from the point where it was paused. Scene changes also end the replacement automatically.
 - The audio visualizer reads the replacement track while it is active, and reads the game's level music after restoration — so the spectrum works for both.
 - Only local files are used; the CGME Downloader is still unsupported.
 
-- 在任意关卡中按 **F5**（与血宫 Jukebox 菜单无关）打开独立的 BGM 面板，递归列出 `Cybergrind/Music` 下所有 `.mp3` / `.ogg` / `.wav`。
-- 面板按键：`[` / `]` 或 **← / →** 切换曲目，**Enter** 取代关卡 BGM，**Backspace** 归还原 BGM，**L** 开关歌词显示，**N** 开关曲绘框，**K** 重新绑定按键，**P** 调整曲绘/歌名位置，**Esc** 关闭，**F5** 开关面板。所有按键都可用 **K** 修改（先选 1–7，再按下新键），绑定会保存到 `lyric_config.json`。
+- 在任意关卡中按 **F5** 打开鼠标菜单。它与血宫菜单分开：**F4 只在血宫可用，F5 只在关卡可用。** 打开时暂停游戏并解锁鼠标。
+- **MUSIC**：递归列出 `Cybergrind/Music` 下所有 `.mp3` / `.ogg` / `.wav`（底部翻页）；点击曲目选中，再点 **取代关卡 BGM** 或 **归还原 BGM**。
+- **SETTINGS**：与血宫内菜单相同的 位置 / 文字 / 动态 / 翻译 / 频谱 五页，全部可用鼠标操作（输入框、开关、单页重置）。
+- **DISPLAY**：切换 **中文 / English**、开关歌词与曲绘框、移动/缩放曲绘与歌名，并点击任意按键绑定后按下新键改绑（Esc 取消）。
+- 键盘快捷键仍可用：`[` / `]` 或 **← / →** 切换曲目，**Enter** 取代，**Backspace** 归还，**L** 歌词，**N** 曲绘，**G** 语言，**K** 改键（1–8），**P** 调位置，**Esc** 关闭，**F5** 开关菜单。
 - **取代**：暂停游戏当前的关卡音乐（clean / battle / boss 三个主题），循环播放选定曲目；被暂停的关卡音乐保留准确进度。
 - **归还**：停止替代曲目并恢复关卡音乐，从暂停的位置继续；切换关卡时也会自动结束取代。
 - 频谱在取代期间读取替代曲目，归还后读取关卡原音乐，两种情况下都有效。
@@ -181,12 +187,12 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 
 - While a Jukebox song or a replaced level track is playing, a bordered frame in the top-right corner shows its cover, title and artist. No cover → the frame stays hollow (only the border is drawn).
 - Cover source, in order: an image with the audio file's base name (`.png` / `.jpg` / `.jpeg`), `cover.*` / `folder.*` in the same folder, then the embedded ID3 picture.
-- Press **P** in the F5 panel to adjust: **arrow keys** move the frame (hold **Shift** for 0.25 steps), **T** switches between cover and title, **[-] / [+]** resize the cover, **P / Esc** finishes. Changes save immediately.
+- In the F5 **DISPLAY** page, click COVER or TITLE and use the on-screen arrows / `-` `+` to move and resize; you can also press **P** for keyboard adjustment (**arrow keys**, Shift = fine, **T** switches cover/title, `-` / `+` resize, **P / Esc** finishes). Changes save immediately.
 - Config keys: `now_playing_enabled`, `cover_pos_x/y`, `title_pos_x/y`, `cover_size`; positions are percentages of the screen, and the cover default is top-right (`84,18`).
 
 - 当 Jukebox 曲目或取代的关卡曲目正在播放时，右上角的描边框会显示曲绘、歌名和歌手。没有曲绘时框体镂空（只画边框）。
 - 曲绘来源依次为：与音频同名的图片（`.png` / `.jpg` / `.jpeg`）、同目录的 `cover.*` / `folder.*`、音频内嵌的 ID3 图片。
-- 在 F5 面板中按 **P** 调整：**方向键**移动（按住 **Shift** 以 0.25 步长微调），**T** 在曲绘和歌名之间切换，**[-] / [+]** 缩放曲绘，**P / Esc** 结束。改动立即保存。
+- 在 F5 的 **DISPLAY** 页点击“曲绘”或“歌名”，用屏幕上的方向按钮和 `-` `+` 移动/缩放；也可按 **P** 用键盘调整（**方向键**移动，Shift 微调，**T** 切换曲绘/歌名，`-` / `+` 缩放，**P / Esc** 结束）。改动立即保存。
 - 配置项：`now_playing_enabled`、`cover_pos_x/y`、`title_pos_x/y`、`cover_size`；位置是屏幕百分比，曲绘默认在右上角（`84,18`）。
 
 ### Position safety / 位置防重叠与防出屏

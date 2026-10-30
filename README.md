@@ -32,7 +32,8 @@ This repository is **source only**. Release packages (DLLs, `Assets/`, ffmpeg/yt
 - Typewriter, fade, shake, rise, perspective, random rotation, custom colors/stroke/glow.
 - Audio visualizer: time-driven hue gradient, bar density, size, position (bottom/top/left/right), X mirror, black outline, own canvas below the game UI.
 - Level BGM replacement (standalone **F5** panel, independent of the Cyber Grind menu): pick any `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` to replace the current level music; restoring resumes the level BGM from the exact paused position. The visualizer follows both the replacement and the level music.
-- The F5 panel also toggles the lyrics layer (**L**) and the now-playing frame (**N**), rebinds every panel key (**K**), and adjusts the cover/title position (**P**).
+- **F5 mouse menu** (levels only; the Cyber Grind keeps **F4** and ignores F5): MUSIC / SETTINGS / DISPLAY pages with the level BGM browser, every lyric setting, 中文 / ENGLISH switching, lyrics and now-playing toggles, cover/title position and key rebinding. Opening it pauses the game and unlocks the cursor.
+- Keyboard shortcuts remain available: **L** lyrics, **N** now-playing, **G** language, **K** rebind (1–8), **P** position, **Esc** close.
 - Now-playing frame: ULK-style bordered cover frame in the top-right (cover from ID3 or a same-name / `cover` / `folder` image), hollow when the track has no cover, with the title and artist underneath; position and size are editable.
 - In-menu LANGUAGE (English default / 中文) and SETTINGS panel with numeric inputs.
 - NFKC text normalization (fixes compatibility ideographs such as U+F9EC) and diagnostic logging.
@@ -93,7 +94,7 @@ Optional translation sidecar: `Track.zh.srt`, `Track.cn.srt`, `Track.chs.srt`, `
 
 Open the Jukebox menu (F4) in Cyber Grind: **LANGUAGE** switches the mod UI (English default, 中文 second); **SETTINGS** opens LAYOUT / TEXT / MOTION / TRANS / VISUAL pages. All values are numeric/text inputs and are saved to `BepInEx/config/LimbusCompany/lyric_config.json` immediately.
 
-Press **F5** in any level for the standalone panel: `[` / `]` (or arrows) change track, **Enter** replaces the level BGM, **Backspace** restores it, **L** toggles lyrics, **N** toggles the now-playing frame, **K** rebinds keys (1–7), **P** adjusts the cover/title position (arrows move, Shift = fine, T switches cover/title, `-` / `+` resize, P/Esc done).
+Press **F5** in any level for the mouse menu (F4 is the Cyber Grind menu only; F5 is ignored there). MUSIC selects and replaces/restores the level BGM; SETTINGS mirrors the LAYOUT / TEXT / MOTION / TRANS / VISUAL pages; DISPLAY switches 中文 / ENGLISH, toggles lyrics and the now-playing frame, moves/resizes the cover and title, and rebinds keys. Keyboard shortcuts: `[` / `]` or arrows change track, **Enter** replace, **Backspace** restore, **L** lyrics, **N** cover, **G** language, **K** rebind (1–8), **P** position, **Esc** close.
 
 ## Known limitations / 已知限制
 

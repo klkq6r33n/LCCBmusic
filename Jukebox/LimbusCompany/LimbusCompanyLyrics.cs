@@ -85,6 +85,7 @@ public static class LimbusCompanyLyrics
             settings["bgm_key_restore"] = s.BgmKeyRestore;
             settings["bgm_key_lyrics"] = s.BgmKeyLyrics;
             settings["bgm_key_now_playing"] = s.BgmKeyNowPlaying;
+            settings["bgm_key_language"] = s.BgmKeyLanguage;
             settings["now_playing_enabled"] = s.NowPlayingEnabled;
             settings["cover_pos_x"] = s.CoverPosX;
             settings["cover_pos_y"] = s.CoverPosY;

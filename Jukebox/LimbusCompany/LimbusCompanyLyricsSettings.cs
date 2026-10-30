@@ -131,6 +131,7 @@ public class LimbusCompanyLyricsSettings
     public string BgmKeyRestore = "Backspace";
     public string BgmKeyLyrics = "L";
     public string BgmKeyNowPlaying = "N";
+    public string BgmKeyLanguage = "G";
 
     // ---- 当前歌曲曲绘 / 歌名（右上角 ULK 风格框） ----
     public bool NowPlayingEnabled = true;
@@ -266,6 +267,7 @@ public class LimbusCompanyLyricsSettings
         BgmKeyRestore = GetString(s, "bgm_key_restore", BgmKeyRestore);
         BgmKeyLyrics = GetString(s, "bgm_key_lyrics", BgmKeyLyrics);
         BgmKeyNowPlaying = GetString(s, "bgm_key_now_playing", BgmKeyNowPlaying);
+        BgmKeyLanguage = GetString(s, "bgm_key_language", BgmKeyLanguage);
         NowPlayingEnabled = GetBool(s, "now_playing_enabled", NowPlayingEnabled);
         CoverPosX = Mathf.Clamp(GetFloat(s, "cover_pos_x", CoverPosX), 0f, 100f);
         CoverPosY = Mathf.Clamp(GetFloat(s, "cover_pos_y", CoverPosY), 0f, 100f);
