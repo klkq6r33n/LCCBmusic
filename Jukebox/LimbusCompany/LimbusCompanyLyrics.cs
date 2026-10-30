@@ -33,6 +33,16 @@ public static class LimbusCompanyLyrics
             Log = Logger.CreateLogSource("Jukebox LimbusCompany");
             Settings = LimbusCompanyLyricsSettings.Load(ConfigDirectory);
             Log.LogInfo($"配置已加载: {Path.Combine(ConfigDirectory, "lyric_config.json")}");
+
+            try
+            {
+                if (!BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("greycsont.ultrakill.fffffff"))
+                    Log.LogWarning("未检测到 Fffffff（greycsont-Fffffff）。它是必需的字库前置，部分字符可能无法显示。");
+            }
+            catch (Exception)
+            {
+                // 忽略前置检测失败。
+            }
         }
         catch (Exception e)
         {

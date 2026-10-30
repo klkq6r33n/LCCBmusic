@@ -824,6 +824,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             : Path.Combine(PathsUtils.MusicPath, relativePath);
 
         var cover = LoadFolderCover(fullPath);
+        var titleFromTag = false;
 
         try
         {
@@ -832,11 +833,16 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             if (tag != null)
             {
                 if (!string.IsNullOrEmpty(tag.Title))
+                {
                     _menuPreviewTitle = tag.Title;
+                    titleFromTag = true;
+                }
 
                 var performer = tag.FirstPerformer;
                 if (string.IsNullOrEmpty(performer))
                     performer = tag.FirstAlbumArtist;
+                if (string.IsNullOrEmpty(performer))
+                    performer = tag.FirstComposer;
                 if (!string.IsNullOrEmpty(performer))
                     _menuPreviewArtist = performer;
 
@@ -856,6 +862,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         {
             LimbusCompanyLyrics.Log?.LogWarning("读取预览标签失败: " + e.Message);
         }
+
+        ApplyNameFallbacks(fullPath, ref _menuPreviewTitle, ref _menuPreviewArtist, titleFromTag);
 
         _menuPreviewSprite = cover;
         _menuPreviewTexture = cover?.texture;
@@ -2022,9 +2030,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (_bgmPanel != null)
             _bgmPanel.SetActive(true);
 
-        // 让曲绘行显示在菜单下层：可直接拖动，但不会挡住菜单按钮。
-        if (_npRoot != null && _bgmPanel != null)
-            _npRoot.transform.SetSiblingIndex(_bgmPanel.transform.GetSiblingIndex());
+        // 曲绘行置于菜单上层：用曲绘本身作为拖动/缩放把手，避免被菜单遮挡。
+        if (_npRoot != null)
+            _npRoot.transform.SetAsLastSibling();
 
         RebuildBgmPanelUi();
         PauseForBgmMenu();
@@ -2513,9 +2521,11 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 : new Color(0.02f, 0.02f, 0.02f, 0f);
         }
 
-        // F5 菜单打开时可直接拖动整行/滚轮缩放（菜单暂停中，鼠标可用）。
+        // F5 菜单打开时，用曲绘小方框作为拖动/滚轮缩放的把手（防止整行挡住菜单）。
         if (_npRowImage != null)
-            _npRowImage.raycastTarget = _bgmPanelOpen;
+            _npRowImage.raycastTarget = false;
+        if (_npFrameImage != null)
+            _npFrameImage.raycastTarget = _bgmPanelOpen;
     }
 
     private string _bgmInfoPath;
@@ -2532,6 +2542,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         _bgmInfoArtist = string.Empty;
 
         var cover = LoadFolderCover(path);
+        var titleFromTag = false;
 
         try
         {
@@ -2540,11 +2551,16 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             if (tag != null)
             {
                 if (!string.IsNullOrEmpty(tag.Title))
+                {
                     _bgmInfoTitle = tag.Title;
+                    titleFromTag = true;
+                }
 
                 var performer = tag.FirstPerformer;
                 if (string.IsNullOrEmpty(performer))
                     performer = tag.FirstAlbumArtist;
+                if (string.IsNullOrEmpty(performer))
+                    performer = tag.FirstComposer;
                 if (!string.IsNullOrEmpty(performer))
                     _bgmInfoArtist = performer;
 
@@ -2565,7 +2581,62 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             LimbusCompanyLyrics.Log?.LogWarning("读取音乐标签失败: " + e.Message);
         }
 
+        ApplyNameFallbacks(path, ref _bgmInfoTitle, ref _bgmInfoArtist, titleFromTag);
+
         SetNowPlayingSprite(cover, true, path);
+    }
+
+    /// <summary>标签缺少作者/标题时，从「作者 - 曲名」文件名或歌曲文件夹名补全。</summary>
+    private static void ApplyNameFallbacks(string fullPath, ref string title, ref string artist, bool titleFromTag)
+    {
+        var fileName = Path.GetFileNameWithoutExtension(fullPath);
+        var folder = Path.GetFileName(Path.GetDirectoryName(fullPath) ?? string.Empty);
+
+        string nameArtist = null;
+        string nameTitle = null;
+
+        if (TrySplitArtistTitle(fileName, out var fileArtist, out var fileTitle))
+        {
+            nameArtist = fileArtist;
+            nameTitle = fileTitle;
+        }
+        else if (TrySplitArtistTitle(folder, out var folderArtist, out _))
+        {
+            nameArtist = folderArtist;
+        }
+
+        if (!titleFromTag && !string.IsNullOrEmpty(nameTitle))
+            title = nameTitle;
+
+        if (string.IsNullOrEmpty(artist) && !string.IsNullOrEmpty(nameArtist))
+            artist = nameArtist;
+    }
+
+    private static bool TrySplitArtistTitle(string text, out string artist, out string title)
+    {
+        artist = null;
+        title = null;
+
+        if (string.IsNullOrWhiteSpace(text))
+            return false;
+
+        foreach (var separator in new[] { " - ", " – ", " — ", " － " })
+        {
+            var index = text.IndexOf(separator, StringComparison.Ordinal);
+            if (index <= 0 || index + separator.Length >= text.Length)
+                continue;
+
+            var left = text.Substring(0, index).Trim();
+            var right = text.Substring(index + separator.Length).Trim();
+            if (left.Length == 0 || right.Length == 0)
+                continue;
+
+            artist = left;
+            title = right;
+            return true;
+        }
+
+        return false;
     }
 
     private void SetNowPlayingSprite(Sprite sprite, bool owned, string path)

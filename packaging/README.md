@@ -4,6 +4,7 @@ GitHub / 开源地址：https://github.com/klkq6r33n/LCCBmusic
 NOTICE: Disable Flazhik-CybergrindMusicExplorer (this fork reuses its plugin GUID).
 Downloader: this package does NOT support CGME's Downloader — yt-dlp / ffmpeg / ffprobe are not bundled. Use local audio files.
 Install: install this zip with r2modman / Thunderstore Mod Manager, or extract it into the ULTRAKILL folder (runtime files live under BepInEx/plugins/Claude-JukeboxLimbusCompany/).
+Prerequisite: **greycsont-Fffffff** (ULTRAKILL font fallbacks) is a required Thunderstore dependency and is installed automatically; without it some glyphs may be missing.
 Lyrics: put Track.srt next to Track.mp3. Optional translation: also add Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt. Both lines are shown at different, non-overlapping positions.
 Songs: this mod bundles no audio. Every song is read from ULTRAKILL's built-in Cyber Grind music folder (ULTRAKILL/Cybergrind/Music); put your audio there.
 UI: default language is English. In the Jukebox menu (F4) use LANGUAGE to switch to Chinese and SETTINGS for precise numeric inputs (position, color, font size, motion, translation).
@@ -14,6 +15,7 @@ Special thanks to greycsont for the ULTRAKILL font, and to Flazhik and the Jukeb
 注意：必须禁用 Flazhik-CybergrindMusicExplorer（本 fork 沿用其插件 GUID）。
 下载器：本包**不支持 CGME 的下载器**——未附带 yt-dlp / ffmpeg / ffprobe，请使用本地音频文件。
 安装：用 r2modman / Thunderstore Mod Manager 安装本 zip，或直接解压到 ULTRAKILL 游戏根目录（运行文件位于 BepInEx/plugins/Claude-JukeboxLimbusCompany/）。
+前置：**greycsont-Fffffff**（ULTRAKILL 字体缺字回退）为必需的 Thunderstore 依赖，会随安装自动装好；缺少它部分字符可能无法显示。
 歌词：把 Track.srt 放在 Track.mp3 同目录。可选翻译：再放 Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt，两行歌词会在不同且不重叠的位置同时显示。
 歌曲：本 mod **不附带任何音频**，所有歌曲均读取自 ULTRAKILL 自带的电子血宫音乐文件夹（ULTRAKILL/Cybergrind/Music），把音频放进该文件夹即可。
 界面：默认英文。在 Jukebox 菜单（F4）用 LANGUAGE 切换中文，用 SETTINGS 精确填写位置、颜色、字号、动态与翻译。
@@ -200,14 +202,16 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - While a Jukebox song or a replaced level track is playing, one horizontal row is drawn: **cover / title / artist** (曲绘 / 曲名 / 作者). The row is **small by default**: the text size is the reference and the cover is only slightly larger than the text (about 1.3×), never the other way around. The title and artist use the **same font size**; the artist is the last item in the row.
 - The cover sits in a ULK-style bordered frame. No cover → the frame stays hollow (only the border is drawn).
 - Cover source, in order: an image with the audio file's base name (`.png` / `.jpg` / `.jpeg`), then `cover` / `folder` / `front` / `album` / `artwork` / `albumart` / `thumb` / `jacket` / `pak` images, then **any other image in the song folder**, then the embedded ID3 picture. Decode results (including failures) are written to the BepInEx log.
-- **Mouse adjustment**: while the F5 menu is open, **drag the in-game row** to move it and **scroll the mouse wheel** over it to change its size. There is no separate adjustment block or shortcut; changes save immediately.
+- If the file has no performer/composer tag, the artist is recovered from an `Artist - Title` file name or song folder name; the title is recovered the same way when the title tag is missing.
+- **Mouse adjustment**: while the F5 menu is open, **drag the small cover square** to move the row and **scroll the mouse wheel over that square** to change its size. The cover square is the handle; there is no separate adjustment block or shortcut, and changes save immediately.
 - The **F5 right-hand preview** uses a vertical layout instead: the selected track's cover is shown **above** its title and author. The in-game row stays horizontal (`cover / title / artist`).
 - Config keys: `now_playing_enabled`, `cover_pos_x/y` (row anchor: right edge X and vertical center Y, in % of the screen), `cover_size` (**text/row size**, 10–120, default 32; the cover is about 1.3× this); `title_pos_x/y` are kept for old configs but are no longer used.
 
 - 当 Jukebox 曲目或取代的关卡曲目正在播放时，会绘制**一整行**：**曲绘 / 曲名 / 作者**。整行默认**很小**：以文字大小为基准，曲绘只比文字略大（约 1.3 倍），而不是把文字放大到曲绘那么大。曲名与作者使用**相同字号**，作者排在整行最后。
 - 曲绘外面是 ULK 风格的描边框。没有曲绘时框体镂空（只画边框）。
 - 曲绘来源依次为：与音频同名的图片（`.png` / `.jpg` / `.jpeg`）、`cover` / `folder` / `front` / `album` / `artwork` / `albumart` / `thumb` / `jacket` / `pak` 图片、**歌曲文件夹内任意其他图片**、最后是音频内嵌的 ID3 图片。解码结果（含失败原因）会写入 BepInEx 日志。
-- **鼠标调整**：F5 菜单打开时，直接**拖动游戏内的曲绘行**移动，鼠标停在上面**滚轮**改变大小；没有独立的调整区块或快捷键，改动立即保存。
+- 如果文件没有作者/作曲标签，会从 `作者 - 曲名` 形式的文件名或歌曲文件夹名补全作者；标题标签缺失时也会按同样方式补全标题。
+- **鼠标调整**：F5 菜单打开时，**拖动曲绘小方框**即可移动整行，鼠标停在曲绘方框上**滚轮**改变大小；曲绘方框就是把手，没有独立的调整区块或快捷键，改动立即保存。
 - **F5 右侧预览**使用竖排布局：选中曲目的曲绘在**上**，曲名与作者在**下**；游戏内的曲绘行仍然是横排（`曲绘 / 曲名 / 作者`）。
 - 配置项：`now_playing_enabled`、`cover_pos_x/y`（整行锚点：右边缘 X、垂直中心 Y，屏幕百分比）、`cover_size`（**文字/整行大小**，10–120，默认 32，曲绘约为它的 1.3 倍）；`title_pos_x/y` 仅为兼容旧配置保留，已不再使用。
 

@@ -12,6 +12,7 @@
   loaders: []
   dependencies:
     - BepInEx-BepInExPack-5.4.2305
+    - greycsont-Fffffff-1.0.1
   incompatibilities: []
   optionalDependencies: []
   versionNumber:
