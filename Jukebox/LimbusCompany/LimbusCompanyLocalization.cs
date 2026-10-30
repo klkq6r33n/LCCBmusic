@@ -606,6 +606,23 @@ public class LimbusCompanyLocalization : MonoBehaviour
             return fallback;
 
         value = value.Trim();
+
+        // RGB triplet, e.g. "255,211,77".
+        if (value.Contains(","))
+        {
+            var parts = value.Split(',');
+            if (parts.Length >= 3 &&
+                int.TryParse(parts[0].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var r) &&
+                int.TryParse(parts[1].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var g) &&
+                int.TryParse(parts[2].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var b))
+            {
+                r = Mathf.Clamp(r, 0, 255);
+                g = Mathf.Clamp(g, 0, 255);
+                b = Mathf.Clamp(b, 0, 255);
+                return $"#{r:X2}{g:X2}{b:X2}";
+            }
+        }
+
         return value.StartsWith("#") ? value : "#" + value;
     }
 

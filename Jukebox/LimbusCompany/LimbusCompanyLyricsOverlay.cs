@@ -668,10 +668,28 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
     private static Color ParseColor(string html, Color fallback)
     {
-        if (!string.IsNullOrEmpty(html) && ColorUtility.TryParseHtmlString(html, out var c))
+        if (!string.IsNullOrEmpty(html))
         {
-            c.a = 1f;
-            return c;
+            html = html.Trim();
+
+            // RGB triplet, e.g. "255,211,77".
+            if (html.Contains(","))
+            {
+                var parts = html.Split(',');
+                if (parts.Length >= 3 &&
+                    int.TryParse(parts[0].Trim(), out var r) &&
+                    int.TryParse(parts[1].Trim(), out var g) &&
+                    int.TryParse(parts[2].Trim(), out var b))
+                {
+                    return new Color(Mathf.Clamp01(r / 255f), Mathf.Clamp01(g / 255f), Mathf.Clamp01(b / 255f), 1f);
+                }
+            }
+
+            if (ColorUtility.TryParseHtmlString(html, out var c))
+            {
+                c.a = 1f;
+                return c;
+            }
         }
 
         return fallback;
