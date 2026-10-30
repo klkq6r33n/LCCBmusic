@@ -114,7 +114,7 @@ While the Jukebox menu is open, the **SETTINGS / 设置** button (next to LANGUA
 - **LAYOUT / 位置**: X min/max %, Y min/max %, zoom %, angle min/max, delay (ms), random position / random angle
 - **TEXT / 文字**: text color, font size, spacing, stroke color/width, glow color/size/alpha, glow on/off, font family
 - **MOTION / 动态**: shake intensity/speed, fade speed, rise speed, **typewriter on/off + chars per second**, perspective + X/Y strength, lyrics on/off, replace original subtitles
-- **VISUAL / 频谱**: audio visualizer on/off, wave size, max extent (% of screen), position (BOTTOM / TOP / LEFT / RIGHT), bar density (8–128), gradient range (0–1), hue from (0–360), hue to (0–360), X mirror
+- **VISUAL / 频谱**: audio visualizer on/off, wave size, max extent (% of screen), position (BOTTOM / TOP / LEFT / RIGHT), bar density (8–128), gradient range (0–1), gradient mode (FIXED 2 / RANGE x~y / MULTI RGB), colour A RGB, colour B RGB, multi RGB (space separated), X mirror
 - RESET / CLOSE
 
 Every change is written to `lyric_config.json` immediately; the lyric style refreshes within a second. (`replace_original` takes full effect after re-entering Cyber Grind; font family needs a restart.)
@@ -124,7 +124,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - **LAYOUT / 位置**：X 最小/最大 %、Y 最小/最大 %、缩放 %、角度最小/最大、延迟（毫秒）、随机位置/随机旋转
 - **TEXT / 文字**：文字颜色、字号、字距、描边颜色/宽度、辉光颜色/大小/透明度、辉光开关、字体
 - **MOTION / 动态**：抖动强度/速度、淡入速度、上飘速度、**逐字显示开关 + 每秒字数**、透视与 X/Y 强度、歌词层开关、替换原版字幕
-- **VISUAL / 频谱**：音频可视化开关、波动大小、最大幅度（屏幕百分比）、显示位置（底部/顶部/左侧/右侧）、频谱密度（8–128）、渐变范围（0–1）、渐变起点 RGB（#RRGGBB）、渐变终点 RGB（#RRGGBB）、X 轴镜像
+- **VISUAL / 频谱**：音频可视化开关、波动大小、最大幅度（屏幕百分比）、显示位置（底部/顶部/左侧/右侧）、频谱密度（8–128）、渐变范围（0–1）、渐变模式（固定双色 / 区间渐变 / 多色渐变）、颜色 A RGB、颜色 B RGB、多色 RGB（空格分隔）、X 轴镜像
 - 重置 / 关闭
 
 每次改动都会立刻写回 `lyric_config.json`，歌词样式 1 秒内刷新。（`replace_original` 需要重新进入 Cyber Grind 才完全生效；字体需要重启。）
@@ -132,15 +132,25 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 ### Audio visualizer / 音频可视化
 
 - Reacts to the currently playing Jukebox track (`AudioSource.GetSpectrumData`), drawn as 48 bars behind the lyrics.
-- `visualizer_enabled` (default off), `visualizer_amplitude` (wave size multiplier, 0.1–5), `visualizer_size` (max extent as % of the screen dimension, 5–50, default 50), `visualizer_position` (`bottom` default / `top` / `left` / `right`), `visualizer_bars` (density, 8–128, default 48), `visualizer_gradient_range` (0 = solid start colour, 1 = full gradient spread), `visualizer_color_from` / `visualizer_color_to` (**RGB** colours, either `#RRGGBB` or `R,G,B` such as `255,211,77`; default `#d8a523` → `#00e5ff`), `visualizer_mirror_x` (X-axis mirror).
-- Color is **time-driven**: the gradient moves continuously over time and `gradient_range` is the spread across the row, so it flows with the song timeline. The **custom RGB range** is defined by `color_from` / `color_to`; colours interpolate between them and sweep back and forth. It does **not** react to audio intensity (bar height still follows the music). Every bar also has a **black outline**.
+- `visualizer_enabled` (default off), `visualizer_amplitude` (wave size multiplier, 0.1–5), `visualizer_size` (max extent as % of the screen dimension, 5–50, default 50), `visualizer_position` (`bottom` default / `top` / `left` / `right`), `visualizer_bars` (density, 8–128, default 48), `visualizer_gradient_range` (0 = solid start colour, 1 = full gradient spread), `visualizer_gradient_mode`, `visualizer_color_a`, `visualizer_color_b`, `visualizer_colors`, `visualizer_mirror_x` (X-axis mirror).
+- **Gradient modes** (`visualizer_gradient_mode`):
+  - `fixed2` — **fixed two colours**: a static gradient from colour A to colour B across the bar row.
+  - `range` (default) — **x~y**: the same two colours, but the blend sweeps back and forth over time.
+  - `multi` — **multiple RGB stops**: a static gradient through every colour in `visualizer_colors`.
+- **RGB input**: each colour is written as `R,G,B` (0–255), separated by `,` or `，`, e.g. `255,211,77`. `visualizer_colors` holds several such triplets separated by **spaces**, e.g. `255,0,0 0,255,0 0,0,255`. Defaults: A `216,165,35`, B `0,229,255`, multi `255,0,0 255,165,0 255,255,0 0,255,0 0,140,255 160,0,255`.
+- Colours never react to audio intensity (bar height still follows the music). Every bar also has a **black outline**.
 - The visualizer is drawn on its **own canvas below the original game UI**, so it never covers the vanilla HUD.
 - Bars are flush with the screen edge (no gap at TOP/BOTTOM/LEFT/RIGHT).
 - Max extent is capped at 50% of the screen height (width for LEFT/RIGHT), so the bars never cover more than half of the screen.
 
 - 跟随当前 Jukebox 曲目（`AudioSource.GetSpectrumData`），以 48 根柱状条绘制在歌词层下方。
-- `visualizer_enabled`（默认关）、`visualizer_amplitude`（波动大小倍数，0.1–5）、`visualizer_size`（最大幅度占屏幕对应方向的百分比，5–50，默认 50）、`visualizer_position`（默认 `bottom`，可选 `top`/`left`/`right`）、`visualizer_bars`（频谱密度，8–128，默认 48）、`visualizer_gradient_range`（0=起点单色，1=整排铺满渐变）、`visualizer_color_from` / `visualizer_color_to`（**RGB** 颜色，支持 `#RRGGBB` 或 `R,G,B`（如 `255,211,77`），默认 `#d8a523` → `#00e5ff`）、`visualizer_mirror_x`（X 轴镜像）。
-- 颜色**按时间流动**：渐变随时间持续移动，`gradient_range` 决定整排柱子的渐变跨度，所以渐变跟着歌曲时间轴移动；**自定义 RGB 渐变范围**由 `color_from` / `color_to` 指定，颜色在两者之间差值渐变并来回扫动。**不随音频强度变化**（柱高仍然跟随音乐）。每根柱状条都带**黑色描边**。
+- `visualizer_enabled`（默认关）、`visualizer_amplitude`（波动大小倍数，0.1–5）、`visualizer_size`（最大幅度占屏幕对应方向的百分比，5–50，默认 50）、`visualizer_position`（默认 `bottom`，可选 `top`/`left`/`right`）、`visualizer_bars`（频谱密度，8–128，默认 48）、`visualizer_gradient_range`（0=起点单色，1=整排铺满渐变）、`visualizer_gradient_mode`、`visualizer_color_a`、`visualizer_color_b`、`visualizer_colors`、`visualizer_mirror_x`（X 轴镜像）。
+- **三种渐变模式**（`visualizer_gradient_mode`）：
+  - `fixed2` —— **固定双色**：颜色 A → 颜色 B 的静态渐变，不随时间移动；
+  - `range`（默认）—— **x~y 区间渐变**：同样两种颜色，但混合比例随时间来回扫动；
+  - `multi` —— **多色渐变**：按 `visualizer_colors` 里的多个 RGB 色标依次渐变。
+- **RGB 输入格式**：单个颜色写作 `R,G,B`（0–255），用 `,` 或 `，` 分隔，如 `255,211,77`；`visualizer_colors` 里多个颜色用**空格**分隔，如 `255,0,0 0,255,0 0,0,255`。默认：A `216,165,35`、B `0,229,255`、多色 `255,0,0 255,165,0 255,255,0 0,255,0 0,140,255 160,0,255`。
+- 颜色**不随音频强度变化**（柱高仍然跟随音乐）。每根柱状条都带**黑色描边**。
 - 波形图放在**独立画布、排序低于游戏原版 UI**，不会盖住原版界面。
 - 柱状条紧贴屏幕边缘（TOP/BOTTOM/LEFT/RIGHT 均无空隙）。
 - 最大幅度限制为屏幕高度（左右时为宽度）的 50%，不会超过屏幕一半。

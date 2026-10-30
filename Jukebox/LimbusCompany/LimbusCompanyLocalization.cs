@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using Jukebox.UI.Windows;
 using JukeboxCore.Logging;
@@ -339,8 +340,11 @@ public class LimbusCompanyLocalization : MonoBehaviour
             AddValueRow(rect, ref y, step, L("Position", "显示位置"), VisualizerPositionText(S.VisualizerPosition), () => S.VisualizerPosition = NextVisualizerPosition(S.VisualizerPosition));
             AddInputRow(rect, ref y, step, L("Bar density (8-128)", "频谱密度 (8-128)"), Mathf.RoundToInt(S.VisualizerBars).ToString(CultureInfo.InvariantCulture), v => S.VisualizerBars = Mathf.Clamp(Mathf.RoundToInt(v), 8, 128));
             AddInputRow(rect, ref y, step, L("Gradient range (0-1)", "渐变范围 (0-1)"), F(S.VisualizerGradientRange), v => S.VisualizerGradientRange = Mathf.Clamp(v, 0f, 1f));
-            AddTextRow(rect, ref y, step, L("Gradient start RGB", "渐变起点 RGB"), S.VisualizerColorFrom, v => S.VisualizerColorFrom = NormalizeColor(v, S.VisualizerColorFrom));
-            AddTextRow(rect, ref y, step, L("Gradient end RGB", "渐变终点 RGB"), S.VisualizerColorTo, v => S.VisualizerColorTo = NormalizeColor(v, S.VisualizerColorTo));
+            AddValueRow(rect, ref y, step, L("Gradient mode", "渐变模式"), GradientModeText(S.VisualizerGradientMode),
+                () => S.VisualizerGradientMode = NextGradientMode(S.VisualizerGradientMode));
+            AddTextRow(rect, ref y, step, L("Color A RGB", "颜色 A RGB"), S.VisualizerColorA, v => S.VisualizerColorA = NormalizeRgbText(v, S.VisualizerColorA));
+            AddTextRow(rect, ref y, step, L("Color B RGB", "颜色 B RGB"), S.VisualizerColorB, v => S.VisualizerColorB = NormalizeRgbText(v, S.VisualizerColorB));
+            AddTextRow(rect, ref y, step, L("Multi RGB (space separated)", "多色 RGB（空格分隔）"), S.VisualizerColors, v => S.VisualizerColors = NormalizeRgbList(v, S.VisualizerColors));
             AddToggleRow(rect, ref y, step, L("X mirror", "X 轴镜像"), () => S.VisualizerMirrorX, () => S.VisualizerMirrorX = !S.VisualizerMirrorX);
 
             var info = CreateLabelObject(rect, "VisInfo",
@@ -488,6 +492,66 @@ public class LimbusCompanyLocalization : MonoBehaviour
             default:
                 return L("RANDOM", "全屏随机");
         }
+    }
+
+    private static readonly string[] GradientModes = { "range", "fixed2", "multi" };
+
+    private static string NextGradientMode(string mode)
+    {
+        var index = Array.IndexOf(GradientModes, LimbusCompanyLyricsSettings.NormalizeGradientMode(mode));
+        if (index < 0)
+            index = 0;
+        return GradientModes[(index + 1) % GradientModes.Length];
+    }
+
+    private static string GradientModeText(string mode)
+    {
+        switch (LimbusCompanyLyricsSettings.NormalizeGradientMode(mode))
+        {
+            case "fixed2":
+                return L("FIXED 2", "固定双色");
+            case "multi":
+                return L("MULTI RGB", "多色渐变");
+            default:
+                return L("RANGE x~y", "区间渐变");
+        }
+    }
+
+    private static string NormalizeRgbText(string value, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return fallback;
+
+        var parts = value.Split(',');
+        if (parts.Length >= 3 &&
+            int.TryParse(parts[0].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var r) &&
+            int.TryParse(parts[1].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var g) &&
+            int.TryParse(parts[2].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var b))
+        {
+            r = Mathf.Clamp(r, 0, 255);
+            g = Mathf.Clamp(g, 0, 255);
+            b = Mathf.Clamp(b, 0, 255);
+            return $"{r},{g},{b}";
+        }
+
+        return fallback;
+    }
+
+    private static string NormalizeRgbList(string value, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return fallback;
+
+        var tokens = value.Split(new[] { ' ', '\t', ';', '|' }, StringSplitOptions.RemoveEmptyEntries);
+        var kept = new List<string>();
+        foreach (var token in tokens)
+        {
+            var normalized = NormalizeRgbText(token, null);
+            if (!string.IsNullOrEmpty(normalized))
+                kept.Add(normalized);
+        }
+
+        return kept.Count > 0 ? string.Join(" ", kept) : fallback;
     }
 
     private static readonly string[] VisualizerPositions = { "bottom", "top", "left", "right" };
@@ -702,8 +766,10 @@ public class LimbusCompanyLocalization : MonoBehaviour
         s.VisualizerPosition = "bottom";
         s.VisualizerBars = 48;
         s.VisualizerGradientRange = 1f;
-        s.VisualizerColorFrom = "#d8a523";
-        s.VisualizerColorTo = "#00e5ff";
+        s.VisualizerGradientMode = "range";
+        s.VisualizerColorA = "216,165,35";
+        s.VisualizerColorB = "0,229,255";
+        s.VisualizerColors = "255,0,0 255,165,0 255,255,0 0,255,0 0,140,255 160,0,255";
         s.VisualizerMirrorX = false;
     }
 

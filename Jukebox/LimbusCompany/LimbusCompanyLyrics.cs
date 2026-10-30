@@ -122,8 +122,10 @@ public static class LimbusCompanyLyrics
             settings["visualizer_position"] = s.VisualizerPosition;
             settings["visualizer_bars"] = s.VisualizerBars;
             settings["visualizer_gradient_range"] = s.VisualizerGradientRange;
-            settings["visualizer_color_from"] = s.VisualizerColorFrom;
-            settings["visualizer_color_to"] = s.VisualizerColorTo;
+            settings["visualizer_gradient_mode"] = s.VisualizerGradientMode;
+            settings["visualizer_color_a"] = s.VisualizerColorA;
+            settings["visualizer_color_b"] = s.VisualizerColorB;
+            settings["visualizer_colors"] = s.VisualizerColors;
             settings["visualizer_mirror_x"] = s.VisualizerMirrorX;
             settings["perspective_enabled"] = s.PerspectiveEnabled;
             settings["persp_x_strength"] = s.PerspXStrength;

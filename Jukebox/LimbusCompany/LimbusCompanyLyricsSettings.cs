@@ -83,11 +83,17 @@ public class LimbusCompanyLyricsSettings
     /// <summary>渐变范围（0=整排同色，1=整排铺满色相段）；色相随时间流动，不随音量变化。</summary>
     public float VisualizerGradientRange = 1f;
 
-    /// <summary>自定义渐变起点颜色（RGB，十六进制 #RRGGBB）。</summary>
-    public string VisualizerColorFrom = "#d8a523";
+    /// <summary>fixed2（固定双色）/ range（x~y 动态）/ multi（多 RGB 色标）。</summary>
+    public string VisualizerGradientMode = "range";
 
-    /// <summary>自定义渐变终点颜色（RGB，十六进制 #RRGGBB）。</summary>
-    public string VisualizerColorTo = "#00e5ff";
+    /// <summary>起点颜色，RGB 文本，例如 "216,165,35"。</summary>
+    public string VisualizerColorA = "216,165,35";
+
+    /// <summary>终点颜色，RGB 文本，例如 "0,229,255"。</summary>
+    public string VisualizerColorB = "0,229,255";
+
+    /// <summary>多色渐变色标，空格分隔多个 RGB，例如 "255,0,0 0,255,0 0,0,255"。</summary>
+    public string VisualizerColors = "255,0,0 255,165,0 255,255,0 0,255,0 0,140,255 160,0,255";
 
     /// <summary>X 轴镜像（左右对称）。</summary>
     public bool VisualizerMirrorX = false;
@@ -206,8 +212,16 @@ public class LimbusCompanyLyricsSettings
         var legacyGradient = GetBool(s, "visualizer_gradient", true);
         VisualizerGradientRange = Mathf.Clamp(
             GetFloat(s, "visualizer_gradient_range", legacyGradient ? VisualizerGradientRange : 0f), 0f, 1f);
-        VisualizerColorFrom = GetString(s, "visualizer_color_from", VisualizerColorFrom);
-        VisualizerColorTo = GetString(s, "visualizer_color_to", VisualizerColorTo);
+        VisualizerGradientMode = NormalizeGradientMode(GetString(s, "visualizer_gradient_mode", VisualizerGradientMode));
+        VisualizerColorA = GetString(s, "visualizer_color_a", VisualizerColorA);
+        VisualizerColorB = GetString(s, "visualizer_color_b", VisualizerColorB);
+        VisualizerColors = GetString(s, "visualizer_colors", VisualizerColors);
+
+        // 兼容旧版十六进制颜色字段。
+        if (s["visualizer_color_a"] == null)
+            VisualizerColorA = LegacyHexToRgb(GetString(s, "visualizer_color_from", null), VisualizerColorA);
+        if (s["visualizer_color_b"] == null)
+            VisualizerColorB = LegacyHexToRgb(GetString(s, "visualizer_color_to", null), VisualizerColorB);
         VisualizerMirrorX = GetBool(s, "visualizer_mirror_x", VisualizerMirrorX);
 
         Enabled = GetBool(s, "enabled", Enabled);
@@ -219,6 +233,33 @@ public class LimbusCompanyLyricsSettings
         TranslationFontSize = Mathf.Clamp(GetFloat(s, "translation_font_size", TranslationFontSize), 0f, 400f);
         TranslationColor = GetString(s, "translation_color", TranslationColor);
         Language = NormalizeLanguage(GetString(s, "language", Language));
+    }
+
+    public static string NormalizeGradientMode(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return "range";
+
+        switch (value.Trim().ToLowerInvariant())
+        {
+            case "fixed2":
+            case "fixed":
+            case "two":
+                return "fixed2";
+            case "multi":
+            case "multiple":
+                return "multi";
+            default:
+                return "range";
+        }
+    }
+
+    private static string LegacyHexToRgb(string hex, string fallback)
+    {
+        if (string.IsNullOrEmpty(hex) || !ColorUtility.TryParseHtmlString(hex, out var c))
+            return fallback;
+
+        return $"{Mathf.RoundToInt(c.r * 255f)},{Mathf.RoundToInt(c.g * 255f)},{Mathf.RoundToInt(c.b * 255f)}";
     }
 
     public static string NormalizeAnchor(string value)

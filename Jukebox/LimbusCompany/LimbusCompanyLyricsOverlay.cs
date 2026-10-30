@@ -431,25 +431,49 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
             var bar = _visBars[i];
             var range = Mathf.Clamp(s.VisualizerGradientRange, 0f, 1f);
-            // 自定义渐变色的两个 RGB 端点（#RRGGBB）。
-            var fromColor = ParseColor(s.VisualizerColorFrom, new Color(0.847f, 0.647f, 0.137f));
-            var toColor = ParseColor(s.VisualizerColorTo, new Color(0f, 0.898f, 1f));
+            var mode = LimbusCompanyLyricsSettings.NormalizeGradientMode(s.VisualizerGradientMode);
+            var colorA = ParseColor(s.VisualizerColorA, new Color(0.847f, 0.647f, 0.137f));
+            var colorB = ParseColor(s.VisualizerColorB, new Color(0f, 0.898f, 1f));
+            var spread = count > 1 ? (float)band / (count - 1) : 0f;
 
-            if (range > 0.001f)
+            if (range <= 0.001f)
             {
-                // 颜色只随时间流动，与音量无关；在用户指定的两个 RGB 颜色间来回渐变。
-                var spread = count > 1 ? (float)band / (count - 1) : 0f;
-                var phase = Mathf.Repeat(Time.unscaledTime * 0.08f + spread * range, 1f);
-                var wave = phase <= 0.5f ? phase * 2f : (1f - phase) * 2f;
+                colorA.a = 0.9f;
+                bar.color = colorA;
+            }
+            else if (mode == "multi")
+            {
+                // 多个 RGB 色标，空格分隔；整排按顺序经过这些颜色。
+                var stops = ParseColorList(s.VisualizerColors);
+                Color custom;
+                if (stops.Count == 0)
+                    custom = colorA;
+                else if (stops.Count == 1)
+                    custom = stops[0];
+                else
+                    custom = SampleColorStops(stops, Mathf.Clamp01(spread * range));
 
-                var custom = Color.Lerp(fromColor, toColor, wave);
                 custom.a = 0.9f;
                 bar.color = custom;
             }
             else
             {
-                fromColor.a = 0.9f;
-                bar.color = fromColor;
+                float t;
+                if (mode == "fixed2")
+                {
+                    // 固定双色：静态渐变，不随时间移动。
+                    t = Mathf.Clamp01(spread * range);
+                }
+                else
+                {
+                    // x~y 动态：在两个颜色之间随时间来回渐变。
+                    var phase = Mathf.Repeat(Time.unscaledTime * 0.08f + spread * range, 1f);
+                    t = phase <= 0.5f ? phase * 2f : (1f - phase) * 2f;
+                }
+
+                var custom = Color.Lerp(colorA, colorB, t);
+                custom.a = 0.9f;
+                bar.color = custom;
             }
 
             var rect = bar.rectTransform;
@@ -664,6 +688,43 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             LimbusCompanyLyrics.Log?.LogInfo($"歌词字符已归一化: \"{text}\" -> \"{result}\"");
 
         return result;
+    }
+
+    private static List<Color> ParseColorList(string text)
+    {
+        var colors = new List<Color>();
+        if (string.IsNullOrEmpty(text))
+            return colors;
+
+        var tokens = text.Split(new[] { ' ', '\t', ';', '|' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var token in tokens)
+        {
+            var parts = token.Split(',');
+            if (parts.Length >= 3 &&
+                int.TryParse(parts[0].Trim(), out var r) &&
+                int.TryParse(parts[1].Trim(), out var g) &&
+                int.TryParse(parts[2].Trim(), out var b))
+            {
+                colors.Add(new Color(Mathf.Clamp01(r / 255f), Mathf.Clamp01(g / 255f), Mathf.Clamp01(b / 255f), 1f));
+            }
+            else if (ColorUtility.TryParseHtmlString(token, out var c))
+            {
+                c.a = 1f;
+                colors.Add(c);
+            }
+        }
+
+        return colors;
+    }
+
+    private static Color SampleColorStops(List<Color> stops, float t)
+    {
+        if (stops.Count == 1)
+            return stops[0];
+
+        t = Mathf.Clamp01(t) * (stops.Count - 1);
+        var index = Mathf.Min(Mathf.FloorToInt(t), stops.Count - 2);
+        return Color.Lerp(stops[index], stops[index + 1], t - index);
     }
 
     private static Color ParseColor(string html, Color fallback)
