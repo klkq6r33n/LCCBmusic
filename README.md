@@ -32,9 +32,9 @@ This repository is **source only**. Release packages (DLLs, `Assets/`, ffmpeg/yt
 - Typewriter, fade, shake, rise, perspective, random rotation, custom colors/stroke/glow.
 - Audio visualizer: time-driven hue gradient, bar density, size, position (bottom/top/left/right), X mirror, black outline, own canvas below the game UI.
 - Level BGM replacement (standalone **F5** panel, independent of the Cyber Grind menu): pick any `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` to replace the current level music; restoring resumes the level BGM from the exact paused position. The visualizer follows both the replacement and the level music.
-- **F5 mouse menu** (levels only; the Cyber Grind keeps **F4** and ignores F5): MUSIC / SETTINGS / DISPLAY pages with the level BGM browser, every lyric setting, 中文 / ENGLISH switching, lyrics and now-playing toggles, cover/title position and key rebinding. Opening it pauses the game and unlocks the cursor.
+- **F5 mouse menu** (levels only; the Cyber Grind keeps **F4** and ignores F5): MUSIC / SETTINGS / DISPLAY pages with the level BGM browser, every lyric setting, 中文 / ENGLISH switching, lyrics and now-playing toggles, mouse drag/resize for the now-playing row, and key rebinding. Opening it pauses the game and unlocks the cursor.
 - Keyboard shortcuts remain available: **L** lyrics, **N** now-playing, **G** language, **K** rebind (1–8), **P** position, **Esc** close.
-- Now-playing frame: ULK-style bordered cover frame in the top-right (cover from ID3 or a same-name / `cover` / `folder` image), hollow when the track has no cover, with the title and artist underneath; position and size are editable.
+- Now-playing **row**: cover / title / artist drawn on one line (cover first, artist last). The cover and text block share the same height, the title and artist use the same font size, and the cover keeps a ULK-style border (hollow when the track has no cover). Cover from ID3 or a same-name / `cover` / `folder` image. Drag the whole row with the mouse and scroll to resize (F5 → DISPLAY → ADJUST ROW WITH MOUSE).
 - In-menu LANGUAGE (English default / 中文) and SETTINGS panel with numeric inputs.
 - NFKC text normalization (fixes compatibility ideographs such as U+F9EC) and diagnostic logging.
 
@@ -81,6 +81,10 @@ Downloader dependency is not declared. See `third_party/README.md`.
 
 ## Lyrics / 歌词
 
+**Songs:** this mod bundles **no audio**. All tracks are read from ULTRAKILL's built-in Cyber Grind music folder, `ULTRAKILL/Cybergrind/Music` (the F5 MUSIC page lists that folder recursively).
+
+**歌曲：** 本 mod **不附带任何音频**，所有曲目都读取自 ULTRAKILL 自带的电子血宫音乐文件夹 `ULTRAKILL/Cybergrind/Music`（F5 的 MUSIC 页递归列出该文件夹）。
+
 Put a `.srt` next to the audio file, same base name:
 
 ```
@@ -94,7 +98,7 @@ Optional translation sidecar: `Track.zh.srt`, `Track.cn.srt`, `Track.chs.srt`, `
 
 Open the Jukebox menu (F4) in Cyber Grind: **LANGUAGE** switches the mod UI (English default, 中文 second); **SETTINGS** opens LAYOUT / TEXT / MOTION / TRANS / VISUAL pages. All values are numeric/text inputs and are saved to `BepInEx/config/LimbusCompany/lyric_config.json` immediately.
 
-Press **F5** in any level for the mouse menu (F4 is the Cyber Grind menu only; F5 is ignored there). MUSIC selects and replaces/restores the level BGM; SETTINGS mirrors the LAYOUT / TEXT / MOTION / TRANS / VISUAL pages; DISPLAY switches 中文 / ENGLISH, toggles lyrics and the now-playing frame, moves/resizes the cover and title, and rebinds keys. Keyboard shortcuts: `[` / `]` or arrows change track, **Enter** replace, **Backspace** restore, **L** lyrics, **N** cover, **G** language, **K** rebind (1–8), **P** position, **Esc** close.
+Press **F5** in any level for the mouse menu (F4 is the Cyber Grind menu only; F5 is ignored there). MUSIC selects and replaces/restores the level BGM; SETTINGS mirrors the LAYOUT / TEXT / MOTION / TRANS / VISUAL pages; DISPLAY switches 中文 / ENGLISH, toggles lyrics and the now-playing row, opens mouse adjustment (drag the row, wheel to resize), and rebinds keys. Keyboard shortcuts: `[` / `]` or arrows change track, **Enter** replace, **Backspace** restore, **L** lyrics, **N** row, **G** language, **K** rebind (1–8), **P** position, **Esc** close.
 
 ## Known limitations / 已知限制
 

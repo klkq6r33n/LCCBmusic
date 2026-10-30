@@ -148,16 +148,22 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private const string BgmPauseStateKey = "lccb_f5_menu";
 
     private GameObject _npRoot;
+    private Image _npRowImage;
     private Image _npFrameImage;
     private Image _npCoverImage;
     private TextMeshProUGUI _npTitle;
+    private TextMeshProUGUI _npArtist;
     private Sprite _npSprite;
     private Texture2D _npSpriteTexture;
     private bool _npSpriteOwned;
     private string _npSpritePath;
     private string _bgmCurrentPath;
-    private string _npLastText;
-    private int _npAdjustTarget; // 0 none, 1 cover, 2 title
+    private string _npLastTitleText;
+    private string _npLastArtistText;
+    private float _npLastFontSize = -1f;
+    private int _npAdjustTarget; // 0 none, 1 row position/size
+    private bool _npMouseAdjust;
+    private GameObject _npAdjustHint;
 
     private static readonly Key[] DigitKeys =
     {
@@ -721,23 +727,25 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         CreateUiButton(parent, (IsZh ? "曲绘 / 歌名：" : "NOW PLAYING: ") + (npOn ? "ON" : "OFF"),
             new Vector2(-330f, 50f), new Vector2(240f, 40f), ToggleNowPlaying, 16f);
 
-        CreateUiLabel(parent, IsZh ? "曲绘 / 歌名位置" : "COVER / TITLE POSITION",
-            new Vector2(40f, 260f), new Vector2(300f, 30f), 16f, TextAlignmentOptions.Center);
-        CreateUiButton(parent, IsZh ? "曲绘" : "COVER", new Vector2(-20f, 212f), new Vector2(130f, 38f),
-            () => { _npAdjustTarget = 1; UpdateBgmPanelStatus(); }, 15f,
-            _npAdjustTarget == 1 ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
-        CreateUiButton(parent, IsZh ? "歌名" : "TITLE", new Vector2(120f, 212f), new Vector2(130f, 38f),
-            () => { _npAdjustTarget = 2; UpdateBgmPanelStatus(); }, 15f,
-            _npAdjustTarget == 2 ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
+        CreateUiLabel(parent, IsZh ? "曲绘行（鼠标拖动 / 滚轮缩放）" : "NOW-PLAYING ROW (drag / scroll)",
+            new Vector2(40f, 260f), new Vector2(380f, 30f), 16f, TextAlignmentOptions.Center);
+        CreateUiButton(parent,
+            IsZh ? "用鼠标调整曲绘行" : "ADJUST ROW WITH MOUSE",
+            new Vector2(40f, 218f), new Vector2(380f, 44f), EnterNowPlayingMouseAdjust, 16f);
+        CreateUiLabel(parent,
+            IsZh
+                ? "点击上面的按钮后：拖动整行移动，滚轮缩放，Esc 完成。"
+                : "After clicking: drag the row to move, scroll to resize, Esc to finish.",
+            new Vector2(40f, 180f), new Vector2(380f, 40f), 12.5f, TextAlignmentOptions.Center, true);
 
-        CreateUiButton(parent, "^", new Vector2(50f, 165f), new Vector2(56f, 38f), () => NudgeNowPlaying(0, 1), 18f);
-        CreateUiButton(parent, "<", new Vector2(-12f, 120f), new Vector2(56f, 38f), () => NudgeNowPlaying(-1, 0), 18f);
-        CreateUiButton(parent, ">", new Vector2(112f, 120f), new Vector2(56f, 38f), () => NudgeNowPlaying(1, 0), 18f);
-        CreateUiButton(parent, "v", new Vector2(50f, 75f), new Vector2(56f, 38f), () => NudgeNowPlaying(0, -1), 18f);
+        CreateUiButton(parent, "^", new Vector2(50f, 140f), new Vector2(56f, 36f), () => NudgeNowPlaying(0, 1), 18f);
+        CreateUiButton(parent, "<", new Vector2(-12f, 98f), new Vector2(56f, 36f), () => NudgeNowPlaying(-1, 0), 18f);
+        CreateUiButton(parent, ">", new Vector2(112f, 98f), new Vector2(56f, 36f), () => NudgeNowPlaying(1, 0), 18f);
+        CreateUiButton(parent, "v", new Vector2(50f, 56f), new Vector2(56f, 36f), () => NudgeNowPlaying(0, -1), 18f);
 
-        CreateUiButton(parent, "-", new Vector2(-12f, 22f), new Vector2(56f, 38f), () => ResizeNowPlayingCover(-5f), 18f);
-        CreateUiButton(parent, "+", new Vector2(112f, 22f), new Vector2(56f, 38f), () => ResizeNowPlayingCover(5f), 18f);
-        CreateUiButton(parent, IsZh ? "重置位置" : "RESET POSITION", new Vector2(50f, -30f), new Vector2(220f, 36f),
+        CreateUiButton(parent, "-", new Vector2(-12f, 8f), new Vector2(56f, 36f), () => ResizeNowPlayingCover(-5f), 18f);
+        CreateUiButton(parent, "+", new Vector2(112f, 8f), new Vector2(56f, 36f), () => ResizeNowPlayingCover(5f), 18f);
+        CreateUiButton(parent, IsZh ? "重置位置" : "RESET POSITION", new Vector2(50f, -44f), new Vector2(220f, 36f),
             ResetNowPlayingPosition, 15f);
 
         CreateUiLabel(parent, IsZh ? "快捷键绑定" : "KEY BINDINGS", new Vector2(360f, 260f),
@@ -793,23 +801,120 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         RebuildBgmPanelUi();
     }
 
+    internal RectTransform NowPlayingCanvasRect =>
+        _canvas != null ? _canvas.GetComponent<RectTransform>() : null;
+
+    internal Vector2 GetNowPlayingAnchorPercent()
+    {
+        var s = LimbusCompanyLyrics.Settings;
+        return new Vector2(s?.CoverPosX ?? 84f, s?.CoverPosY ?? 18f);
+    }
+
+    internal void SetNowPlayingAnchorPercent(float x, float y, bool save)
+    {
+        var s = LimbusCompanyLyrics.Settings;
+        if (s == null)
+            return;
+
+        s.CoverPosX = Mathf.Clamp(x, 0f, 100f);
+        s.CoverPosY = Mathf.Clamp(y, 0f, 100f);
+
+        if (save)
+        {
+            LimbusCompanyLyrics.SaveAllSettings();
+            UpdateBgmPanelStatus();
+        }
+    }
+
+    internal void SaveNowPlayingSettings()
+    {
+        LimbusCompanyLyrics.SaveAllSettings();
+        UpdateBgmPanelStatus();
+    }
+
+    internal void ScrollNowPlayingSize(float scroll)
+    {
+        var s = LimbusCompanyLyrics.Settings;
+        if (s == null || Mathf.Approximately(scroll, 0f))
+            return;
+
+        s.CoverSize = Mathf.Clamp(s.CoverSize + (scroll > 0f ? 10f : -10f), 80f, 600f);
+        LimbusCompanyLyrics.SaveAllSettings();
+        UpdateBgmPanelStatus();
+    }
+
+    private void EnterNowPlayingMouseAdjust()
+    {
+        if (!_bgmPanelOpen || _bgmPanel == null)
+            return;
+
+        _npMouseAdjust = true;
+        _bgmPanel.SetActive(false);
+        BuildNowPlayingAdjustHint();
+    }
+
+    private void BuildNowPlayingAdjustHint()
+    {
+        if (_npAdjustHint != null || _canvas == null)
+            return;
+
+        var canvasRect = _canvas.GetComponent<RectTransform>();
+        var rect = CreateUiObject("NowPlayingAdjustHint", canvasRect, new Vector2(-700f, 480f),
+            new Vector2(520f, 82f));
+
+        var image = rect.gameObject.AddComponent<Image>();
+        image.color = new Color(0.02f, 0.02f, 0.03f, 0.95f);
+        image.raycastTarget = true;
+
+        var outline = rect.gameObject.AddComponent<Outline>();
+        outline.effectColor = new Color(0.776f, 0.635f, 0.29f, 1f);
+        outline.effectDistance = new Vector2(1.5f, -1.5f);
+
+        CreateUiLabel(rect,
+            IsZh
+                ? "拖动曲绘行移动 · 滚轮缩放 · Esc 完成"
+                : "Drag the cover row · scroll to resize · Esc to finish",
+            new Vector2(-55f, 16f), new Vector2(380f, 30f), 14f, TextAlignmentOptions.Center);
+        CreateUiButton(rect, IsZh ? "完成" : "DONE", new Vector2(200f, -17f), new Vector2(110f, 30f),
+            ExitNowPlayingMouseAdjust, 14f);
+
+        _npAdjustHint = rect.gameObject;
+    }
+
+    private void CleanupNowPlayingAdjustHint()
+    {
+        if (_npAdjustHint == null)
+            return;
+
+        _npAdjustHint.SetActive(false);
+        Destroy(_npAdjustHint);
+        _npAdjustHint = null;
+    }
+
+    private void ExitNowPlayingMouseAdjust()
+    {
+        if (!_npMouseAdjust)
+            return;
+
+        _npMouseAdjust = false;
+        CleanupNowPlayingAdjustHint();
+        LimbusCompanyLyrics.SaveAllSettings();
+
+        if (_bgmPanelOpen && _bgmPanel != null)
+        {
+            _bgmPanel.SetActive(true);
+            RebuildBgmPanelUi();
+        }
+    }
+
     private void NudgeNowPlaying(int dx, int dy)
     {
         var s = LimbusCompanyLyrics.Settings;
         if (s == null)
             return;
 
-        if (_npAdjustTarget == 2)
-        {
-            s.TitlePosX = Mathf.Clamp(s.TitlePosX + dx, 0f, 100f);
-            s.TitlePosY = Mathf.Clamp(s.TitlePosY - dy, 0f, 100f);
-        }
-        else
-        {
-            s.CoverPosX = Mathf.Clamp(s.CoverPosX + dx, 0f, 100f);
-            s.CoverPosY = Mathf.Clamp(s.CoverPosY - dy, 0f, 100f);
-        }
-
+        s.CoverPosX = Mathf.Clamp(s.CoverPosX + dx, 0f, 100f);
+        s.CoverPosY = Mathf.Clamp(s.CoverPosY - dy, 0f, 100f);
         LimbusCompanyLyrics.SaveAllSettings();
         UpdateBgmPanelStatus();
     }
@@ -833,8 +938,6 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         s.CoverPosX = 84f;
         s.CoverPosY = 18f;
-        s.TitlePosX = 84f;
-        s.TitlePosY = 38f;
         s.CoverSize = 220f;
         LimbusCompanyLyrics.SaveAllSettings();
         RebuildBgmPanelUi();
@@ -885,6 +988,16 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             return;
 
         var settings = LimbusCompanyLyrics.Settings;
+
+        // 鼠标调整模式：只处理完成/关闭。
+        if (_npMouseAdjust)
+        {
+            if (keyboard.escapeKey.wasPressedThisFrame)
+                ExitNowPlayingMouseAdjust();
+            else if (Pressed(keyboard, ParseKey(settings?.BgmKeyToggle, Key.F5)))
+                CloseBgmPanel();
+            return;
+        }
 
         // 改键流程优先，避免按键被旧功能抢走。
         if (_bgmRebindStage == 2)
@@ -1224,13 +1337,6 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             return;
         }
 
-        if (keyboard.tKey.wasPressedThisFrame)
-        {
-            _npAdjustTarget = _npAdjustTarget == 1 ? 2 : 1;
-            RefreshBgmUiForChange();
-            return;
-        }
-
         var step = keyboard.leftShiftKey.isPressed ? 0.25f : 1f;
         var dx = 0f;
         var dy = 0f;
@@ -1246,22 +1352,13 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         if (settings != null && (dx != 0f || dy != 0f))
         {
-            if (_npAdjustTarget == 1)
-            {
-                settings.CoverPosX = Mathf.Clamp(settings.CoverPosX + dx, 0f, 100f);
-                settings.CoverPosY = Mathf.Clamp(settings.CoverPosY - dy, 0f, 100f);
-            }
-            else
-            {
-                settings.TitlePosX = Mathf.Clamp(settings.TitlePosX + dx, 0f, 100f);
-                settings.TitlePosY = Mathf.Clamp(settings.TitlePosY - dy, 0f, 100f);
-            }
-
+            settings.CoverPosX = Mathf.Clamp(settings.CoverPosX + dx, 0f, 100f);
+            settings.CoverPosY = Mathf.Clamp(settings.CoverPosY - dy, 0f, 100f);
             LimbusCompanyLyrics.SaveAllSettings();
-            RefreshBgmUiForChange();
+            UpdateBgmPanelStatus();
         }
 
-        if (settings == null || _npAdjustTarget != 1)
+        if (settings == null)
             return;
 
         var resize = 0f;
@@ -1274,7 +1371,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         {
             settings.CoverSize = Mathf.Clamp(settings.CoverSize + resize, 80f, 600f);
             LimbusCompanyLyrics.SaveAllSettings();
-            RefreshBgmUiForChange();
+            UpdateBgmPanelStatus();
         }
     }
 
@@ -1316,10 +1413,12 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private void CloseBgmPanel()
     {
         // 关闭面板时退出改键/调整模式，避免下次打开时状态残留。
-        var wasEditing = _bgmRebindStage != 0 || _npAdjustTarget != 0;
+        var wasEditing = _bgmRebindStage != 0 || _npAdjustTarget != 0 || _npMouseAdjust;
         _bgmPanelOpen = false;
         _bgmRebindStage = 0;
         _npAdjustTarget = 0;
+        _npMouseAdjust = false;
+        CleanupNowPlayingAdjustHint();
 
         _settingsUi?.CloseStandalone();
 
@@ -1441,10 +1540,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         }
         else if (_npAdjustTarget != 0)
         {
-            text = (zh ? "调整 " : "Adjusting ") + (zh ? (_npAdjustTarget == 1 ? "曲绘" : "歌名") : (_npAdjustTarget == 1 ? "cover" : "title"))
-                   + (zh ? "：方向键移动，Shift 微调，[-]/[+] 缩放，T 切换，P/Esc 完成" : ": arrows move, Shift = fine, [-]/[+] resize, T switch, P/Esc done")
-                   + $"   cover=({s?.CoverPosX:F0},{s?.CoverPosY:F0}) size={s?.CoverSize:F0}"
-                   + $"   title=({s?.TitlePosX:F0},{s?.TitlePosY:F0})";
+            text = (zh ? "调整曲绘行" : "Adjusting the cover row")
+                   + (zh ? "：方向键移动，Shift 微调，[-]/[+] 缩放，P/Esc 完成" : ": arrows move, Shift = fine, [-]/[+] resize, P/Esc done")
+                   + $"   x={s?.CoverPosX:F0}%  y={s?.CoverPosY:F0}%  size={s?.CoverSize:F0}";
         }
         else
         {
@@ -1487,13 +1585,31 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (_canvas == null || _npRoot != null)
             return;
 
-        var frameGo = new GameObject("LimbusNowPlaying", typeof(RectTransform));
+        var rowGo = new GameObject("LimbusNowPlaying", typeof(RectTransform));
+        var rowRect = rowGo.GetComponent<RectTransform>();
+        rowRect.SetParent(_canvas.transform, false);
+        rowRect.anchorMin = new Vector2(0.5f, 0.5f);
+        rowRect.anchorMax = new Vector2(0.5f, 0.5f);
+        rowRect.pivot = new Vector2(0.5f, 0.5f);
+        rowRect.sizeDelta = new Vector2(500f, 220f);
+        rowRect.anchoredPosition = Vector2.zero;
+
+        // 透明点击层：仅在 F5 的“显示”页启用，用于鼠标拖动整行。
+        _npRowImage = rowGo.AddComponent<Image>();
+        _npRowImage.color = new Color(0f, 0f, 0f, 0f);
+        _npRowImage.raycastTarget = false;
+
+        var drag = rowGo.AddComponent<NowPlayingDragHandler>();
+        drag.Owner = this;
+
+        // 曲绘框（只框住曲绘，不框整行）。
+        var frameGo = new GameObject("CoverFrame", typeof(RectTransform));
         var frameRect = frameGo.GetComponent<RectTransform>();
-        frameRect.SetParent(_canvas.transform, false);
+        frameRect.SetParent(rowRect, false);
         frameRect.anchorMin = new Vector2(0.5f, 0.5f);
         frameRect.anchorMax = new Vector2(0.5f, 0.5f);
         frameRect.pivot = new Vector2(0.5f, 0.5f);
-        frameRect.sizeDelta = new Vector2(248f, 248f);
+        frameRect.sizeDelta = new Vector2(220f, 220f);
         frameRect.anchoredPosition = Vector2.zero;
 
         _npFrameImage = frameGo.AddComponent<Image>();
@@ -1513,7 +1629,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         coverRect.anchorMin = new Vector2(0.5f, 0.5f);
         coverRect.anchorMax = new Vector2(0.5f, 0.5f);
         coverRect.pivot = new Vector2(0.5f, 0.5f);
-        coverRect.sizeDelta = new Vector2(220f, 220f);
+        coverRect.sizeDelta = new Vector2(208f, 208f);
         coverRect.anchoredPosition = Vector2.zero;
 
         _npCoverImage = coverGo.AddComponent<Image>();
@@ -1521,33 +1637,39 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         _npCoverImage.raycastTarget = false;
         _npCoverImage.enabled = false;
 
-        var titleGo = new GameObject("NowPlayingTitle", typeof(RectTransform));
-        var titleRect = titleGo.GetComponent<RectTransform>();
-        titleRect.SetParent(_canvas.transform, false);
-        titleRect.anchorMin = new Vector2(0.5f, 0.5f);
-        titleRect.anchorMax = new Vector2(0.5f, 0.5f);
-        titleRect.pivot = new Vector2(0.5f, 0.5f);
-        titleRect.sizeDelta = new Vector2(620f, 96f);
-        titleRect.anchoredPosition = Vector2.zero;
+        _npTitle = CreateNowPlayingText(rowRect, "NowPlayingTitle", new Color(1f, 0.996f, 0.937f, 1f));
+        _npArtist = CreateNowPlayingText(rowRect, "NowPlayingArtist", new Color(0.82f, 0.82f, 0.84f, 1f));
 
-        _npTitle = titleGo.AddComponent<TextMeshProUGUI>();
-        _npTitle.font = LimbusCompanyFonts.Resolve();
-        _npTitle.fontSize = 24f;
-        _npTitle.color = new Color(1f, 0.996f, 0.937f, 1f);
-        _npTitle.alignment = TextAlignmentOptions.Center;
-        _npTitle.enableWordWrapping = true;
-        _npTitle.overflowMode = TextOverflowModes.Overflow;
-        _npTitle.richText = true;
-        _npTitle.raycastTarget = false;
-        _npTitle.text = string.Empty;
+        _npRoot = rowGo;
+        rowGo.SetActive(false);
+    }
 
-        var titleOutline = titleGo.AddComponent<Outline>();
-        titleOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-        titleOutline.effectDistance = new Vector2(2f, -2f);
+    private TextMeshProUGUI CreateNowPlayingText(RectTransform parent, string name, Color color)
+    {
+        var go = new GameObject(name, typeof(RectTransform));
+        var rect = go.GetComponent<RectTransform>();
+        rect.SetParent(parent, false);
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = new Vector2(200f, 220f);
+        rect.anchoredPosition = Vector2.zero;
 
-        _npRoot = frameGo;
-        frameGo.SetActive(false);
-        titleGo.SetActive(false);
+        var text = go.AddComponent<TextMeshProUGUI>();
+        text.font = LimbusCompanyFonts.Resolve();
+        text.fontSize = 24f;
+        text.color = color;
+        text.alignment = TextAlignmentOptions.Left;
+        text.enableWordWrapping = false;
+        text.overflowMode = TextOverflowModes.Ellipsis;
+        text.richText = false;
+        text.raycastTarget = false;
+        text.text = string.Empty;
+
+        var outline = go.AddComponent<Outline>();
+        outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+        outline.effectDistance = new Vector2(2f, -2f);
+        return text;
     }
 
     private void UpdateNowPlayingPanel()
@@ -1560,8 +1682,14 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         {
             if (_npRoot.activeSelf)
                 _npRoot.SetActive(false);
-            if (_npTitle != null && _npTitle.gameObject.activeSelf)
-                _npTitle.gameObject.SetActive(false);
+            return;
+        }
+
+        // F5 菜单打开时隐藏曲绘行（鼠标调整模式除外），避免遮挡菜单。
+        if (_bgmPanelOpen && !_npMouseAdjust)
+        {
+            if (_npRoot.activeSelf)
+                _npRoot.SetActive(false);
             return;
         }
 
@@ -1573,45 +1701,15 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         {
             if (_npRoot.activeSelf)
                 _npRoot.SetActive(false);
-            if (_npTitle != null && _npTitle.gameObject.activeSelf)
-                _npTitle.gameObject.SetActive(false);
             return;
         }
 
         if (!_npRoot.activeSelf)
             _npRoot.SetActive(true);
-        if (_npTitle != null && !_npTitle.gameObject.activeSelf)
-            _npTitle.gameObject.SetActive(true);
 
         var canvasRect = _canvas != null ? _canvas.GetComponent<RectTransform>().rect : new Rect(0f, 0f, 1920f, 1080f);
         var width = canvasRect.width > 1f ? canvasRect.width : 1920f;
         var height = canvasRect.height > 1f ? canvasRect.height : 1080f;
-
-        var coverPos = new Vector2(
-            (Mathf.Clamp(settings.CoverPosX, 0f, 100f) / 100f - 0.5f) * width,
-            (0.5f - Mathf.Clamp(settings.CoverPosY, 0f, 100f) / 100f) * height);
-        var titlePos = new Vector2(
-            (Mathf.Clamp(settings.TitlePosX, 0f, 100f) / 100f - 0.5f) * width,
-            (0.5f - Mathf.Clamp(settings.TitlePosY, 0f, 100f) / 100f) * height);
-
-        var size = Mathf.Clamp(settings.CoverSize, 80f, 600f);
-        var frameRect = _npRoot.GetComponent<RectTransform>();
-        frameRect.sizeDelta = new Vector2(size + 28f, size + 28f);
-        frameRect.anchoredPosition = coverPos;
-
-        if (_npCoverImage != null)
-        {
-            var coverRect = _npCoverImage.GetComponent<RectTransform>();
-            coverRect.sizeDelta = new Vector2(size, size);
-            coverRect.anchoredPosition = Vector2.zero;
-        }
-
-        if (_npTitle != null)
-        {
-            var titleRect = _npTitle.GetComponent<RectTransform>();
-            titleRect.anchoredPosition = titlePos;
-            _npTitle.fontSize = Mathf.Clamp(size * 0.11f, 16f, 30f);
-        }
 
         string title;
         string artist;
@@ -1636,17 +1734,66 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             SetNowPlayingSprite(icon, false, "game:" + title);
         }
 
-        if (_npTitle != null)
-        {
-            var text = string.IsNullOrEmpty(artist)
-                ? title ?? string.Empty
-                : title + "\n<size=65%>" + artist + "</size>";
+        title ??= string.Empty;
+        artist ??= string.Empty;
 
-            if (text != _npLastText)
-            {
-                _npLastText = text;
-                _npTitle.text = text;
-            }
+        var size = Mathf.Clamp(settings.CoverSize, 80f, 600f);
+        var fontSize = Mathf.Clamp(size * 0.28f, 16f, 56f);
+        var changed = title != _npLastTitleText || artist != _npLastArtistText ||
+                      !Mathf.Approximately(fontSize, _npLastFontSize);
+        if (changed)
+        {
+            _npLastTitleText = title;
+            _npLastArtistText = artist;
+            _npLastFontSize = fontSize;
+
+            _npTitle.text = title;
+            _npArtist.text = artist;
+            _npTitle.fontSize = fontSize;
+            _npArtist.fontSize = fontSize;
+            _npTitle.gameObject.SetActive(title.Length > 0);
+            _npArtist.gameObject.SetActive(artist.Length > 0);
+            _npTitle.ForceMeshUpdate();
+            _npArtist.ForceMeshUpdate();
+        }
+
+        var gap = Mathf.Max(10f, size * 0.08f);
+        var titleWidth = title.Length > 0 ? Mathf.Min(_npTitle.preferredWidth, width * 0.45f) : 0f;
+        var artistWidth = artist.Length > 0 ? Mathf.Min(_npArtist.preferredWidth, width * 0.30f) : 0f;
+        var totalWidth = size + (titleWidth > 0f ? gap + titleWidth : 0f) +
+                         (artistWidth > 0f ? gap + artistWidth : 0f);
+
+        var anchorX = Mathf.Clamp(settings.CoverPosX, 0f, 100f) / 100f * width;
+        var centerY = (0.5f - Mathf.Clamp(settings.CoverPosY, 0f, 100f) / 100f) * height;
+        var left = anchorX - totalWidth;
+
+        var rowRect = _npRoot.GetComponent<RectTransform>();
+        rowRect.sizeDelta = new Vector2(totalWidth, size);
+        rowRect.anchoredPosition = new Vector2(left + totalWidth / 2f, centerY);
+
+        var frameRect = _npFrameImage.GetComponent<RectTransform>();
+        frameRect.sizeDelta = new Vector2(size, size);
+        frameRect.anchoredPosition = new Vector2(-totalWidth / 2f + size / 2f, 0f);
+
+        var pad = Mathf.Clamp(size * 0.03f, 3f, 10f);
+        var coverRect = _npCoverImage.GetComponent<RectTransform>();
+        coverRect.sizeDelta = new Vector2(size - pad * 2f, size - pad * 2f);
+        coverRect.anchoredPosition = Vector2.zero;
+
+        var x = -totalWidth / 2f + size;
+        var titleRect = _npTitle.GetComponent<RectTransform>();
+        if (titleWidth > 0f)
+        {
+            titleRect.sizeDelta = new Vector2(titleWidth, size);
+            titleRect.anchoredPosition = new Vector2(x + gap + titleWidth / 2f, 0f);
+            x += gap + titleWidth;
+        }
+
+        var artistRect = _npArtist.GetComponent<RectTransform>();
+        if (artistWidth > 0f)
+        {
+            artistRect.sizeDelta = new Vector2(artistWidth, size);
+            artistRect.anchoredPosition = new Vector2(x + gap + artistWidth / 2f, 0f);
         }
 
         // 没有曲绘时，框体透明，只留下 ULK 风格的描边。
@@ -1657,6 +1804,10 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 ? new Color(0.02f, 0.02f, 0.02f, 0.78f)
                 : new Color(0.02f, 0.02f, 0.02f, 0f);
         }
+
+        // 只有鼠标调整模式下才接收拖动/滚轮，避免挡住菜单按钮。
+        if (_npRowImage != null)
+            _npRowImage.raycastTarget = _npMouseAdjust;
     }
 
     private string _bgmInfoPath;
@@ -3646,5 +3797,63 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             meshInfo[i].mesh.vertices = meshInfo[i].vertices;
             _text.UpdateGeometry(meshInfo[i].mesh, i);
         }
+    }
+}
+
+/// <summary>F5“显示”页中，用鼠标拖动曲绘行 / 滚轮缩放。</summary>
+public sealed class NowPlayingDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IScrollHandler
+{
+    public LimbusCompanyLyricsOverlay Owner;
+
+    private Vector2 _startPointer;
+    private float _startPercentX;
+    private float _startPercentY;
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        if (Owner == null)
+            return;
+
+        var canvas = Owner.NowPlayingCanvasRect;
+        if (canvas == null)
+            return;
+
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas, eventData.position,
+            eventData.pressEventCamera, out _startPointer);
+        var anchor = Owner.GetNowPlayingAnchorPercent();
+        _startPercentX = anchor.x;
+        _startPercentY = anchor.y;
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (Owner == null)
+            return;
+
+        var canvas = Owner.NowPlayingCanvasRect;
+        if (canvas == null)
+            return;
+
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas, eventData.position,
+                eventData.pressEventCamera, out var current))
+            return;
+
+        var rect = canvas.rect;
+        if (rect.width <= 0f || rect.height <= 0f)
+            return;
+
+        var dx = (current.x - _startPointer.x) / rect.width * 100f;
+        var dy = (current.y - _startPointer.y) / rect.height * 100f;
+        Owner.SetNowPlayingAnchorPercent(_startPercentX + dx, _startPercentY - dy, false);
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        Owner?.SaveNowPlayingSettings();
+    }
+
+    public void OnScroll(PointerEventData eventData)
+    {
+        Owner?.ScrollNowPlayingSize(eventData.scrollDelta.y);
     }
 }

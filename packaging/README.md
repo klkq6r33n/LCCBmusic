@@ -5,6 +5,7 @@ NOTICE: Disable Flazhik-CybergrindMusicExplorer (this fork reuses its plugin GUI
 Downloader: this package does NOT support CGME's Downloader — yt-dlp / ffmpeg / ffprobe are not bundled. Use local audio files.
 Install: install this zip with r2modman / Thunderstore Mod Manager, or extract it into the ULTRAKILL folder (runtime files live under BepInEx/plugins/Claude-JukeboxLimbusCompany/).
 Lyrics: put Track.srt next to Track.mp3. Optional translation: also add Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt. Both lines are shown at different, non-overlapping positions.
+Songs: this mod bundles no audio. Every song is read from ULTRAKILL's built-in Cyber Grind music folder (ULTRAKILL/Cybergrind/Music); put your audio there.
 UI: default language is English. In the Jukebox menu (F4) use LANGUAGE to switch to Chinese and SETTINGS for precise numeric inputs (position, color, font size, motion, translation).
 Safety: lyrics are clamped on-screen and never overlap each other.
 Special thanks to greycsont for the ULTRAKILL font, and to Flazhik and the Jukebox / CybergrindMusicExplorer team for the original mod and source code this fork is based on.
@@ -14,6 +15,7 @@ Special thanks to greycsont for the ULTRAKILL font, and to Flazhik and the Jukeb
 下载器：本包**不支持 CGME 的下载器**——未附带 yt-dlp / ffmpeg / ffprobe，请使用本地音频文件。
 安装：用 r2modman / Thunderstore Mod Manager 安装本 zip，或直接解压到 ULTRAKILL 游戏根目录（运行文件位于 BepInEx/plugins/Claude-JukeboxLimbusCompany/）。
 歌词：把 Track.srt 放在 Track.mp3 同目录。可选翻译：再放 Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt，两行歌词会在不同且不重叠的位置同时显示。
+歌曲：本 mod **不附带任何音频**，所有歌曲均读取自 ULTRAKILL 自带的电子血宫音乐文件夹（ULTRAKILL/Cybergrind/Music），把音频放进该文件夹即可。
 界面：默认英文。在 Jukebox 菜单（F4）用 LANGUAGE 切换中文，用 SETTINGS 精确填写位置、颜色、字号、动态与翻译。
 防重叠/防出屏：歌词自动限制在屏幕内，且不会互相交叠。
 特别感谢 greycsont 提供的 ULTRAKILL 字体，以及 Flazhik 与 Jukebox / CybergrindMusicExplorer 团队提供的原型 mod 与源码。
@@ -100,12 +102,12 @@ Changes are hot-reloaded within one second (font family needs a restart).
 
 ### Language / 语言
 
-- Default UI language is **English**; a **Language: English / 中文** button is injected at the top-right corner of the Jukebox menu while it is open.
+- Default UI language is **English**. Switch it in the Cyber Grind with the **LANGUAGE** button injected into the F4 menu, or in any level with **F5 → DISPLAY → 中文 / ENGLISH** (keyboard **G** also toggles it).
 - The choice is saved as `"language": "en"` / `"zh"` in `lyric_config.json` and re-applied on launch.
-- Chinese mode localizes **this mod's own UI only** (the LANGUAGE / SETTINGS buttons and the settings panel). The original CybergrindMusicExplorer menu stays English.
-- 默认界面语言为**英文**；打开 Jukebox 菜单后右上角会出现 **LANGUAGE: ENGLISH / 中文** 按钮。
+- Chinese mode localizes **this mod's own UI only** (the LANGUAGE / SETTINGS buttons, the settings panel and the F5 menu). The original CybergrindMusicExplorer menu stays English.
+- 默认界面语言为**英文**。血宫内用 F4 菜单里的 **LANGUAGE** 按钮切换；任意关卡内用 **F5 → DISPLAY → 中文 / ENGLISH**（键盘 **G** 也可切换）。
 - 选择会写回 `lyric_config.json` 的 `"language"`（`en`/`zh`），下次启动自动生效。
-- 中文模式**只翻译本 mod 自己的界面**（LANGUAGE / SETTINGS 按钮与设置面板），原版 CGME 菜单保持英文。
+- 中文模式**只翻译本 mod 自己的界面**（LANGUAGE / SETTINGS 按钮、设置面板与 F5 菜单），原版 CGME 菜单保持英文。
 
 ### In-game feature settings / 游戏内功能设置
 
@@ -115,7 +117,7 @@ While the Jukebox menu is open, the **SETTINGS / 设置** button (next to LANGUA
 - **TEXT / 文字**: text color, font size, spacing, stroke color/width, glow color/size/alpha, glow on/off, font family
 - **MOTION / 动态**: shake intensity/speed, fade speed, rise speed, **typewriter on/off + chars per second**, perspective + X/Y strength, lyrics on/off, replace original subtitles
 - **VISUAL / 频谱**: audio visualizer on/off, wave size, max extent (% of screen), position (BOTTOM / TOP / LEFT / RIGHT), bar density (8–256), gradient range (0–1), gradient speed, gradient mode (FIXED 2 / RANGE x~y / MULTI RGB), colour A RGB, colour B RGB, multi RGB (space separated), X mirror — plus an in-panel usage note
-- **F5 mouse menu** (levels only; the Cyber Grind uses **F4** and F5 is ignored there): a clickable menu with MUSIC / SETTINGS / DISPLAY pages — browse `Cybergrind/Music`, replace/restore the level BGM, switch the UI language, edit every lyric setting, toggle lyrics/now-playing, move the cover/title, and rebind keys. Opening it pauses the game and unlocks the cursor, like the CGME menu.
+- **F5 mouse menu** (levels only; the Cyber Grind uses **F4** and F5 is ignored there): a clickable menu with MUSIC / SETTINGS / DISPLAY pages — browse `Cybergrind/Music` (the game's built-in Cyber Grind music folder; no audio is bundled), replace/restore the level BGM, switch the UI language, edit every lyric setting, toggle lyrics/now-playing, drag/resize the cover row, and rebind keys. Opening it pauses the game and unlocks the cursor, like the CGME menu.
 - **Now-playing frame** (top-right by default): ULK-style bordered frame around the current track's cover art, with the title and artist underneath; when the track has no cover the frame stays hollow. Cover art is read from the audio file's ID3 tag or a same-name / `cover` / `folder` image; its position and size are adjustable.
 - RESET PAGE (resets only the currently open page) / CLOSE
 
@@ -127,7 +129,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - **TEXT / 文字**：文字颜色、字号、字距、描边颜色/宽度、辉光颜色/大小/透明度、辉光开关、字体
 - **MOTION / 动态**：抖动强度/速度、淡入速度、上飘速度、**逐字显示开关 + 每秒字数**、透视与 X/Y 强度、歌词层开关、替换原版字幕
 - **VISUAL / 频谱**：音频可视化开关、波动大小、最大幅度（屏幕百分比）、显示位置（底部/顶部/左侧/右侧）、频谱密度（8–256）、渐变范围（0–1）、渐变强度（速度）、渐变模式（固定双色 / 区间渐变 / 多色渐变）、颜色 A RGB、颜色 B RGB、多色 RGB（空格分隔）、X 轴镜像，面板内附使用说明
-- **F5 鼠标菜单**（仅关卡可用；血宫内只用 **F4**，F5 会被忽略）：可点击的 MUSIC / SETTINGS / DISPLAY 三页——浏览 `Cybergrind/Music`、取代/归还关卡 BGM、切换界面语言、修改全部歌词设置、开关歌词/曲绘框、移动曲绘/歌名、重绑按键。打开时暂停游戏并解锁鼠标，操作方式与 CGME 菜单一致。
+- **F5 鼠标菜单**（仅关卡可用；血宫内只用 **F4**，F5 会被忽略）：可点击的 MUSIC / SETTINGS / DISPLAY 三页——浏览 `Cybergrind/Music`（ULTRAKILL 自带的电子血宫音乐文件夹，mod 不附带音频）、取代/归还关卡 BGM、切换界面语言、修改全部歌词设置、开关歌词/曲绘行、用鼠标拖动缩放曲绘行、重绑按键。打开时暂停游戏并解锁鼠标，操作方式与 CGME 菜单一致。
 - **曲绘框**（默认右上角）：ULTRAKILL 风格的描边框住当前歌曲的曲绘，下方显示歌名与歌手；没有曲绘时框体镂空。曲绘从音频文件的 ID3 标签或同名 / `cover` / `folder` 图片读取，位置和大小都可调整。
 - 重置本页（只重置当前打开的页面）/ 关闭
 
@@ -183,17 +185,19 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - 频谱在取代期间读取替代曲目，归还后读取关卡原音乐，两种情况下都有效。
 - 只使用本地文件；CGME 下载器仍不受支持。
 
-### Now-playing frame / 曲绘框
+### Now-playing row / 曲绘行
 
-- While a Jukebox song or a replaced level track is playing, a bordered frame in the top-right corner shows its cover, title and artist. No cover → the frame stays hollow (only the border is drawn).
+- While a Jukebox song or a replaced level track is playing, one horizontal row is drawn: **cover / title / artist** (曲绘 / 曲名 / 作者). Cover and the text block share the same height, and the title and artist use the **same font size**; the artist is the last item in the row.
+- The cover sits in a ULK-style bordered frame. No cover → the frame stays hollow (only the border is drawn).
 - Cover source, in order: an image with the audio file's base name (`.png` / `.jpg` / `.jpeg`), `cover.*` / `folder.*` in the same folder, then the embedded ID3 picture.
-- In the F5 **DISPLAY** page, click COVER or TITLE and use the on-screen arrows / `-` `+` to move and resize; you can also press **P** for keyboard adjustment (**arrow keys**, Shift = fine, **T** switches cover/title, `-` / `+` resize, **P / Esc** finishes). Changes save immediately.
-- Config keys: `now_playing_enabled`, `cover_pos_x/y`, `title_pos_x/y`, `cover_size`; positions are percentages of the screen, and the cover default is top-right (`84,18`).
+- **Mouse adjustment** (F5 → DISPLAY → **ADJUST ROW WITH MOUSE**): the menu hides, then **drag the whole row** to move it and **scroll the mouse wheel** to change its size; press **Esc** or click **DONE** to finish. The DISPLAY page also has arrow / `-` `+` / reset buttons, and keyboard **P** still works (arrows move, Shift = fine, `-` / `+` resize, P/Esc finish). Changes save immediately.
+- Config keys: `now_playing_enabled`, `cover_pos_x/y` (row anchor: right edge X and vertical center Y, in % of the screen), `cover_size` (row height); `title_pos_x/y` are kept for old configs but are no longer used.
 
-- 当 Jukebox 曲目或取代的关卡曲目正在播放时，右上角的描边框会显示曲绘、歌名和歌手。没有曲绘时框体镂空（只画边框）。
+- 当 Jukebox 曲目或取代的关卡曲目正在播放时，会绘制**一整行**：**曲绘 / 曲名 / 作者**。曲绘与文字块高度相同，曲名与作者使用**相同字号**，作者排在整行最后。
+- 曲绘外面是 ULK 风格的描边框。没有曲绘时框体镂空（只画边框）。
 - 曲绘来源依次为：与音频同名的图片（`.png` / `.jpg` / `.jpeg`）、同目录的 `cover.*` / `folder.*`、音频内嵌的 ID3 图片。
-- 在 F5 的 **DISPLAY** 页点击“曲绘”或“歌名”，用屏幕上的方向按钮和 `-` `+` 移动/缩放；也可按 **P** 用键盘调整（**方向键**移动，Shift 微调，**T** 切换曲绘/歌名，`-` / `+` 缩放，**P / Esc** 结束）。改动立即保存。
-- 配置项：`now_playing_enabled`、`cover_pos_x/y`、`title_pos_x/y`、`cover_size`；位置是屏幕百分比，曲绘默认在右上角（`84,18`）。
+- **鼠标调整**（F5 → DISPLAY → **用鼠标调整曲绘行**）：菜单会隐藏，此时**拖动整行**移动、**滚轮**改变大小，按 **Esc** 或点击 **完成** 结束。DISPLAY 页也保留方向按钮、`-` `+` 与重置按钮；键盘 **P** 仍可用（方向键移动，Shift 微调，`-` / `+` 缩放，P/Esc 结束）。改动立即保存。
+- 配置项：`now_playing_enabled`、`cover_pos_x/y`（整行锚点：右边缘 X、垂直中心 Y，屏幕百分比）、`cover_size`（整行高度）；`title_pos_x/y` 仅为兼容旧配置保留，已不再使用。
 
 ### Position safety / 位置防重叠与防出屏
 
@@ -228,6 +232,10 @@ These belong to an external player's lyric fetching / auto timing. In game, the 
 这些属于外部播放器抓词/自动时间轴的部分；游戏内直接使用 SRT 时间轴。
 
 ## Lyrics source / 歌词来源
+
+**Songs:** this mod bundles **no audio at all**. It only reads the tracks already placed in ULTRAKILL's built-in Cyber Grind music folder — `ULTRAKILL/Cybergrind/Music` (shown as `Cybergrind/Music` below). The F5 MUSIC page lists exactly that folder recursively.
+
+**歌曲：** 本 mod **不附带任何音频**，只读取 ULTRAKILL 自带电子血宫音乐文件夹 `ULTRAKILL/Cybergrind/Music`（下文简写为 `Cybergrind/Music`）里已有的曲目；F5 的 MUSIC 页就是递归列出这个文件夹。
 
 Same as the original mod: a **`.srt` file with the exact same filename** next to the audio file.
 
