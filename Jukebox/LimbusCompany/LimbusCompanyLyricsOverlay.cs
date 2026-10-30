@@ -699,7 +699,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         var tokens = text.Split(new[] { ' ', '\t', ';', '|' }, StringSplitOptions.RemoveEmptyEntries);
         foreach (var token in tokens)
         {
-            var parts = token.Split(',');
+            var parts = token.Replace('，', ',').Split(',');
             if (parts.Length >= 3 &&
                 int.TryParse(parts[0].Trim(), out var r) &&
                 int.TryParse(parts[1].Trim(), out var g) &&
@@ -731,7 +731,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     {
         if (!string.IsNullOrEmpty(html))
         {
-            html = html.Trim();
+            html = html.Trim().Replace('，', ',');
 
             // RGB triplet, e.g. "255,211,77".
             if (html.Contains(","))

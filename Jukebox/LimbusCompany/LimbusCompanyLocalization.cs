@@ -522,7 +522,7 @@ public class LimbusCompanyLocalization : MonoBehaviour
         if (string.IsNullOrWhiteSpace(value))
             return fallback;
 
-        var parts = value.Split(',');
+        var parts = value.Replace('，', ',').Split(',');
         if (parts.Length >= 3 &&
             int.TryParse(parts[0].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var r) &&
             int.TryParse(parts[1].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var g) &&
@@ -669,7 +669,7 @@ public class LimbusCompanyLocalization : MonoBehaviour
         if (string.IsNullOrWhiteSpace(value))
             return fallback;
 
-        value = value.Trim();
+        value = value.Trim().Replace('，', ',');
 
         // RGB triplet, e.g. "255,211,77".
         if (value.Contains(","))
