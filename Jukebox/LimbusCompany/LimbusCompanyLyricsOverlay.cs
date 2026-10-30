@@ -949,15 +949,51 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             new Vector2(220f, 44f), RestoreBgmFromUi, 16f);
     }
 
-    /// <summary>菜单按画布大小自动缩放，避免小分辨率/窄画布被裁切。</summary>
+    /// <summary>当前窗口在 Canvas 单位下的真实大小（而不是固定参考分辨率）。</summary>
+    private void GetWindowCanvasSize(out float width, out float height)
+    {
+        width = 1920f;
+        height = 1080f;
+
+        if (_canvas == null)
+            return;
+
+        var scale = _canvas.scaleFactor;
+        if (scale <= 0.0001f)
+            scale = 1f;
+
+        var screenWidth = Screen.width / scale;
+        var screenHeight = Screen.height / scale;
+        if (screenWidth > 1f && screenHeight > 1f)
+        {
+            width = screenWidth;
+            height = screenHeight;
+            return;
+        }
+
+        var rect = _canvas.GetComponent<RectTransform>().rect;
+        if (rect.width > 1f)
+            width = rect.width;
+        if (rect.height > 1f)
+            height = rect.height;
+    }
+
+    internal float WindowCanvasScale
+    {
+        get
+        {
+            var scale = _canvas != null ? _canvas.scaleFactor : 1f;
+            return scale > 0.0001f ? scale : 1f;
+        }
+    }
+
+    /// <summary>菜单按当前窗口大小自动缩放，避免小窗口/窄窗口被裁切。</summary>
     private void UpdateBgmMenuScale()
     {
         if (_bgmPanelRect == null || _canvas == null)
             return;
 
-        var rect = _canvas.GetComponent<RectTransform>().rect;
-        var width = rect.width > 1f ? rect.width : 1920f;
-        var height = rect.height > 1f ? rect.height : 1080f;
+        GetWindowCanvasSize(out var width, out var height);
 
         var scale = Mathf.Min(1f, Mathf.Min((width - 40f) / 1220f, (height - 40f) / 820f));
         scale = Mathf.Clamp(scale, 0.5f, 1f);
@@ -2537,9 +2573,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (!_npRoot.activeSelf)
             _npRoot.SetActive(true);
 
-        var canvasRect = _canvas != null ? _canvas.GetComponent<RectTransform>().rect : new Rect(0f, 0f, 1920f, 1080f);
-        var width = canvasRect.width > 1f ? canvasRect.width : 1920f;
-        var height = canvasRect.height > 1f ? canvasRect.height : 1080f;
+        GetWindowCanvasSize(out var width, out var height);
 
         string title;
         string artist;
@@ -4953,12 +4987,21 @@ public sealed class NowPlayingDragHandler : MonoBehaviour, IBeginDragHandler, ID
                 eventData.pressEventCamera, out var current))
             return;
 
-        var rect = canvas.rect;
-        if (rect.width <= 0f || rect.height <= 0f)
+        var scale = Owner.WindowCanvasScale;
+        var windowWidth = Screen.width / scale;
+        var windowHeight = Screen.height / scale;
+        if (windowWidth <= 1f || windowHeight <= 1f)
+        {
+            var rect = canvas.rect;
+            windowWidth = rect.width;
+            windowHeight = rect.height;
+        }
+
+        if (windowWidth <= 0f || windowHeight <= 0f)
             return;
 
-        var dx = (current.x - _startPointer.x) / rect.width * 100f;
-        var dy = (current.y - _startPointer.y) / rect.height * 100f;
+        var dx = (current.x - _startPointer.x) / windowWidth * 100f;
+        var dy = (current.y - _startPointer.y) / windowHeight * 100f;
         Owner.SetNowPlayingAnchorPercent(_startPercentX + dx, _startPercentY - dy, false);
     }
 
