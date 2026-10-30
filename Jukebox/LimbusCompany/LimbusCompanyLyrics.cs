@@ -77,6 +77,7 @@ public static class LimbusCompanyLyrics
             var settings = root["settings"] as JObject ?? root;
 
             settings["language"] = s.Language;
+            settings["bgm_track"] = s.BgmTrack;
             settings["enabled"] = s.Enabled;
             settings["replace_original"] = s.ReplaceOriginal;
             settings["glow_enabled"] = s.GlowEnabled;

@@ -82,7 +82,8 @@
     "translation_scale": 0.75,
     "translation_font_size": 0,
     "translation_color": "#d8d8d8",
-    "language": "en"
+    "language": "en",
+    "bgm_track": ""
   },
   "presets": {
     "通用": { "text": "#fffeef", "stroke": "#d8a523", "glow": "#d8a523" },

@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using Jukebox.UI.Windows;
 using JukeboxCore.Logging;
+using JukeboxCore.Utils;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -257,16 +260,18 @@ public class LimbusCompanyLocalization : MonoBehaviour
         CreateLabel(rect, "Subtitle", "Jukebox LimbusCompany v" + Jukebox.JukeboxPluginInfo.Version,
             new Vector2(0f, 270f), new Vector2(500f, 20f), 13f, TextAlignmentOptions.Center);
 
-        CreateButtonAt(rect, "TabLayout", L("LAYOUT", "位置"), new Vector2(-216f, 236f), new Vector2(100f, 28f),
+        CreateButtonAt(rect, "TabLayout", L("LAYOUT", "位置"), new Vector2(-225f, 236f), new Vector2(86f, 28f),
             () => SwitchPage(0));
-        CreateButtonAt(rect, "TabText", L("TEXT", "文字"), new Vector2(-108f, 236f), new Vector2(100f, 28f),
+        CreateButtonAt(rect, "TabText", L("TEXT", "文字"), new Vector2(-135f, 236f), new Vector2(86f, 28f),
             () => SwitchPage(1));
-        CreateButtonAt(rect, "TabMotion", L("MOTION", "动态"), new Vector2(0f, 236f), new Vector2(100f, 28f),
+        CreateButtonAt(rect, "TabMotion", L("MOTION", "动态"), new Vector2(-45f, 236f), new Vector2(86f, 28f),
             () => SwitchPage(2));
-        CreateButtonAt(rect, "TabTrans", L("TRANS", "翻译"), new Vector2(108f, 236f), new Vector2(100f, 28f),
+        CreateButtonAt(rect, "TabTrans", L("TRANS", "翻译"), new Vector2(45f, 236f), new Vector2(86f, 28f),
             () => SwitchPage(3));
-        CreateButtonAt(rect, "TabVisual", L("VISUAL", "频谱"), new Vector2(216f, 236f), new Vector2(100f, 28f),
+        CreateButtonAt(rect, "TabVisual", L("VISUAL", "频谱"), new Vector2(135f, 236f), new Vector2(86f, 28f),
             () => SwitchPage(4));
+        CreateButtonAt(rect, "TabBgm", L("BGM", "BGM"), new Vector2(225f, 236f), new Vector2(86f, 28f),
+            () => SwitchPage(5));
 
         var y = 188f;
         // VISUAL has more rows (gradient modes/RGB); use a slightly tighter spacing.
@@ -333,7 +338,7 @@ public class LimbusCompanyLocalization : MonoBehaviour
                 new Vector2(0f, -208f), new Vector2(470f, 88f), 13f, TextAlignmentOptions.TopLeft);
             info.enableWordWrapping = true;
         }
-        else
+        else if (_page == 4)
         {
             AddToggleRow(rect, ref y, step, L("Audio visualizer", "音频可视化"), () => S.VisualizerEnabled, () => S.VisualizerEnabled = !S.VisualizerEnabled);
             AddInputRow(rect, ref y, step, L("Wave size (x)", "波动大小 (倍)"), F(S.VisualizerAmplitude), v => S.VisualizerAmplitude = Mathf.Clamp(v, 0.1f, 5f));
@@ -353,6 +358,57 @@ public class LimbusCompanyLocalization : MonoBehaviour
                 L("Modes: FIXED 2 = A→B flow; RANGE = A↔B sweep; MULTI = RGB stops.\nRGB: R,G,B using ',' or '，'. Multi colors are separated by spaces.\nRange 0 = solid A; Gradient speed = animation speed.",
                   "模式：FIXED 2=双色流动；RANGE=双色来回；MULTI=多色色标。\nRGB 格式：R,G,B，用 , 或 ， 分隔；多色之间用空格。\n渐变范围 0=颜色 A 单色；渐变强度=渐变速度。"),
                 new Vector2(0f, -205f), new Vector2(480f, 82f), 11.5f, TextAlignmentOptions.TopLeft);
+            info.enableWordWrapping = true;
+        }
+        else
+        {
+            // ---- 关卡 BGM 取代 ----
+            var tracks = GetBgmTrackList();
+            if (tracks.Length == 0)
+            {
+                CreateLabelObject(rect, "BgmEmpty",
+                    L("No audio files found in Cybergrind/Music.\nPut .mp3 / .ogg / .wav files there first.",
+                      "在 Cybergrind/Music 中没有找到音频文件。\n请先放入 .mp3 / .ogg / .wav 文件。"),
+                    new Vector2(0f, 120f), new Vector2(500f, 60f), 14f, TextAlignmentOptions.Center);
+            }
+            else
+            {
+                if (Array.IndexOf(tracks, S.BgmTrack) < 0)
+                    S.BgmTrack = tracks[0];
+
+                AddValueRow(rect, ref y, step, L("Track", "曲目"), ShortTrack(S.BgmTrack), () =>
+                {
+                    var index = Array.IndexOf(tracks, S.BgmTrack);
+                    if (index < 0)
+                        index = 0;
+                    S.BgmTrack = tracks[(index + 1) % tracks.Length];
+                });
+            }
+
+            var overlay = LimbusCompanyLyricsOverlay.Instance;
+            var status = overlay != null && overlay.BgmReplacing
+                ? L("Replacing: ", "正在取代：") + ShortTrack(S.BgmTrack)
+                : L("Level BGM active", "当前为关卡原 BGM");
+            CreateLabelObject(rect, "BgmStatus", status,
+                new Vector2(0f, y - 4f), new Vector2(500f, 26f), 13f, TextAlignmentOptions.Center);
+
+            CreateButtonAt(rect, "BgmReplace", L("REPLACE BGM", "取代关卡 BGM"),
+                new Vector2(-120f, -150f), new Vector2(210f, 36f), () =>
+                {
+                    LimbusCompanyLyricsOverlay.Instance?.StartBgmReplacement(S.BgmTrack);
+                    _rebuildPending = _panelOpen;
+                });
+            CreateButtonAt(rect, "BgmRestore", L("RESTORE BGM", "归还原 BGM"),
+                new Vector2(120f, -150f), new Vector2(210f, 36f), () =>
+                {
+                    LimbusCompanyLyricsOverlay.Instance?.StopBgmReplacement();
+                    _rebuildPending = _panelOpen;
+                });
+
+            var info = CreateLabelObject(rect, "BgmInfo",
+                L("Replaces the current level BGM (e.g. 1-4) with a track from Cybergrind/Music.\nThe level music is paused; RESTORE resumes it from the exact point where it stopped.\nThe spectrum visualizer works for both the replacement and the level BGM.",
+                  "用 Cybergrind/Music 中的曲目取代当前关卡 BGM（例如 1-4 正在播放的音乐）。\n关卡音乐会被暂停，归还原 BGM 时会从暂停的位置继续。\n频谱可视化对替代曲目和关卡原 BGM 都有效。"),
+                new Vector2(0f, -212f), new Vector2(500f, 100f), 11.5f, TextAlignmentOptions.TopLeft);
             info.enableWordWrapping = true;
         }
 
@@ -556,6 +612,39 @@ public class LimbusCompanyLocalization : MonoBehaviour
         return kept.Count > 0 ? string.Join(" ", kept) : fallback;
     }
 
+    private static string[] GetBgmTrackList()
+    {
+        try
+        {
+            var root = PathsUtils.MusicPath;
+            if (!Directory.Exists(root))
+                return Array.Empty<string>();
+
+            var allowed = new[] { ".mp3", ".ogg", ".wav" };
+            return Directory.GetFiles(root, "*", SearchOption.AllDirectories)
+                .Where(file => Array.IndexOf(allowed, Path.GetExtension(file).ToLowerInvariant()) >= 0)
+                .Select(file => file.Substring(root.Length + 1))
+                .OrderBy(file => file, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("读取 Cybergrind/Music 失败: " + e.Message);
+            return Array.Empty<string>();
+        }
+    }
+
+    private static string ShortTrack(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return "-";
+
+        var name = Path.GetFileName(path);
+        if (string.IsNullOrEmpty(name))
+            name = path;
+        return name.Length <= 46 ? name : name.Substring(0, 43) + "...";
+    }
+
     private static readonly string[] VisualizerPositions = { "bottom", "top", "left", "right" };
 
     private static string NextVisualizerPosition(string position)
@@ -748,8 +837,11 @@ public class LimbusCompanyLocalization : MonoBehaviour
             case 3:
                 ResetTranslation(s);
                 break;
-            default:
+            case 4:
                 ResetVisualizer(s);
+                break;
+            default:
+                // BGM page has no persisted options to reset.
                 break;
         }
     }

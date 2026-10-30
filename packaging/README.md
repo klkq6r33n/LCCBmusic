@@ -115,6 +115,7 @@ While the Jukebox menu is open, the **SETTINGS / 设置** button (next to LANGUA
 - **TEXT / 文字**: text color, font size, spacing, stroke color/width, glow color/size/alpha, glow on/off, font family
 - **MOTION / 动态**: shake intensity/speed, fade speed, rise speed, **typewriter on/off + chars per second**, perspective + X/Y strength, lyrics on/off, replace original subtitles
 - **VISUAL / 频谱**: audio visualizer on/off, wave size, max extent (% of screen), position (BOTTOM / TOP / LEFT / RIGHT), bar density (8–256), gradient range (0–1), gradient speed, gradient mode (FIXED 2 / RANGE x~y / MULTI RGB), colour A RGB, colour B RGB, multi RGB (space separated), X mirror — plus an in-panel usage note
+- **BGM / 关卡音乐**: choose a track from `Cybergrind/Music` and replace the current level BGM; RESTORE returns to the level music from the exact point it was paused
 - RESET PAGE (resets only the currently open page) / CLOSE
 
 Every change is written to `lyric_config.json` immediately; the lyric style refreshes within a second. (`replace_original` takes full effect after re-entering Cyber Grind; font family needs a restart.)
@@ -125,6 +126,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - **TEXT / 文字**：文字颜色、字号、字距、描边颜色/宽度、辉光颜色/大小/透明度、辉光开关、字体
 - **MOTION / 动态**：抖动强度/速度、淡入速度、上飘速度、**逐字显示开关 + 每秒字数**、透视与 X/Y 强度、歌词层开关、替换原版字幕
 - **VISUAL / 频谱**：音频可视化开关、波动大小、最大幅度（屏幕百分比）、显示位置（底部/顶部/左侧/右侧）、频谱密度（8–256）、渐变范围（0–1）、渐变强度（速度）、渐变模式（固定双色 / 区间渐变 / 多色渐变）、颜色 A RGB、颜色 B RGB、多色 RGB（空格分隔）、X 轴镜像，面板内附使用说明
+- **BGM / 关卡音乐**：从 `Cybergrind/Music` 选择曲目取代当前关卡 BGM；归还原 BGM 时会从暂停的准确位置继续
 - 重置本页（只重置当前打开的页面）/ 关闭
 
 每次改动都会立刻写回 `lyric_config.json`，歌词样式 1 秒内刷新。（`replace_original` 需要重新进入 Cyber Grind 才完全生效；字体需要重启。）
@@ -156,6 +158,20 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - 波形图放在**独立画布、排序低于游戏原版 UI**，不会盖住原版界面。
 - 柱状条紧贴屏幕边缘（TOP/BOTTOM/LEFT/RIGHT 均无空隙）。
 - 最大幅度限制为屏幕高度（左右时为宽度）的 50%，不会超过屏幕一半。
+
+### Level BGM replacement / 关卡 BGM 取代
+
+- The **BGM** page lists every `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` (recursively). Click the **Track** row to cycle through them.
+- **REPLACE BGM** pauses the game's level music (clean / battle / boss themes) and starts the selected track on a loop. The paused level music keeps its exact position.
+- **RESTORE BGM** stops the replacement and unpauses the level music, which continues from the point where it was paused. Scene changes also end the replacement automatically.
+- The audio visualizer reads the replacement track while it is active, and reads the game's level music after restoration — so the spectrum works for both.
+- Only local files are used; the CGME Downloader is still unsupported.
+
+- **BGM** 页会递归列出 `Cybergrind/Music` 下所有 `.mp3` / `.ogg` / `.wav`。点击 **曲目 / Track** 行可循环切换。
+- **取代关卡 BGM**：暂停游戏当前的关卡音乐（clean / battle / boss 三个主题），循环播放选定曲目；被暂停的关卡音乐保留准确进度。
+- **归还原 BGM**：停止替代曲目并恢复关卡音乐，从暂停的位置继续；切换关卡时也会自动结束取代。
+- 频谱在取代期间读取替代曲目，归还后读取关卡原音乐，两种情况下都有效。
+- 只使用本地文件；CGME 下载器仍不受支持。
 
 ### Position safety / 位置防重叠与防出屏
 

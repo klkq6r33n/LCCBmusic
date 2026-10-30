@@ -1,14 +1,19 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using Jukebox.Components;
 using Jukebox.UI.Subtitles;
 using JukeboxCore.Logging;
 using JukeboxCore.Songs.Models;
 using JukeboxCore.Subtitles;
+using JukeboxCore.Utils;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Jukebox.LimbusCompany;
@@ -111,14 +116,45 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private float _nextConfigCheck;
     private float _nextOverlapCheck;
 
+    // ---- 关卡 BGM 取代 ----
+    public static LimbusCompanyLyricsOverlay Instance { get; private set; }
+
+    private AudioSource _bgmSource;
+    private Coroutine _bgmLoadRoutine;
+    private readonly List<AudioSource> _pausedThemes = new();
+    private AudioSource[] _musicThemesCache = Array.Empty<AudioSource>();
+    private float _nextMusicThemeScan;
+    public bool BgmReplacing { get; private set; }
+    public string BgmStatus { get; private set; } = "";
+
+    private void Awake()
+    {
+        Instance = this;
+    }
+
     private void OnEnable()
     {
         LimbusCompanyLyrics.SettingsChanged += OnSettingsChanged;
+        SceneManager.sceneLoaded += OnSceneLoadedForBgm;
     }
 
     private void OnDisable()
     {
         LimbusCompanyLyrics.SettingsChanged -= OnSettingsChanged;
+        SceneManager.sceneLoaded -= OnSceneLoadedForBgm;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+
+    private void OnSceneLoadedForBgm(Scene scene, LoadSceneMode mode)
+    {
+        // 切关卡时结束取代，避免继续静音新关卡的 BGM。
+        if (BgmReplacing)
+            StopBgmReplacement();
     }
 
     private void OnSettingsChanged()
@@ -135,6 +171,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             PollPanelSuppression();
             Animate();
             PollTranslation();
+            if (BgmReplacing)
+                KeepGameMusicPaused();
             UpdateVisualizer();
             CheckOverlapDiagnostics();
         }
@@ -376,13 +414,250 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         _visRoot.transform.SetSiblingIndex(0);
     }
 
+    // ------------------------------------------------------------------ level BGM replacement
+
+    private AudioSource EnsureBgmSource()
+    {
+        if (_bgmSource != null)
+            return _bgmSource;
+
+        var go = new GameObject("LimbusCompanyBgmSource");
+        go.transform.SetParent(transform, false);
+        _bgmSource = go.AddComponent<AudioSource>();
+        _bgmSource.playOnAwake = false;
+        _bgmSource.loop = true;
+        _bgmSource.spatialBlend = 0f;
+        _bgmSource.volume = 1f;
+
+        foreach (var theme in GetGameMusicThemes())
+        {
+            if (theme != null && theme.outputAudioMixerGroup != null)
+            {
+                _bgmSource.outputAudioMixerGroup = theme.outputAudioMixerGroup;
+                break;
+            }
+        }
+
+        return _bgmSource;
+    }
+
+    /// <summary>用 Cybergrind/Music 中的曲目取代当前关卡 BGM。</summary>
+    public bool StartBgmReplacement(string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            BgmStatus = "no track selected";
+            return false;
+        }
+
+        var fullPath = Path.IsPathRooted(relativePath)
+            ? relativePath
+            : Path.Combine(PathsUtils.MusicPath, relativePath);
+
+        if (!File.Exists(fullPath))
+        {
+            BgmStatus = "file not found: " + relativePath;
+            LimbusCompanyLyrics.Log?.LogWarning("BGM 取代失败，文件不存在: " + fullPath);
+            return false;
+        }
+
+        StopBgmReplacement();
+        EnsureBgmSource();
+        BgmReplacing = true;
+        BgmStatus = "loading: " + relativePath;
+        PauseGameMusic();
+
+        _bgmLoadRoutine = StartCoroutine(LoadBgmClip(fullPath, relativePath));
+        return true;
+    }
+
+    private IEnumerator LoadBgmClip(string fullPath, string displayName)
+    {
+        using (var request = UnityWebRequestMultimedia.GetAudioClip(new Uri(fullPath).AbsoluteUri, AudioTypeFor(fullPath)))
+        {
+            yield return request.SendWebRequest();
+
+            if (!BgmReplacing)
+                yield break;
+
+            if (request.isNetworkError || request.isHttpError)
+            {
+                BgmStatus = "load failed: " + request.error;
+                LimbusCompanyLyrics.Log?.LogWarning("BGM 读取失败: " + request.error);
+                StopBgmReplacement();
+                yield break;
+            }
+
+            var clip = DownloadHandlerAudioClip.GetContent(request);
+            if (clip == null)
+            {
+                BgmStatus = "load failed (empty clip)";
+                StopBgmReplacement();
+                yield break;
+            }
+
+            var source = EnsureBgmSource();
+            var old = source.clip;
+            source.clip = clip;
+            source.loop = true;
+            source.volume = 1f;
+            source.Play();
+            if (old != null)
+                Destroy(old);
+
+            BgmStatus = "replacing: " + displayName;
+            LimbusCompanyLyrics.Log?.LogInfo("BGM 取代: " + fullPath);
+        }
+
+        _bgmLoadRoutine = null;
+    }
+
+    /// <summary>归还关卡 BGM，并从取代前的进度继续。</summary>
+    public void StopBgmReplacement()
+    {
+        BgmReplacing = false;
+
+        if (_bgmLoadRoutine != null)
+        {
+            StopCoroutine(_bgmLoadRoutine);
+            _bgmLoadRoutine = null;
+        }
+
+        if (_bgmSource != null)
+        {
+            _bgmSource.Stop();
+            var clip = _bgmSource.clip;
+            _bgmSource.clip = null;
+            if (clip != null)
+                Destroy(clip);
+        }
+
+        _pausedThemes.RemoveAll(src => src == null);
+        foreach (var source in _pausedThemes)
+        {
+            if (source != null)
+                source.UnPause();
+        }
+        _pausedThemes.Clear();
+
+        BgmStatus = "restored level BGM";
+    }
+
+    private void PauseGameMusic()
+    {
+        foreach (var source in GetGameMusicThemes())
+        {
+            if (source == null)
+                continue;
+
+            if (source.isPlaying)
+                source.Pause();
+
+            if (!_pausedThemes.Contains(source))
+                _pausedThemes.Add(source);
+        }
+    }
+
+    private void KeepGameMusicPaused()
+    {
+        _pausedThemes.RemoveAll(src => src == null);
+        foreach (var source in GetGameMusicThemes())
+        {
+            if (source == null)
+                continue;
+
+            if (source.isPlaying)
+                source.Pause();
+
+            if (!_pausedThemes.Contains(source))
+                _pausedThemes.Add(source);
+        }
+    }
+
+    private static AudioType AudioTypeFor(string path)
+    {
+        switch (Path.GetExtension(path).ToLowerInvariant())
+        {
+            case ".ogg":
+                return AudioType.OGGVORBIS;
+            case ".wav":
+                return AudioType.WAV;
+            default:
+                return AudioType.MPEG;
+        }
+    }
+
+    /// <summary>反射取得 MusicManager 的 battle/clean/boss AudioSource。</summary>
+    private AudioSource[] GetGameMusicThemes()
+    {
+        if (Time.unscaledTime < _nextMusicThemeScan)
+            return _musicThemesCache;
+
+        _nextMusicThemeScan = Time.unscaledTime + 1f;
+
+        try
+        {
+            var type = Type.GetType("MusicManager, Assembly-CSharp");
+            if (type == null)
+                return _musicThemesCache = Array.Empty<AudioSource>();
+
+            PropertyInfo instanceProperty = null;
+            for (var current = type; current != null && instanceProperty == null; current = current.BaseType)
+                instanceProperty = current.GetProperty("Instance",
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+
+            var instance = instanceProperty?.GetValue(null);
+            if (instance == null)
+                return _musicThemesCache = Array.Empty<AudioSource>();
+
+            var field = type.GetField("allThemes",
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            var themes = field?.GetValue(instance) as AudioSource[];
+            return _musicThemesCache = themes ?? Array.Empty<AudioSource>();
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("读取关卡音乐失败: " + e.Message);
+            return _musicThemesCache = Array.Empty<AudioSource>();
+        }
+    }
+
+    private AudioSource GetVisualizerSource(LimbusCompanyLyricsSettings s)
+    {
+        if (s == null || !s.VisualizerEnabled)
+            return null;
+
+        if (BgmReplacing && _bgmSource != null && _bgmSource.isPlaying)
+            return _bgmSource;
+
+        if (_player != null && _player.Source != null && _player.Source.isPlaying)
+            return _player.Source;
+
+        AudioSource best = null;
+        var bestVolume = -1f;
+        foreach (var source in GetGameMusicThemes())
+        {
+            if (source == null || !source.isPlaying)
+                continue;
+
+            if (source.volume > bestVolume)
+            {
+                best = source;
+                bestVolume = source.volume;
+            }
+        }
+
+        return best;
+    }
+
     private void UpdateVisualizer()
     {
         if (_visRoot == null)
             return;
 
         var s = LimbusCompanyLyrics.Settings;
-        var show = s != null && s.VisualizerEnabled && _player != null && _player.Source != null;
+        var spectrumSource = GetVisualizerSource(s);
+        var show = s != null && s.VisualizerEnabled && spectrumSource != null;
         if (!show)
         {
             if (_visRoot.activeSelf)
@@ -393,7 +668,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (!_visRoot.activeSelf)
             _visRoot.SetActive(true);
 
-        _player.Source.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
+        spectrumSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
 
         var rootRect = _visRoot.GetComponent<RectTransform>();
         var size = rootRect.rect.size;

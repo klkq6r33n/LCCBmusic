@@ -119,6 +119,10 @@ public class LimbusCompanyLyricsSettings
     /// <summary>"en" (default) or "zh".</summary>
     public string Language = "en";
 
+    // ---- 关卡 BGM 取代 ----
+    /// <summary>库存中选中的曲目（相对 Cybergrind/Music 的路径）。</summary>
+    public string BgmTrack = "";
+
     // ---- 运行时状态 ----
     public string FilePath;
     public DateTime LastWriteUtc;
@@ -237,6 +241,7 @@ public class LimbusCompanyLyricsSettings
         TranslationFontSize = Mathf.Clamp(GetFloat(s, "translation_font_size", TranslationFontSize), 0f, 400f);
         TranslationColor = GetString(s, "translation_color", TranslationColor);
         Language = NormalizeLanguage(GetString(s, "language", Language));
+        BgmTrack = GetString(s, "bgm_track", BgmTrack);
     }
 
     public static string NormalizeGradientMode(string value)
