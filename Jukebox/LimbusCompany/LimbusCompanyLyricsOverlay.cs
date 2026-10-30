@@ -431,26 +431,25 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
             var bar = _visBars[i];
             var range = Mathf.Clamp(s.VisualizerGradientRange, 0f, 1f);
+            // 自定义渐变色的两个 RGB 端点（#RRGGBB）。
+            var fromColor = ParseColor(s.VisualizerColorFrom, new Color(0.847f, 0.647f, 0.137f));
+            var toColor = ParseColor(s.VisualizerColorTo, new Color(0f, 0.898f, 1f));
+
             if (range > 0.001f)
             {
-                // 颜色只随时间流动，与音量无关。
-                // 用户可用 visualizer_hue_from / hue_to 指定渐变的色相范围（0-360）。
-                var hueFrom = Mathf.Clamp(s.VisualizerHueFrom, 0f, 360f) / 360f;
-                var hueTo = Mathf.Clamp(s.VisualizerHueTo, 0f, 360f) / 360f;
-
+                // 颜色只随时间流动，与音量无关；在用户指定的两个 RGB 颜色间来回渐变。
                 var spread = count > 1 ? (float)band / (count - 1) : 0f;
                 var phase = Mathf.Repeat(Time.unscaledTime * 0.08f + spread * range, 1f);
-                // 在 [from, to] 之间来回渐变，避免色相绕圈时突然跳变。
                 var wave = phase <= 0.5f ? phase * 2f : (1f - phase) * 2f;
-                var hue = Mathf.Lerp(hueFrom, hueTo, wave);
 
-                var custom = Color.HSVToRGB(hue, 1f, 1f);
+                var custom = Color.Lerp(fromColor, toColor, wave);
                 custom.a = 0.9f;
                 bar.color = custom;
             }
             else
             {
-                bar.color = new Color(0.776f, 0.635f, 0.29f, 0.55f);
+                fromColor.a = 0.9f;
+                bar.color = fromColor;
             }
 
             var rect = bar.rectTransform;

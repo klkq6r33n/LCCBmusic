@@ -83,11 +83,11 @@ public class LimbusCompanyLyricsSettings
     /// <summary>渐变范围（0=整排同色，1=整排铺满色相段）；色相随时间流动，不随音量变化。</summary>
     public float VisualizerGradientRange = 1f;
 
-    /// <summary>可自定义的渐变色相起点（0-360）。</summary>
-    public float VisualizerHueFrom = 0f;
+    /// <summary>自定义渐变起点颜色（RGB，十六进制 #RRGGBB）。</summary>
+    public string VisualizerColorFrom = "#d8a523";
 
-    /// <summary>可自定义的渐变色相终点（0-360）。</summary>
-    public float VisualizerHueTo = 360f;
+    /// <summary>自定义渐变终点颜色（RGB，十六进制 #RRGGBB）。</summary>
+    public string VisualizerColorTo = "#00e5ff";
 
     /// <summary>X 轴镜像（左右对称）。</summary>
     public bool VisualizerMirrorX = false;
@@ -206,8 +206,8 @@ public class LimbusCompanyLyricsSettings
         var legacyGradient = GetBool(s, "visualizer_gradient", true);
         VisualizerGradientRange = Mathf.Clamp(
             GetFloat(s, "visualizer_gradient_range", legacyGradient ? VisualizerGradientRange : 0f), 0f, 1f);
-        VisualizerHueFrom = Mathf.Clamp(GetFloat(s, "visualizer_hue_from", VisualizerHueFrom), 0f, 360f);
-        VisualizerHueTo = Mathf.Clamp(GetFloat(s, "visualizer_hue_to", VisualizerHueTo), 0f, 360f);
+        VisualizerColorFrom = GetString(s, "visualizer_color_from", VisualizerColorFrom);
+        VisualizerColorTo = GetString(s, "visualizer_color_to", VisualizerColorTo);
         VisualizerMirrorX = GetBool(s, "visualizer_mirror_x", VisualizerMirrorX);
 
         Enabled = GetBool(s, "enabled", Enabled);
