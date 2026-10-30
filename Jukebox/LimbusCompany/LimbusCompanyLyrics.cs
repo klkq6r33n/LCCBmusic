@@ -78,6 +78,19 @@ public static class LimbusCompanyLyrics
 
             settings["language"] = s.Language;
             settings["bgm_track"] = s.BgmTrack;
+            settings["bgm_key_toggle"] = s.BgmKeyToggle;
+            settings["bgm_key_prev"] = s.BgmKeyPrev;
+            settings["bgm_key_next"] = s.BgmKeyNext;
+            settings["bgm_key_replace"] = s.BgmKeyReplace;
+            settings["bgm_key_restore"] = s.BgmKeyRestore;
+            settings["bgm_key_lyrics"] = s.BgmKeyLyrics;
+            settings["bgm_key_now_playing"] = s.BgmKeyNowPlaying;
+            settings["now_playing_enabled"] = s.NowPlayingEnabled;
+            settings["cover_pos_x"] = s.CoverPosX;
+            settings["cover_pos_y"] = s.CoverPosY;
+            settings["title_pos_x"] = s.TitlePosX;
+            settings["title_pos_y"] = s.TitlePosY;
+            settings["cover_size"] = s.CoverSize;
             settings["enabled"] = s.Enabled;
             settings["replace_original"] = s.ReplaceOriginal;
             settings["glow_enabled"] = s.GlowEnabled;

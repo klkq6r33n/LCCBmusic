@@ -83,7 +83,20 @@
     "translation_font_size": 0,
     "translation_color": "#d8d8d8",
     "language": "en",
-    "bgm_track": ""
+    "bgm_track": "",
+    "bgm_key_toggle": "F5",
+    "bgm_key_prev": "LeftBracket",
+    "bgm_key_next": "RightBracket",
+    "bgm_key_replace": "Enter",
+    "bgm_key_restore": "Backspace",
+    "bgm_key_lyrics": "L",
+    "bgm_key_now_playing": "N",
+    "now_playing_enabled": true,
+    "cover_pos_x": 84,
+    "cover_pos_y": 18,
+    "title_pos_x": 84,
+    "title_pos_y": 38,
+    "cover_size": 220
   },
   "presets": {
     "通用": { "text": "#fffeef", "stroke": "#d8a523", "glow": "#d8a523" },

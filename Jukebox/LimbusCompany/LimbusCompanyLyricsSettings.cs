@@ -123,6 +123,23 @@ public class LimbusCompanyLyricsSettings
     /// <summary>库存中选中的曲目（相对 Cybergrind/Music 的路径）。</summary>
     public string BgmTrack = "";
 
+    /// <summary>F5 面板快捷键（Unity InputSystem Key 名称）。</summary>
+    public string BgmKeyToggle = "F5";
+    public string BgmKeyPrev = "LeftBracket";
+    public string BgmKeyNext = "RightBracket";
+    public string BgmKeyReplace = "Enter";
+    public string BgmKeyRestore = "Backspace";
+    public string BgmKeyLyrics = "L";
+    public string BgmKeyNowPlaying = "N";
+
+    // ---- 当前歌曲曲绘 / 歌名（右上角 ULK 风格框） ----
+    public bool NowPlayingEnabled = true;
+    public float CoverPosX = 84f;
+    public float CoverPosY = 18f;
+    public float TitlePosX = 84f;
+    public float TitlePosY = 38f;
+    public float CoverSize = 220f;
+
     // ---- 运行时状态 ----
     public string FilePath;
     public DateTime LastWriteUtc;
@@ -242,6 +259,19 @@ public class LimbusCompanyLyricsSettings
         TranslationColor = GetString(s, "translation_color", TranslationColor);
         Language = NormalizeLanguage(GetString(s, "language", Language));
         BgmTrack = GetString(s, "bgm_track", BgmTrack);
+        BgmKeyToggle = GetString(s, "bgm_key_toggle", BgmKeyToggle);
+        BgmKeyPrev = GetString(s, "bgm_key_prev", BgmKeyPrev);
+        BgmKeyNext = GetString(s, "bgm_key_next", BgmKeyNext);
+        BgmKeyReplace = GetString(s, "bgm_key_replace", BgmKeyReplace);
+        BgmKeyRestore = GetString(s, "bgm_key_restore", BgmKeyRestore);
+        BgmKeyLyrics = GetString(s, "bgm_key_lyrics", BgmKeyLyrics);
+        BgmKeyNowPlaying = GetString(s, "bgm_key_now_playing", BgmKeyNowPlaying);
+        NowPlayingEnabled = GetBool(s, "now_playing_enabled", NowPlayingEnabled);
+        CoverPosX = Mathf.Clamp(GetFloat(s, "cover_pos_x", CoverPosX), 0f, 100f);
+        CoverPosY = Mathf.Clamp(GetFloat(s, "cover_pos_y", CoverPosY), 0f, 100f);
+        TitlePosX = Mathf.Clamp(GetFloat(s, "title_pos_x", TitlePosX), 0f, 100f);
+        TitlePosY = Mathf.Clamp(GetFloat(s, "title_pos_y", TitlePosY), 0f, 100f);
+        CoverSize = Mathf.Clamp(GetFloat(s, "cover_size", CoverSize), 80f, 600f);
     }
 
     public static string NormalizeGradientMode(string value)
