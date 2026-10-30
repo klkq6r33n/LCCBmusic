@@ -255,7 +255,6 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         // F5 鼠标菜单需要射线检测；EventSystem 通常由游戏自带。
         canvasGo.AddComponent<GraphicRaycaster>();
-        EnsureMouseEventSystem();
 
         // 波形图放进独立画布：排序值低于游戏原版 UI，避免盖住原版界面。
         var visCanvasGo = new GameObject("LimbusCompanyVisualizerCanvas", typeof(RectTransform));
@@ -472,15 +471,18 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
     // ------------------------------------------------------------------ level BGM replacement
 
+    private GameObject _tempEventSystem;
+
     private void EnsureMouseEventSystem()
     {
-        if (EventSystem.current != null)
+        if (EventSystem.current != null || _tempEventSystem != null)
             return;
 
         try
         {
             var go = new GameObject("LimbusEventSystem");
-            DontDestroyOnLoad(go);
+            go.transform.SetParent(transform, false);
+            _tempEventSystem = go;
             go.AddComponent<EventSystem>();
             var module = go.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
             module.GetType().GetMethod("AssignDefaultActions")?.Invoke(module, null);
@@ -489,6 +491,15 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         {
             LimbusCompanyLyrics.Log?.LogWarning("创建 UI EventSystem 失败: " + e.Message);
         }
+    }
+
+    private void DestroyTempEventSystem()
+    {
+        if (_tempEventSystem == null)
+            return;
+
+        Destroy(_tempEventSystem);
+        _tempEventSystem = null;
     }
 
     private void BuildBgmPanel()
@@ -1293,6 +1304,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         _bgmPage = 0;
         _bgmListOffset = 0;
         RefreshBgmTracks();
+        EnsureMouseEventSystem();
 
         if (_bgmPanel != null)
             _bgmPanel.SetActive(true);
@@ -1315,6 +1327,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             _bgmPanel.SetActive(false);
 
         ResumeFromBgmMenu();
+        DestroyTempEventSystem();
 
         if (wasEditing)
             LimbusCompanyLyrics.SaveAllSettings();
