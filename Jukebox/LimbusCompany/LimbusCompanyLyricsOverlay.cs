@@ -900,11 +900,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         CleanupNowPlayingAdjustHint();
         LimbusCompanyLyrics.SaveAllSettings();
 
-        if (_bgmPanelOpen && _bgmPanel != null)
-        {
-            _bgmPanel.SetActive(true);
-            RebuildBgmPanelUi();
-        }
+        // 完成后直接关闭菜单并恢复游戏，让玩家立刻看到调整结果。
+        CloseBgmPanel();
     }
 
     private void NudgeNowPlaying(int dx, int dy)

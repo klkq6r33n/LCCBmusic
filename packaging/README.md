@@ -190,13 +190,13 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - While a Jukebox song or a replaced level track is playing, one horizontal row is drawn: **cover / title / artist** (曲绘 / 曲名 / 作者). Cover and the text block share the same height, and the title and artist use the **same font size**; the artist is the last item in the row.
 - The cover sits in a ULK-style bordered frame. No cover → the frame stays hollow (only the border is drawn).
 - Cover source, in order: an image with the audio file's base name (`.png` / `.jpg` / `.jpeg`), `cover.*` / `folder.*` in the same folder, then the embedded ID3 picture.
-- **Mouse adjustment** (F5 → DISPLAY → **ADJUST ROW WITH MOUSE**): the menu hides, then **drag the whole row** to move it and **scroll the mouse wheel** to change its size; press **Esc** or click **DONE** to finish. The DISPLAY page also has arrow / `-` `+` / reset buttons, and keyboard **P** still works (arrows move, Shift = fine, `-` / `+` resize, P/Esc finish). Changes save immediately.
+- **Mouse adjustment** (F5 → DISPLAY → **ADJUST ROW WITH MOUSE**): the menu hides, then **drag the whole row** to move it and **scroll the mouse wheel** to change its size; press **Esc** or click **DONE** to finish (the menu closes so you can see the result). The DISPLAY page also has arrow / `-` `+` / reset buttons, and keyboard **P** still works (arrows move, Shift = fine, `-` / `+` resize, P/Esc finish). Changes save immediately.
 - Config keys: `now_playing_enabled`, `cover_pos_x/y` (row anchor: right edge X and vertical center Y, in % of the screen), `cover_size` (row height); `title_pos_x/y` are kept for old configs but are no longer used.
 
 - 当 Jukebox 曲目或取代的关卡曲目正在播放时，会绘制**一整行**：**曲绘 / 曲名 / 作者**。曲绘与文字块高度相同，曲名与作者使用**相同字号**，作者排在整行最后。
 - 曲绘外面是 ULK 风格的描边框。没有曲绘时框体镂空（只画边框）。
 - 曲绘来源依次为：与音频同名的图片（`.png` / `.jpg` / `.jpeg`）、同目录的 `cover.*` / `folder.*`、音频内嵌的 ID3 图片。
-- **鼠标调整**（F5 → DISPLAY → **用鼠标调整曲绘行**）：菜单会隐藏，此时**拖动整行**移动、**滚轮**改变大小，按 **Esc** 或点击 **完成** 结束。DISPLAY 页也保留方向按钮、`-` `+` 与重置按钮；键盘 **P** 仍可用（方向键移动，Shift 微调，`-` / `+` 缩放，P/Esc 结束）。改动立即保存。
+- **鼠标调整**（F5 → DISPLAY → **用鼠标调整曲绘行**）：菜单会隐藏，此时**拖动整行**移动、**滚轮**改变大小，按 **Esc** 或点击 **完成** 结束（结束后菜单关闭并恢复游戏，方便立刻查看效果）。DISPLAY 页也保留方向按钮、`-` `+` 与重置按钮；键盘 **P** 仍可用（方向键移动，Shift 微调，`-` / `+` 缩放，P/Esc 结束）。改动立即保存。
 - 配置项：`now_playing_enabled`、`cover_pos_x/y`（整行锚点：右边缘 X、垂直中心 Y，屏幕百分比）、`cover_size`（整行高度）；`title_pos_x/y` 仅为兼容旧配置保留，已不再使用。
 
 ### Position safety / 位置防重叠与防出屏
