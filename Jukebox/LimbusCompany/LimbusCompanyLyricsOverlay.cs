@@ -581,7 +581,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         var image = go.AddComponent<Image>();
         image.color = new Color(0.02f, 0.02f, 0.03f, 0.96f);
-        image.raycastTarget = true;
+        // 空白处不拦截点击：让下层曲绘行在菜单打开时仍可拖动（按钮本身仍可点击）。
+        image.raycastTarget = false;
 
         var outline = go.AddComponent<Outline>();
         outline.effectColor = new Color(0.847f, 0.647f, 0.137f, 1f);
@@ -716,7 +717,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         var panelRect = CreateUiObject("PreviewPanel", root, new Vector2(330f, -20f), new Vector2(420f, 660f));
         var panelImage = panelRect.gameObject.AddComponent<Image>();
         panelImage.color = new Color(0.045f, 0.045f, 0.055f, 0.9f);
-        panelImage.raycastTarget = false;
+        panelImage.raycastTarget = true;
         var panelOutline = panelRect.gameObject.AddComponent<Outline>();
         panelOutline.effectColor = new Color(0.776f, 0.635f, 0.29f, 0.7f);
         panelOutline.effectDistance = new Vector2(1f, -1f);
