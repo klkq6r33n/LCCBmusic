@@ -433,13 +433,20 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             var range = Mathf.Clamp(s.VisualizerGradientRange, 0f, 1f);
             if (range > 0.001f)
             {
-                // 颜色只随时间流动：色相沿时间周期平移，与音量无关；
-                // range 决定整排柱子跨越的色相宽度，镜像时同一 band 同色。
+                // 颜色只随时间流动，与音量无关。
+                // 用户可用 visualizer_hue_from / hue_to 指定渐变的色相范围（0-360）。
+                var hueFrom = Mathf.Clamp(s.VisualizerHueFrom, 0f, 360f) / 360f;
+                var hueTo = Mathf.Clamp(s.VisualizerHueTo, 0f, 360f) / 360f;
+
                 var spread = count > 1 ? (float)band / (count - 1) : 0f;
-                var hue = Mathf.Repeat(Time.unscaledTime * 0.08f + spread * range, 1f);
-                var rainbow = Color.HSVToRGB(hue, 1f, 1f);
-                rainbow.a = 0.9f;
-                bar.color = rainbow;
+                var phase = Mathf.Repeat(Time.unscaledTime * 0.08f + spread * range, 1f);
+                // 在 [from, to] 之间来回渐变，避免色相绕圈时突然跳变。
+                var wave = phase <= 0.5f ? phase * 2f : (1f - phase) * 2f;
+                var hue = Mathf.Lerp(hueFrom, hueTo, wave);
+
+                var custom = Color.HSVToRGB(hue, 1f, 1f);
+                custom.a = 0.9f;
+                bar.color = custom;
             }
             else
             {

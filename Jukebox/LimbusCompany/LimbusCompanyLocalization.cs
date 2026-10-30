@@ -339,6 +339,8 @@ public class LimbusCompanyLocalization : MonoBehaviour
             AddValueRow(rect, ref y, step, L("Position", "显示位置"), VisualizerPositionText(S.VisualizerPosition), () => S.VisualizerPosition = NextVisualizerPosition(S.VisualizerPosition));
             AddInputRow(rect, ref y, step, L("Bar density (8-128)", "频谱密度 (8-128)"), Mathf.RoundToInt(S.VisualizerBars).ToString(CultureInfo.InvariantCulture), v => S.VisualizerBars = Mathf.Clamp(Mathf.RoundToInt(v), 8, 128));
             AddInputRow(rect, ref y, step, L("Gradient range (0-1)", "渐变范围 (0-1)"), F(S.VisualizerGradientRange), v => S.VisualizerGradientRange = Mathf.Clamp(v, 0f, 1f));
+            AddInputRow(rect, ref y, step, L("Hue from (0-360)", "色相起点 (0-360)"), F(S.VisualizerHueFrom), v => S.VisualizerHueFrom = Mathf.Clamp(v, 0f, 360f));
+            AddInputRow(rect, ref y, step, L("Hue to (0-360)", "色相终点 (0-360)"), F(S.VisualizerHueTo), v => S.VisualizerHueTo = Mathf.Clamp(v, 0f, 360f));
             AddToggleRow(rect, ref y, step, L("X mirror", "X 轴镜像"), () => S.VisualizerMirrorX, () => S.VisualizerMirrorX = !S.VisualizerMirrorX);
 
             var info = CreateLabelObject(rect, "VisInfo",
@@ -683,6 +685,8 @@ public class LimbusCompanyLocalization : MonoBehaviour
         s.VisualizerPosition = "bottom";
         s.VisualizerBars = 48;
         s.VisualizerGradientRange = 1f;
+        s.VisualizerHueFrom = 0f;
+        s.VisualizerHueTo = 360f;
         s.VisualizerMirrorX = false;
     }
 
