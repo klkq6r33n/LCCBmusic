@@ -176,7 +176,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 ### Level BGM replacement / 关卡 BGM 取代
 
 - Press **F5** in any level to open the mouse menu. It is separate from the Cyber Grind menu: **F4 works only in the Cyber Grind, F5 only in levels.** Opening the menu pauses the game and unlocks the cursor.
-- **MUSIC**: lists every `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` recursively (page buttons at the bottom); click a track to select it, then **REPLACE LEVEL BGM** or **RESTORE BGM**. A **progress bar** shows the replacement track's position — click/drag it to seek — with **PAUSE / RESUME** and elapsed/total time. The **PERSONAL / ULTRAKILL-OST** buttons at the top switch between personal songs (everything outside the OST folder) and a dedicated `Cybergrind/Music/ULTRAKILL-OST` category (created automatically) for official songs. No official audio is shipped with the mod or downloaded automatically — the folder is for tracks extracted from your own game copy.
+- **MUSIC**: lists every `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` recursively (page buttons at the bottom); click a track to select it, then **REPLACE LEVEL BGM** or **RESTORE BGM**. A **progress bar** shows the replacement track's position — click/drag it to seek — with **PAUSE / RESUME** and elapsed/total time. The category buttons at the top show **PERSONAL** (songs outside all category folders) and every registered category folder, starting with `ULTRAKILL-OST`. Click **+** to add your own category: enter a folder name, and the mod creates `Cybergrind/Music/<name>` and switches to it. Category names are saved in `lyric_config.json` under `"song_categories"`. No official audio is shipped with the mod or downloaded automatically — the folder is for tracks extracted from your own game copy.
 - **SETTINGS**: the same LAYOUT / TEXT / MOTION / TRANS / VISUAL pages as the in-Cyber-Grind menu, fully mouse-driven (inputs, toggles, per-page reset).
 - **DISPLAY**: switch **中文 / ENGLISH**, toggle lyrics and the now-playing row. The row is dragged/resized directly with the mouse while F5 is open (no separate adjustment block or shortcuts).
 - Only **F5** (open/close) and **Esc** (close) remain as keyboard shortcuts; all other shortcuts were removed.
@@ -186,7 +186,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - Only local files are used; the CGME Downloader is still unsupported.
 
 - 在任意关卡中按 **F5** 打开鼠标菜单。它与血宫菜单分开：**F4 只在血宫可用，F5 只在关卡可用。** 打开时暂停游戏并解锁鼠标。
-- **MUSIC**：递归列出 `Cybergrind/Music` 下所有 `.mp3` / `.ogg` / `.wav`（底部翻页）；点击曲目选中，再点 **取代关卡 BGM** 或 **归还原 BGM**。界面带**进度条**（点击/拖动跳转）、**暂停 / 继续**按钮以及已播放/总时长。顶部的 **个人 / ULTRAKILL-OST** 分类按钮：个人 = `ULTRAKILL-OST` 之外的所有歌曲；ULTRAKILL-OST = 专门的 `Cybergrind/Music/ULTRAKILL-OST` 文件夹（不存在时会自动创建），官方歌曲放进该文件夹即可。mod **不附带也不会自动下载官方音频**，该文件夹用于放置从你自己游戏副本中提取的曲目。
+- **MUSIC**：递归列出 `Cybergrind/Music` 下所有 `.mp3` / `.ogg` / `.wav`（底部翻页）；点击曲目选中，再点 **取代关卡 BGM** 或 **归还原 BGM**。界面带**进度条**（点击/拖动跳转）、**暂停 / 继续**按钮以及已播放/总时长。顶部的分类按钮显示 **个人**（不在任何分类文件夹内的歌曲）以及所有已注册的分类文件夹，第一个是 `ULTRAKILL-OST`。点 **+** 可添加自己的分类：输入文件夹名后，mod 会创建 `Cybergrind/Music/<名称>` 并切换到该分类。分类列表保存在 `lyric_config.json` 的 `"song_categories"` 中。mod **不附带也不会自动下载官方音频**，该文件夹用于放置从你自己游戏副本中提取的曲目。
 - **SETTINGS**：与血宫内菜单相同的 位置 / 文字 / 动态 / 翻译 / 频谱 五页，全部可用鼠标操作（输入框、开关、单页重置）。
 - **DISPLAY**：切换 **中文 / English**、开关歌词与曲绘框、移动/缩放曲绘与歌名，并点击任意按键绑定后按下新键改绑（Esc 取消）。
 - 仅保留 **F5**（开关）与 **Esc**（关闭）两个键盘快捷键；其余快捷键已全部移除。

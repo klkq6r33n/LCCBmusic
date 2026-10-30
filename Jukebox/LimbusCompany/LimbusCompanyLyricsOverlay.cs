@@ -157,8 +157,13 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private string[] _bgmAllTracks = Array.Empty<string>();
     private string[] _bgmTracks = Array.Empty<string>();
     private int _bgmIndex;
-    private int _bgmSourceFilter; // 0 all, 1 ULTRAKILL-OST
-    private const string OstFolderName = "ULTRAKILL-OST";
+    private string _bgmSelectedCategory; // null/空 = 个人
+    private int _categoryPage;
+    private bool _addingCategory;
+    private TMP_InputField _categoryNameInput;
+    private TextMeshProUGUI _categoryStatusText;
+    private const int CategoriesPerPage = 3;
+    private const string OstFolderName = LimbusCompanySongCategories.OstName;
     private int _bgmRebindStage; // 0 none, 1 choose action, 2 wait key
     private int _bgmRebindAction;
     private int _bgmPage; // 0 music, 1 settings, 2 display
@@ -862,24 +867,31 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
     private void BuildBgmMusicPage(RectTransform parent)
     {
-        CreateUiButton(parent, IsZh ? "个人" : "PERSONAL", new Vector2(-150f, 288f), new Vector2(180f, 30f),
-            () => SetBgmSourceFilter(0), 14f,
-            _bgmSourceFilter == 0 ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
-        CreateUiButton(parent, OstFolderName, new Vector2(80f, 288f), new Vector2(240f, 30f),
-            () => SetBgmSourceFilter(1), 14f,
-            _bgmSourceFilter == 1 ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
-
+        BuildBgmCategoryBar(parent);
         BuildBgmPlaybackControls(parent);
 
         if (_bgmTracks.Length == 0)
         {
-            var message = _bgmSourceFilter == 1
-                ? (IsZh
+            string message;
+            if (string.IsNullOrEmpty(_bgmSelectedCategory))
+            {
+                message = IsZh
+                    ? "没有个人歌曲。\n把音频放进 Cybergrind/Music（分类文件夹之外）。"
+                    : "No personal songs.\nPut audio in Cybergrind/Music (outside category folders).";
+            }
+            else if (string.Equals(_bgmSelectedCategory, OstFolderName, StringComparison.OrdinalIgnoreCase))
+            {
+                message = IsZh
                     ? "ULTRAKILL-OST 文件夹为空。\n把官方歌曲放进 Cybergrind/Music/ULTRAKILL-OST。"
-                    : "ULTRAKILL-OST is empty.\nPut official songs in Cybergrind/Music/ULTRAKILL-OST.")
-                : (IsZh
-                    ? "没有个人歌曲。\n把音频放进 Cybergrind/Music（ULTRAKILL-OST 之外）。"
-                    : "No personal songs.\nPut audio in Cybergrind/Music (outside ULTRAKILL-OST).");
+                    : "ULTRAKILL-OST is empty.\nPut official songs in Cybergrind/Music/ULTRAKILL-OST.";
+            }
+            else
+            {
+                message = IsZh
+                    ? $"分类 {_bgmSelectedCategory} 为空。\n把歌曲放进 Cybergrind/Music/{_bgmSelectedCategory}。"
+                    : $"Category {_bgmSelectedCategory} is empty.\nPut songs in Cybergrind/Music/{_bgmSelectedCategory}.";
+            }
+
             CreateUiLabel(parent, message, new Vector2(0f, 120f), new Vector2(600f, 80f), 17f,
                 TextAlignmentOptions.Center, true);
             CreateUiButton(parent, IsZh ? "归还原 BGM" : "RESTORE BGM", new Vector2(0f, -300f),
@@ -917,6 +929,123 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             new Vector2(260f, 44f), ApplySelectedBgmTrack, 16f);
         CreateUiButton(parent, IsZh ? "归还原 BGM" : "RESTORE BGM", new Vector2(140f, -300f),
             new Vector2(220f, 44f), RestoreBgmFromUi, 16f);
+    }
+
+    private void BuildBgmCategoryBar(RectTransform parent)
+    {
+        LimbusCompanySongCategories.Refresh();
+
+        if (_addingCategory)
+        {
+            BuildAddBgmCategoryRow(parent);
+            return;
+        }
+
+        var all = new List<string> { null };
+        foreach (var category in LimbusCompanySongCategories.Categories)
+        {
+            if (!string.IsNullOrEmpty(category))
+                all.Add(category);
+        }
+
+        var pages = Mathf.Max(1, (all.Count + CategoriesPerPage - 1) / CategoriesPerPage);
+        _categoryPage = Mathf.Clamp(_categoryPage, 0, pages - 1);
+        var start = _categoryPage * CategoriesPerPage;
+        var centers = new[] { -200f, -45f, 110f };
+
+        for (var i = 0; i < CategoriesPerPage; i++)
+        {
+            var index = start + i;
+            if (index >= all.Count)
+                break;
+
+            var category = all[index];
+            var selected = string.IsNullOrEmpty(category)
+                ? string.IsNullOrEmpty(_bgmSelectedCategory)
+                : string.Equals(category, _bgmSelectedCategory, StringComparison.OrdinalIgnoreCase);
+
+            CreateUiButton(parent,
+                string.IsNullOrEmpty(category) ? (IsZh ? "个人" : "PERSONAL") : CategoryLabel(category),
+                new Vector2(centers[i], 288f), new Vector2(145f, 30f),
+                () => SelectBgmCategory(category), 13f,
+                selected ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
+        }
+
+        if (pages > 1)
+        {
+            CreateUiButton(parent, "<", new Vector2(-300f, 288f), new Vector2(30f, 30f),
+                () => ChangeCategoryPage(-1), 16f);
+            CreateUiButton(parent, ">", new Vector2(210f, 288f), new Vector2(30f, 30f),
+                () => ChangeCategoryPage(1), 16f);
+        }
+
+        CreateUiButton(parent, "+", new Vector2(275f, 288f), new Vector2(50f, 30f),
+            () => { _addingCategory = true; _categoryNameInput = null; RebuildBgmPanelUi(); }, 18f);
+    }
+
+    private void BuildAddBgmCategoryRow(RectTransform parent)
+    {
+        _categoryNameInput = CreateUiInput(parent, string.Empty, new Vector2(-80f, 288f), new Vector2(300f, 30f));
+        CreateUiButton(parent, IsZh ? "添加" : "ADD", new Vector2(140f, 288f), new Vector2(90f, 30f),
+            ConfirmAddBgmCategory, 14f);
+        CreateUiButton(parent, IsZh ? "取消" : "CANCEL", new Vector2(240f, 288f), new Vector2(100f, 30f),
+            () => { _addingCategory = false; _categoryNameInput = null; _categoryStatusText = null; RebuildBgmPanelUi(); },
+            14f);
+
+        _categoryStatusText = CreateUiLabel(parent, string.Empty, new Vector2(0f, 312f),
+            new Vector2(600f, 22f), 12f, TextAlignmentOptions.Center);
+    }
+
+    private void ConfirmAddBgmCategory()
+    {
+        var raw = _categoryNameInput != null ? _categoryNameInput.text : string.Empty;
+        var name = LimbusCompanySongCategories.SanitizeName(raw);
+
+        if (string.IsNullOrEmpty(name))
+        {
+            SetCategoryStatus(IsZh ? "名称无效或为空。" : "Invalid or empty name.");
+            return;
+        }
+
+        if (!LimbusCompanySongCategories.Add(raw))
+        {
+            SetCategoryStatus(IsZh ? "分类已存在或无法创建。" : "Category exists or cannot be created.");
+            return;
+        }
+
+        _addingCategory = false;
+        _categoryNameInput = null;
+        _categoryStatusText = null;
+        _bgmSelectedCategory = name;
+        _categoryPage = 0;
+        ApplyBgmSourceFilter();
+        _bgmListOffset = 0;
+        RebuildBgmPanelUi();
+    }
+
+    private void SetCategoryStatus(string text)
+    {
+        if (_categoryStatusText == null)
+            return;
+
+        _categoryStatusText.font = LimbusCompanyFonts.MenuFont(text);
+        _categoryStatusText.text = text;
+    }
+
+    private void ChangeCategoryPage(int delta)
+    {
+        var total = LimbusCompanySongCategories.Categories.Count + 1;
+        var pages = Mathf.Max(1, (total + CategoriesPerPage - 1) / CategoriesPerPage);
+        _categoryPage = Mathf.Clamp(_categoryPage + delta, 0, pages - 1);
+        RebuildBgmPanelUi();
+    }
+
+    private static string CategoryLabel(string category)
+    {
+        if (string.IsNullOrEmpty(category))
+            return "PERSONAL";
+
+        return category.Length <= 14 ? category : category.Substring(0, 13) + "...";
     }
 
     private void BuildBgmPlaybackControls(RectTransform parent)
@@ -1773,7 +1902,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         _bgmPanelOpen = true;
         _bgmPage = 0;
         _bgmListOffset = 0;
-        _bgmSourceFilter = 0;
+        _addingCategory = false;
+        _categoryNameInput = null;
+        _categoryStatusText = null;
         RefreshBgmTracks();
         EnsureMouseEventSystem();
 
@@ -1840,36 +1971,65 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             LimbusCompanyLyrics.Log?.LogWarning("读取 Cybergrind/Music 失败: " + e.Message);
         }
 
-        try
-        {
-            // 为官方歌曲准备一个固定分类文件夹（没有就创建）。
-            Directory.CreateDirectory(Path.Combine(PathsUtils.MusicPath, OstFolderName));
-        }
-        catch (Exception)
-        {
-            // 游戏目录不可写时忽略。
-        }
-
         tracks.Sort(StringComparer.OrdinalIgnoreCase);
         _bgmAllTracks = tracks.ToArray();
 
-        // 打开时默认回到上次选中曲目所属的分类（个人 / ULTRAKILL-OST）。
+        LimbusCompanySongCategories.Refresh();
+
         var settings = LimbusCompanyLyrics.Settings;
-        _bgmSourceFilter = settings != null && IsOstTrack(settings.BgmTrack) ? 1 : 0;
+        if (!string.IsNullOrEmpty(_bgmSelectedCategory) && !IsKnownCategory(_bgmSelectedCategory))
+            _bgmSelectedCategory = null;
+
+        if (string.IsNullOrEmpty(_bgmSelectedCategory))
+            _bgmSelectedCategory = CategoryOf(settings?.BgmTrack);
+
         ApplyBgmSourceFilter();
 
-        // 当前分类为空时自动切到另一个分类。
+        // 当前分类为空时自动切到有歌曲的分类。
         if (_bgmTracks.Length == 0 && _bgmAllTracks.Length > 0)
         {
-            _bgmSourceFilter = _bgmSourceFilter == 0 ? 1 : 0;
+            _bgmSelectedCategory = CategoryOf(_bgmAllTracks[0]);
             ApplyBgmSourceFilter();
         }
     }
 
-    private static bool IsOstTrack(string relativePath)
+    private static bool IsKnownCategory(string category)
     {
-        return relativePath.StartsWith(OstFolderName + "\\", StringComparison.OrdinalIgnoreCase) ||
-               relativePath.StartsWith(OstFolderName + "/", StringComparison.OrdinalIgnoreCase);
+        if (string.IsNullOrEmpty(category))
+            return true;
+
+        foreach (var known in LimbusCompanySongCategories.Categories)
+        {
+            if (string.Equals(known, category, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>返回歌曲所属的自定义分类；不在任何分类文件夹内则返回 null（个人）。</summary>
+    private static string CategoryOf(string relativePath)
+    {
+        if (string.IsNullOrEmpty(relativePath))
+            return null;
+
+        string best = null;
+        foreach (var category in LimbusCompanySongCategories.Categories)
+        {
+            if (!IsUnderCategory(relativePath, category))
+                continue;
+
+            if (best == null || category.Length > best.Length)
+                best = category;
+        }
+
+        return best;
+    }
+
+    private static bool IsUnderCategory(string relativePath, string category)
+    {
+        return relativePath.StartsWith(category + "\\", StringComparison.OrdinalIgnoreCase) ||
+               relativePath.StartsWith(category + "/", StringComparison.OrdinalIgnoreCase);
     }
 
     private void ApplyBgmSourceFilter()
@@ -1877,14 +2037,15 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         var filtered = new List<string>();
         foreach (var track in _bgmAllTracks)
         {
-            if (_bgmSourceFilter == 1)
+            var category = CategoryOf(track);
+            if (string.IsNullOrEmpty(_bgmSelectedCategory))
             {
-                if (IsOstTrack(track))
+                if (category == null)
                     filtered.Add(track);
             }
-            else if (!IsOstTrack(track))
+            else if (category != null &&
+                     string.Equals(category, _bgmSelectedCategory, StringComparison.OrdinalIgnoreCase))
             {
-                // 个人分类：ULTRAKILL-OST 之外的所有歌曲。
                 filtered.Add(track);
             }
         }
@@ -1902,11 +2063,12 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         // 只是切换分类浏览时不覆盖已保存的曲目，切回另一分类时还能恢复选择。
     }
 
-    private void SetBgmSourceFilter(int filter)
+    private void SelectBgmCategory(string category)
     {
-        _bgmSourceFilter = filter;
+        _bgmSelectedCategory = string.IsNullOrEmpty(category) ? null : category;
         ApplyBgmSourceFilter();
         _bgmListOffset = 0;
+        _categoryPage = 0;
         RebuildBgmPanelUi();
     }
 
