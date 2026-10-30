@@ -1644,12 +1644,43 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             CloseBgmPanel();
     }
 
+    private static bool IsCyberGrindScene()
+    {
+        try
+        {
+            // ULTRAKILL 的场景资源名是哈希；SceneHelper.CurrentScene 才是 "Endless" 等友好名称。
+            if (SceneHelper.CurrentScene == "Endless")
+                return true;
+        }
+        catch (Exception)
+        {
+            // 忽略，继续用其它判据。
+        }
+
+        try
+        {
+            if (EndlessGrid.Instance != null)
+                return true;
+        }
+        catch (Exception)
+        {
+            // 忽略。
+        }
+
+        var scene = SceneManager.GetActiveScene().name;
+        return !string.IsNullOrEmpty(scene) &&
+               scene.IndexOf("Endless", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
     private static bool CanOpenBgmMenu()
     {
         try
         {
-            var scene = SceneManager.GetActiveScene().name;
-            if (scene == "Endless" || scene == "Main Menu" || scene == "Bootstrap")
+            if (IsCyberGrindScene())
+                return false;
+
+            var scene = SceneHelper.CurrentScene;
+            if (scene == "Main Menu" || scene == "Bootstrap")
                 return false;
 
             if (NewMovement.Instance == null)
@@ -1969,6 +2000,10 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             CloseBgmPanel();
             return;
         }
+
+        // 血宫内禁用 F5 菜单（F4 仍由 CGME 使用）。
+        if (!CanOpenBgmMenu())
+            return;
 
         _bgmPanelOpen = true;
         _bgmPage = 0;
