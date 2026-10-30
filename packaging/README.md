@@ -343,6 +343,8 @@ Right-click → **Install**, then restart the game: the mod automatically prefer
 - Changing `font_family` requires a restart.
 - Lyric text is NFKC-normalized at runtime: CJK compatibility ideographs (e.g. U+F9EC `溺` → `溺`), variation selectors and stray control characters are removed, so copy-pasted lyrics cannot flicker as missing glyphs.
 - Diagnostics are written to `BepInEx/LogOutput.log` under `[Jukebox LimbusCompany]` (normalized text, line placement, and a warning if an overlap is still detected).
+- **The cover / title / artist row position and its window adaptation may still be inaccurate in some window sizes or aspect ratios; the author (6r3²n) lacks the computer knowledge to fully fix it.**
+- **曲绘 / 曲名 / 作者行的位置及其窗口自适应，在部分窗口尺寸或宽高比下仍可能不准确；作者（6r3²n）计算机知识不足，无法完全修复。**
 - **The CGME Downloader is not supported.** `yt-dlp`, `ffmpeg`, `ffprobe` and `yt-dlp.sha256` are not bundled, and the Downloader dependency is not declared. URL / YouTube downloads are unavailable; local audio files are required.
 - **Only the lyric layer is added.** CGME's non-lyric localization extras and helper scripts are not included; the Jukebox core (player, playlists, menu) is still required and remains as-is.
 - **Known issue:** in some cases lyrics may still overlap; the author (**6r3²n**) lacks computer knowledge and made this mod with AI, but the AI used could not fix this issue.

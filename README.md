@@ -109,6 +109,8 @@ Press **F5** in any level for the mouse menu (F4 is the Cyber Grind menu only; F
 - **The CGME Downloader is not supported** — no `yt-dlp`, `ffmpeg` or `ffprobe` is bundled, so URL/YouTube downloads are unavailable. Use local audio files.
 - **Lyrics may still overlap in some cases; the author (6r3²n) lacks the computer knowledge to fix it.**
 - 部分情况下歌词仍可能重叠；作者（**6r3²n**）计算机知识不足，无法修复该问题。
+- **The cover / title / artist row position and its window adaptation may still be inaccurate in some window sizes or aspect ratios; the author (6r3²n) lacks the computer knowledge to fully fix it.**
+- **曲绘 / 曲名 / 作者行的位置及其窗口自适应，在部分窗口尺寸或宽高比下仍可能不准确；作者（6r3²n）计算机知识不足，无法完全修复。**
 - Reuses Jukebox's plugin GUID: cannot be enabled together with the original CybergrindMusicExplorer.
 - Font family changes require a restart; glow depends on TMP shader variants shipped with the game.
 

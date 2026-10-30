@@ -6,7 +6,7 @@
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $packageName = "JukeboxLimbusCompany"
-$version = "1.0.0"
+$version = "1.0.1"
 
 Write-Host "== build =="
 foreach ($proj in @(
