@@ -640,9 +640,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         CreateUiLabel(root, IsZh
                 ? "L 歌词 · N 曲绘 · G 语言 · K 改键 · P 调位置 · Esc 关闭"
                 : "L lyrics · N cover · G language · K rebind · P position · Esc close",
-            new Vector2(0f, -358f), new Vector2(1000f, 26f), 14f, TextAlignmentOptions.Center);
+            new Vector2(0f, -355f), new Vector2(1000f, 24f), 14f, TextAlignmentOptions.Center);
 
-        _bgmStatus = CreateUiLabel(root, string.Empty, new Vector2(0f, -386f), new Vector2(1000f, 34f), 15f,
+        _bgmStatus = CreateUiLabel(root, string.Empty, new Vector2(0f, -390f), new Vector2(1000f, 30f), 15f,
             TextAlignmentOptions.Center, true);
         UpdateBgmPanelStatus();
     }
