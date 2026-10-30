@@ -606,7 +606,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     {
         var rect = CreateUiObject("Label", parent, position, size);
         var label = rect.gameObject.AddComponent<TextMeshProUGUI>();
-        label.font = LimbusCompanyFonts.Resolve();
+        label.font = LimbusCompanyFonts.MenuFont(text);
         label.fontSize = fontSize;
         label.color = new Color(1f, 0.996f, 0.937f, 1f);
         label.alignment = alignment;
@@ -639,7 +639,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         labelRect.offsetMax = Vector2.zero;
 
         var label = labelRect.gameObject.AddComponent<TextMeshProUGUI>();
-        label.font = LimbusCompanyFonts.Resolve();
+        label.font = LimbusCompanyFonts.MenuFont(text);
         label.fontSize = fontSize;
         label.alignment = TextAlignmentOptions.Center;
         label.enableWordWrapping = false;
@@ -667,7 +667,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         var root = CreateUiObject("BgmUi", _bgmPanelRect, Vector2.zero, new Vector2(1220f, 820f));
         _bgmUiRoot = root.gameObject;
 
-        CreateUiLabel(root, "JUKEBOX LIMBUSCOMPANY — F5", new Vector2(-180f, 378f), new Vector2(720f, 36f), 24f,
+        CreateUiLabel(root, "JUKEBOX LIMBUSCOMPANY - F5", new Vector2(-180f, 378f), new Vector2(720f, 36f), 24f,
             TextAlignmentOptions.Center);
         CreateUiButton(root, "X", new Vector2(570f, 378f), new Vector2(44f, 34f), CloseBgmPanel, 18f);
 
@@ -753,6 +753,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             EnsureMenuPreviewInfo(_bgmTracks[Mathf.Clamp(_bgmIndex, 0, _bgmTracks.Length - 1)]);
         }
 
+        _menuPreviewTitleText.font = LimbusCompanyFonts.MenuFont(_menuPreviewTitle);
+        _menuPreviewArtistText.font = LimbusCompanyFonts.MenuFont(_menuPreviewArtist);
         _menuPreviewTitleText.text = _menuPreviewTitle ?? string.Empty;
         _menuPreviewArtistText.text = _menuPreviewArtist ?? string.Empty;
 
@@ -1785,6 +1787,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (text != _bgmLastStatusText)
         {
             _bgmLastStatusText = text;
+            _bgmStatus.font = LimbusCompanyFonts.MenuFont(text);
             _bgmStatus.text = text;
         }
     }
@@ -1975,6 +1978,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             _npLastArtistText = artist;
             _npLastFontSize = fontSize;
 
+            _npTitle.font = LimbusCompanyFonts.MenuFont(title);
+            _npArtist.font = LimbusCompanyFonts.MenuFont(artist);
             _npTitle.text = title;
             _npArtist.text = artist;
             _npTitle.fontSize = fontSize;

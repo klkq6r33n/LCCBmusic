@@ -100,6 +100,8 @@ public class LimbusCompanyLocalization : MonoBehaviour
 
     private static string L(string en, string zh) => IsChinese() ? zh : en;
 
+    private static TMP_FontAsset MenuFont(string text) => LimbusCompanyFonts.MenuFont(text);
+
     private void EnsureMenu()
     {
         if (_menu != null)
@@ -155,7 +157,7 @@ public class LimbusCompanyLocalization : MonoBehaviour
         labelRect.offsetMax = Vector2.zero;
 
         text = labelGo.AddComponent<TextMeshProUGUI>();
-        text.font = LimbusCompanyFonts.Resolve();
+        text.font = MenuFont(string.Empty);
         text.fontSize = 15f;
         text.alignment = TextAlignmentOptions.Center;
         text.enableWordWrapping = false;
@@ -205,14 +207,20 @@ public class LimbusCompanyLocalization : MonoBehaviour
         {
             var text = IsChinese() ? "LANGUAGE: 中文" : "LANGUAGE: ENGLISH";
             if (_languageText.text != text)
+            {
+                _languageText.font = MenuFont(text);
                 _languageText.text = text;
+            }
         }
 
         if (_settingsText != null)
         {
             var text = L("SETTINGS", "设置");
             if (_settingsText.text != text)
+            {
+                _settingsText.font = MenuFont(text);
                 _settingsText.text = text;
+            }
         }
     }
 
@@ -672,7 +680,7 @@ public class LimbusCompanyLocalization : MonoBehaviour
         labelRect.offsetMax = Vector2.zero;
 
         var label = labelGo.AddComponent<TextMeshProUGUI>();
-        label.font = LimbusCompanyFonts.Resolve();
+        label.font = MenuFont(text);
         label.fontSize = 15f;
         label.alignment = TextAlignmentOptions.Center;
         label.enableWordWrapping = false;
@@ -709,7 +717,7 @@ public class LimbusCompanyLocalization : MonoBehaviour
         textRect.offsetMax = new Vector2(-8f, -2f);
 
         var text = textGo.AddComponent<TextMeshProUGUI>();
-        text.font = LimbusCompanyFonts.Resolve();
+        text.font = MenuFont(value);
         text.fontSize = 15f;
         text.alignment = TextAlignmentOptions.Left;
         text.enableWordWrapping = false;
@@ -771,7 +779,7 @@ public class LimbusCompanyLocalization : MonoBehaviour
         rect.sizeDelta = size;
 
         var label = go.AddComponent<TextMeshProUGUI>();
-        label.font = LimbusCompanyFonts.Resolve();
+        label.font = MenuFont(text);
         label.fontSize = fontSize;
         label.alignment = alignment;
         label.enableWordWrapping = false;

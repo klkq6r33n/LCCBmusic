@@ -3,6 +3,7 @@ using Jukebox.UI.Subtitles;
 using JukeboxCore.Logging;
 using TMPro;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace Jukebox.LimbusCompany;
 
@@ -49,6 +50,24 @@ public static class LimbusCompanyFonts
             return _latin;
         }
 
+        // 关卡内 Jukebox 菜单未加载时，主动从 Addressables 取 ULTRAKILL 官方字库。
+        try
+        {
+            var ulkFont = Addressables
+                .LoadAssetAsync<TMP_FontAsset>("Assets/Jukebox/Fonts/VCR_OSD_MONO.asset")
+                .WaitForCompletion();
+            if (ulkFont != null)
+            {
+                _latin = ulkFont;
+                LimbusCompanyLyrics.Log?.LogInfo("LimbusCompany 英文字体: VCR_OSD_MONO (ULTRAKILL)");
+                return _latin;
+            }
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("LimbusCompany 加载 ULTRAKILL 字体失败: " + e.Message);
+        }
+
         var panel = UnityEngine.Object.FindObjectOfType<SubtitlesPanel>();
         if (panel != null && panel.text != null && panel.text.font != null)
         {
@@ -58,6 +77,12 @@ public static class LimbusCompanyFonts
 
         _latin = any ?? TMP_Settings.defaultFontAsset;
         return _latin;
+    }
+
+    /// <summary>菜单字体：英文使用 ULTRAKILL 官方字体，含中日韩字符时使用 CJK 字体。</summary>
+    public static TMP_FontAsset MenuFont(string text)
+    {
+        return IsCjkText(text) ? Resolve() : ResolveLatin();
     }
 
     /// <summary>是否包含中日韩字符（含假名）。</summary>
