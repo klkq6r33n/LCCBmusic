@@ -1018,7 +1018,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         _npFrameImage.raycastTarget = false;
 
         var outline = frameGo.AddComponent<Outline>();
-        outline.effectColor = new Color(0.847f, 0.647f, 0.137f, 1f);
+        // ULTRAKILL HUD 风格：浅色细边框 + 深色半透明底。
+        outline.effectColor = new Color(0.92f, 0.92f, 0.92f, 0.9f);
         outline.effectDistance = new Vector2(3f, -3f);
         // 镂空时框体填充完全透明，描边仍需独立可见。
         outline.useGraphicAlpha = false;
