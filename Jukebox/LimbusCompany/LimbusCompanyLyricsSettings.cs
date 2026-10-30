@@ -71,7 +71,7 @@ public class LimbusCompanyLyricsSettings
     /// <summary>波动大小倍数。</summary>
     public float VisualizerAmplitude = 1f;
 
-    /// <summary>波动最大占屏幕对应方向的百分比（5-50）。</summary>
+    /// <summary>波动最大占屏幕对应方向的百分比（≥1，无上限）。</summary>
     public float VisualizerSize = 50f;
 
     /// <summary>bottom / top / left / right</summary>
@@ -213,7 +213,7 @@ public class LimbusCompanyLyricsSettings
         CustomOffsetY = Mathf.Clamp(GetFloat(s, "custom_offset_y", CustomOffsetY), -2000f, 2000f);
         VisualizerEnabled = GetBool(s, "visualizer_enabled", VisualizerEnabled);
         VisualizerAmplitude = Mathf.Clamp(GetFloat(s, "visualizer_amplitude", VisualizerAmplitude), 0.1f, 5f);
-        VisualizerSize = Mathf.Clamp(GetFloat(s, "visualizer_size", VisualizerSize), 5f, 50f);
+        VisualizerSize = Mathf.Max(1f, GetFloat(s, "visualizer_size", VisualizerSize));
         VisualizerPosition = NormalizePosition(GetString(s, "visualizer_position", VisualizerPosition));
         VisualizerBars = Mathf.Clamp((int)GetFloat(s, "visualizer_bars", VisualizerBars), 8, 256);
         var legacyGradient = GetBool(s, "visualizer_gradient", true);

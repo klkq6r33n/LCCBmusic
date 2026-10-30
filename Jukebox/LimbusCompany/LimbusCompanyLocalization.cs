@@ -342,7 +342,7 @@ public class LimbusCompanyLocalization : MonoBehaviour
         {
             AddToggleRow(rect, ref y, step, L("Audio visualizer", "音频可视化"), () => S.VisualizerEnabled, () => S.VisualizerEnabled = !S.VisualizerEnabled);
             AddInputRow(rect, ref y, step, L("Wave size (x)", "波动大小 (倍)"), F(S.VisualizerAmplitude), v => S.VisualizerAmplitude = Mathf.Clamp(v, 0.1f, 5f));
-            AddInputRow(rect, ref y, step, L("Max extent (% screen)", "最大幅度 (屏幕%)"), F(S.VisualizerSize), v => S.VisualizerSize = Mathf.Clamp(v, 5f, 50f));
+            AddInputRow(rect, ref y, step, L("Max extent (% screen, no cap)", "最大幅度 (屏幕%，无上限)"), F(S.VisualizerSize), v => S.VisualizerSize = Mathf.Max(1f, v));
             AddValueRow(rect, ref y, step, L("Position", "显示位置"), VisualizerPositionText(S.VisualizerPosition), () => S.VisualizerPosition = NextVisualizerPosition(S.VisualizerPosition));
             AddInputRow(rect, ref y, step, L("Bar density (8-256)", "频谱密度 (8-256)"), Mathf.RoundToInt(S.VisualizerBars).ToString(CultureInfo.InvariantCulture), v => S.VisualizerBars = Mathf.Clamp(Mathf.RoundToInt(v), 8, 256));
             AddInputRow(rect, ref y, step, L("Gradient range (0-1)", "渐变范围 (0-1)"), F(S.VisualizerGradientRange), v => S.VisualizerGradientRange = Mathf.Clamp(v, 0f, 1f));

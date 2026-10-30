@@ -677,7 +677,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         var position = LimbusCompanyLyricsSettings.NormalizePosition(s.VisualizerPosition);
         var horizontal = position == "bottom" || position == "top";
-        var maxExtent = (horizontal ? height : width) * Mathf.Clamp(s.VisualizerSize, 5f, 50f) / 100f;
+        var maxExtent = (horizontal ? height : width) * Mathf.Max(1f, s.VisualizerSize) / 100f;
         var amplitude = Mathf.Clamp(s.VisualizerAmplitude, 0.1f, 5f);
         var count = Mathf.Clamp(s.VisualizerBars, 8, _visBars.Length);
         const float spreadMargin = 16f;

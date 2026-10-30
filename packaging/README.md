@@ -133,8 +133,8 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 
 ### Audio visualizer / 音频可视化
 
-- Reacts to the currently playing Jukebox track (`AudioSource.GetSpectrumData`), drawn as 48 bars behind the lyrics.
-- `visualizer_enabled` (default off), `visualizer_amplitude` (wave size multiplier, 0.1–5), `visualizer_size` (max extent as % of the screen dimension, 5–50, default 50), `visualizer_position` (`bottom` default / `top` / `left` / `right`), `visualizer_bars` (density, 8–256, default 96), `visualizer_gradient_range` (0 = solid start colour, 1 = full gradient spread), `visualizer_gradient_speed` (gradient animation speed; the "gradient strength"), `visualizer_gradient_mode`, `visualizer_color_a`, `visualizer_color_b`, `visualizer_colors`, `visualizer_mirror_x` (X-axis mirror).
+- Reacts to the currently playing Jukebox track or level BGM (`AudioSource.GetSpectrumData`), drawn as bars behind the lyrics.
+- `visualizer_enabled` (default off), `visualizer_amplitude` (wave size multiplier, 0.1–5), `visualizer_size` (max extent as % of the screen dimension, default 50, **no upper limit**), `visualizer_position` (`bottom` default / `top` / `left` / `right`), `visualizer_bars` (density, 8–256, default 96), `visualizer_gradient_range` (0 = solid start colour, 1 = full gradient spread), `visualizer_gradient_speed` (gradient animation speed; the "gradient strength"), `visualizer_gradient_mode`, `visualizer_color_a`, `visualizer_color_b`, `visualizer_colors`, `visualizer_mirror_x` (X-axis mirror).
 - **Gradient speed / strength** (`visualizer_gradient_speed`, 0–2, default `0.08`): how fast the colours move; `0` freezes the gradient.
 - **Gradient modes** (`visualizer_gradient_mode`) — every mode animates per bar, so different frequency blocks change colour independently:
   - `fixed2` — **two colours**: colour A → colour B flows in one direction along the row and loops.
@@ -144,10 +144,10 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - Colours never react to audio intensity (bar height still follows the music). Every bar also has a **black outline**.
 - The visualizer is drawn on its **own canvas below the original game UI**, so it never covers the vanilla HUD.
 - Bars are flush with the screen edge (no gap at TOP/BOTTOM/LEFT/RIGHT).
-- Max extent is capped at 50% of the screen height (width for LEFT/RIGHT), so the bars never cover more than half of the screen.
+- The maximum extent is entirely user-defined (no 50% cap); set it as large as you want.
 
-- 跟随当前 Jukebox 曲目（`AudioSource.GetSpectrumData`），以 48 根柱状条绘制在歌词层下方。
-- `visualizer_enabled`（默认关）、`visualizer_amplitude`（波动大小倍数，0.1–5）、`visualizer_size`（最大幅度占屏幕对应方向的百分比，5–50，默认 50）、`visualizer_position`（默认 `bottom`，可选 `top`/`left`/`right`）、`visualizer_bars`（频谱密度，8–256，默认 96）、`visualizer_gradient_range`（0=起点单色，1=整排铺满渐变）、`visualizer_gradient_speed`（渐变速度 = 渐变强度）、`visualizer_gradient_mode`、`visualizer_color_a`、`visualizer_color_b`、`visualizer_colors`、`visualizer_mirror_x`（X 轴镜像）。
+- 跟随当前 Jukebox 曲目或关卡 BGM（`AudioSource.GetSpectrumData`），以可配置密度的柱状条绘制在歌词层下方。
+- `visualizer_enabled`（默认关）、`visualizer_amplitude`（波动大小倍数，0.1–5）、`visualizer_size`（最大幅度占屏幕对应方向的百分比，默认 50，**无上限**）、`visualizer_position`（默认 `bottom`，可选 `top`/`left`/`right`）、`visualizer_bars`（频谱密度，8–256，默认 96）、`visualizer_gradient_range`（0=起点单色，1=整排铺满渐变）、`visualizer_gradient_speed`（渐变速度 = 渐变强度）、`visualizer_gradient_mode`、`visualizer_color_a`、`visualizer_color_b`、`visualizer_colors`、`visualizer_mirror_x`（X 轴镜像）。
 - **渐变强度 / 速度**（`visualizer_gradient_speed`，0–2，默认 `0.08`）：数值越大颜色流动越快；`0` 表示渐变静止。
 - **三种渐变模式**（`visualizer_gradient_mode`）—— 三种模式都会按柱子的不同相位随时间变色：
   - `fixed2` —— **双色流动**：颜色 A → 颜色 B 沿整排单向流动并循环；
@@ -157,7 +157,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - 颜色**不随音频强度变化**（柱高仍然跟随音乐）。每根柱状条都带**黑色描边**。
 - 波形图放在**独立画布、排序低于游戏原版 UI**，不会盖住原版界面。
 - 柱状条紧贴屏幕边缘（TOP/BOTTOM/LEFT/RIGHT 均无空隙）。
-- 最大幅度限制为屏幕高度（左右时为宽度）的 50%，不会超过屏幕一半。
+- 最大幅度完全由用户设置（不再限制 50%），可以设得任意大。
 
 ### Level BGM replacement / 关卡 BGM 取代
 
