@@ -133,10 +133,10 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 
 - Reacts to the currently playing Jukebox track (`AudioSource.GetSpectrumData`), drawn as 48 bars behind the lyrics.
 - `visualizer_enabled` (default off), `visualizer_amplitude` (wave size multiplier, 0.1–5), `visualizer_size` (max extent as % of the screen dimension, 5–50, default 50), `visualizer_position` (`bottom` default / `top` / `left` / `right`), `visualizer_bars` (density, 8–128, default 48), `visualizer_gradient_range` (0 = solid start colour, 1 = full gradient spread), `visualizer_gradient_mode`, `visualizer_color_a`, `visualizer_color_b`, `visualizer_colors`, `visualizer_mirror_x` (X-axis mirror).
-- **Gradient modes** (`visualizer_gradient_mode`):
-  - `fixed2` — **fixed two colours**: a static gradient from colour A to colour B across the bar row.
-  - `range` (default) — **x~y**: the same two colours, but the blend sweeps back and forth over time.
-  - `multi` — **multiple RGB stops**: a static gradient through every colour in `visualizer_colors`.
+- **Gradient modes** (`visualizer_gradient_mode`) — every mode animates per bar, so different frequency blocks change colour independently:
+  - `fixed2` — **two colours**: colour A → colour B flows in one direction along the row and loops.
+  - `range` (default) — **x~y**: the same two colours sweep back and forth over time.
+  - `multi` — **multiple RGB stops**: the whole row flows through every colour in `visualizer_colors`.
 - **RGB input**: each colour is written as `R,G,B` (0–255), separated by `,` or `，`, e.g. `255,211,77`. `visualizer_colors` holds several such triplets separated by **spaces**, e.g. `255,0,0 0,255,0 0,0,255`. Defaults: A `216,165,35`, B `0,229,255`, multi `255,0,0 255,165,0 255,255,0 0,255,0 0,140,255 160,0,255`.
 - Colours never react to audio intensity (bar height still follows the music). Every bar also has a **black outline**.
 - The visualizer is drawn on its **own canvas below the original game UI**, so it never covers the vanilla HUD.
@@ -145,10 +145,10 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 
 - 跟随当前 Jukebox 曲目（`AudioSource.GetSpectrumData`），以 48 根柱状条绘制在歌词层下方。
 - `visualizer_enabled`（默认关）、`visualizer_amplitude`（波动大小倍数，0.1–5）、`visualizer_size`（最大幅度占屏幕对应方向的百分比，5–50，默认 50）、`visualizer_position`（默认 `bottom`，可选 `top`/`left`/`right`）、`visualizer_bars`（频谱密度，8–128，默认 48）、`visualizer_gradient_range`（0=起点单色，1=整排铺满渐变）、`visualizer_gradient_mode`、`visualizer_color_a`、`visualizer_color_b`、`visualizer_colors`、`visualizer_mirror_x`（X 轴镜像）。
-- **三种渐变模式**（`visualizer_gradient_mode`）：
-  - `fixed2` —— **固定双色**：颜色 A → 颜色 B 的静态渐变，不随时间移动；
-  - `range`（默认）—— **x~y 区间渐变**：同样两种颜色，但混合比例随时间来回扫动；
-  - `multi` —— **多色渐变**：按 `visualizer_colors` 里的多个 RGB 色标依次渐变。
+- **三种渐变模式**（`visualizer_gradient_mode`）—— 三种模式都会按柱子的不同相位随时间变色：
+  - `fixed2` —— **双色流动**：颜色 A → 颜色 B 沿整排单向流动并循环；
+  - `range`（默认）—— **x~y 区间渐变**：同样两种颜色，混合比例随时间来回扫动；
+  - `multi` —— **多色渐变**：整排按 `visualizer_colors` 里的多个 RGB 色标依次流动。
 - **RGB 输入格式**：单个颜色写作 `R,G,B`（0–255），用 `,` 或 `，` 分隔，如 `255,211,77`；`visualizer_colors` 里多个颜色用**空格**分隔，如 `255,0,0 0,255,0 0,0,255`。默认：A `216,165,35`、B `0,229,255`、多色 `255,0,0 255,165,0 255,255,0 0,255,0 0,140,255 160,0,255`。
 - 颜色**不随音频强度变化**（柱高仍然跟随音乐）。每根柱状条都带**黑色描边**。
 - 波形图放在**独立画布、排序低于游戏原版 UI**，不会盖住原版界面。

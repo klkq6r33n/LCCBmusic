@@ -441,39 +441,38 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 colorA.a = 0.9f;
                 bar.color = colorA;
             }
-            else if (mode == "multi")
-            {
-                // 多个 RGB 色标，空格分隔；整排按顺序经过这些颜色。
-                var stops = ParseColorList(s.VisualizerColors);
-                Color custom;
-                if (stops.Count == 0)
-                    custom = colorA;
-                else if (stops.Count == 1)
-                    custom = stops[0];
-                else
-                    custom = SampleColorStops(stops, Mathf.Clamp01(spread * range));
-
-                custom.a = 0.9f;
-                bar.color = custom;
-            }
             else
             {
-                float t;
-                if (mode == "fixed2")
+                // 所有模式都像区间渐变一样：每根柱子有自己的相位，颜色随时间变化。
+                var phase = Mathf.Repeat(Time.unscaledTime * 0.08f + spread * range, 1f);
+
+                if (mode == "multi")
                 {
-                    // 固定双色：静态渐变，不随时间移动。
-                    t = Mathf.Clamp01(spread * range);
+                    // 多个 RGB 色标，空格分隔；整排按顺序流动经过这些颜色。
+                    var stops = ParseColorList(s.VisualizerColors);
+                    Color custom;
+                    if (stops.Count == 0)
+                        custom = colorA;
+                    else if (stops.Count == 1)
+                        custom = stops[0];
+                    else
+                        custom = SampleColorStops(stops, phase);
+
+                    custom.a = 0.9f;
+                    bar.color = custom;
                 }
                 else
                 {
-                    // x~y 动态：在两个颜色之间随时间来回渐变。
-                    var phase = Mathf.Repeat(Time.unscaledTime * 0.08f + spread * range, 1f);
-                    t = phase <= 0.5f ? phase * 2f : (1f - phase) * 2f;
-                }
+                    // fixed2：在两个颜色之间单向流动（循环）。
+                    // range：在两个颜色之间来回渐变。
+                    var t = mode == "fixed2"
+                        ? phase
+                        : (phase <= 0.5f ? phase * 2f : (1f - phase) * 2f);
 
-                var custom = Color.Lerp(colorA, colorB, t);
-                custom.a = 0.9f;
-                bar.color = custom;
+                    var custom = Color.Lerp(colorA, colorB, t);
+                    custom.a = 0.9f;
+                    bar.color = custom;
+                }
             }
 
             var rect = bar.rectTransform;
