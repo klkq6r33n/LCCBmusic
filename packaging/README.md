@@ -2,6 +2,7 @@ GitHub / 开源地址：https://github.com/klkq6r33n/LCCBmusic
 
 [EN]
 NOTICE: Disable Flazhik-CybergrindMusicExplorer (this fork reuses its plugin GUID).
+Downloader: this package does NOT support CGME's Downloader — yt-dlp / ffmpeg / ffprobe are not bundled. Use local audio files.
 Install: install this zip with r2modman / Thunderstore Mod Manager, or extract it into the ULTRAKILL folder (runtime files live under BepInEx/plugins/Claude-JukeboxLimbusCompany/).
 Lyrics: put Track.srt next to Track.mp3. Optional translation: also add Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt. Both lines are shown at different, non-overlapping positions.
 UI: default language is English. In the Jukebox menu (F4) use LANGUAGE to switch to Chinese and SETTINGS for precise numeric inputs (position, color, font size, motion, translation).
@@ -10,6 +11,7 @@ Special thanks to greycsont for the ULTRAKILL font, and to Flazhik and the Jukeb
 
 [中文]
 注意：必须禁用 Flazhik-CybergrindMusicExplorer（本 fork 沿用其插件 GUID）。
+下载器：本包**不支持 CGME 的下载器**——未附带 yt-dlp / ffmpeg / ffprobe，请使用本地音频文件。
 安装：用 r2modman / Thunderstore Mod Manager 安装本 zip，或直接解压到 ULTRAKILL 游戏根目录（运行文件位于 BepInEx/plugins/Claude-JukeboxLimbusCompany/）。
 歌词：把 Track.srt 放在 Track.mp3 同目录。可选翻译：再放 Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt，两行歌词会在不同且不重叠的位置同时显示。
 界面：默认英文。在 Jukebox 菜单（F4）用 LANGUAGE 切换中文，用 SETTINGS 精确填写位置、颜色、字号、动态与翻译。
@@ -29,12 +31,16 @@ Special thanks to greycsont for the ULTRAKILL font, and to Flazhik and the Jukeb
 Based on the open-source **Flazhik/Jukebox (CybergrindMusicExplorer) 2.3.1** source.
 It replaces Jukebox's built-in Cyber Grind subtitle rendering with a LimbusCompany-style lyric layer: text color, outline, glow, font size/spacing, shake, fade-in, rise, random angle, pseudo-perspective and position range.
 
-> This is a **standalone mod**, not an add-on inside the original mod folder. It reuses Jukebox's assembly names and plugin GUID (Addressables bundles bind scripts by assembly name, and CGMEDownloader / Thorn extensions depend on that GUID), so **you must disable `Flazhik-CybergrindMusicExplorer` in r2modman**. The two cannot be enabled at the same time.
+> This is a **standalone mod**, not an add-on inside the original mod folder. It reuses Jukebox's assembly names and plugin GUID (Addressables bundles bind scripts by assembly name, and Thorn extensions depend on that GUID), so **you must disable `Flazhik-CybergrindMusicExplorer` in r2modman**. The two cannot be enabled at the same time.
+>
+> **The CGME Downloader is not supported.** This package does not ship `yt-dlp`, `ffmpeg` or `ffprobe`, and the Downloader dependency was removed from the manifest; URL/YouTube downloads will not work. Use local audio files with SRT sidecars.
 
 基于 **Flazhik/Jukebox (CybergrindMusicExplorer) 2.3.1 源码** 的独立 fork。
 在 Cyber Grind 里把 Jukebox 自带的字幕显示替换成 LimbusCompany 演出风格的歌词层：文字颜色、描边、辉光、字号/字距、抖动、淡入、上升、随机角度、近似透视、位置范围。
 
-> 本包是**独立 mod**，不是原 mod 文件夹里的附属扩展。因为它复用 Jukebox 的程序集名与插件 GUID（资源包按程序集名绑定脚本，CGMEDownloader / Thorn 扩展也依赖该 GUID），**必须先在 r2modman 中禁用 `Flazhik-CybergrindMusicExplorer`**，两者不能同时启用。
+> 本包是**独立 mod**，不是原 mod 文件夹里的附属扩展。因为它复用 Jukebox 的程序集名与插件 GUID（资源包按程序集名绑定脚本，Thorn 扩展也依赖该 GUID），**必须先在 r2modman 中禁用 `Flazhik-CybergrindMusicExplorer`**，两者不能同时启用。
+>
+> **不支持 CGME 的下载器。** 本包不附带 `yt-dlp`、`ffmpeg`、`ffprobe`，manifest 中也已移除 Downloader 依赖；通过 URL / YouTube 下载歌曲的功能不可用。请使用本地音频文件与 SRT 字幕。
 
 ---
 
@@ -50,21 +56,18 @@ JukeboxCore.dll              built from the same source
 Jukebox.ThornExtensions.dll  Thorn HUD modules (same GUID as upstream)
 RTLTMPro.dll / SubtitlesParser.dll / TagLibSharp.dll   runtime dependencies
 Assets/                      catalog.json + asset bundles (taken from the 2.3.2 original)
-ffmpeg.exe / ffprobe.exe / yt-dlp.exe / yt-dlp.sha256
-                             third-party binaries required by CGMEDownloader.
-                             JukeboxCore's PathsUtils.AssemblyPath points at this
-                             mod folder, so they must stay here. Hashes match the
-                             downloader's built-in integrity checks.
+
+No downloader binaries are included: the CGME Downloader is unsupported, so
+yt-dlp / ffmpeg / ffprobe / yt-dlp.sha256 are intentionally absent.
 
 Jukebox.dll                  fork 主体（插件 GUID: dev.flazhik.jukebox，显示名 Jukebox LimbusCompany）
 JukeboxCore.dll              同源码编译
 Jukebox.ThornExtensions.dll  Thorn HUD 模块（沿用原 GUID）
 RTLTMPro.dll / SubtitlesParser.dll / TagLibSharp.dll   运行时依赖
 Assets/                      catalog.json 与资源 bundle（取自 2.3.2 原 mod）
-ffmpeg.exe / ffprobe.exe / yt-dlp.exe / yt-dlp.sha256
-                             CGMEDownloader 需要的第三方程序；JukeboxCore 的
-                             PathsUtils.AssemblyPath 指向本 mod 目录，必须放在这里。
-                             哈希与下载器内置校验一致。
+
+不包含下载器程序：本 mod 不支持 CGME 下载器，因此刻意不附带
+yt-dlp / ffmpeg / ffprobe / yt-dlp.sha256。
 ```
 
 ## Configuration / 配置
@@ -248,6 +251,7 @@ Right-click → **Install**, then restart the game: the mod automatically prefer
 - Changing `font_family` requires a restart.
 - Lyric text is NFKC-normalized at runtime: CJK compatibility ideographs (e.g. U+F9EC `溺` → `溺`), variation selectors and stray control characters are removed, so copy-pasted lyrics cannot flicker as missing glyphs.
 - Diagnostics are written to `BepInEx/LogOutput.log` under `[Jukebox LimbusCompany]` (normalized text, line placement, and a warning if an overlap is still detected).
+- **The CGME Downloader is not supported.** `yt-dlp`, `ffmpeg`, `ffprobe` and `yt-dlp.sha256` are not bundled, and the Downloader dependency is not declared. URL / YouTube downloads are unavailable; local audio files are required.
 - **Known issue:** in some cases lyrics may still overlap; the author (**6r3²n**) lacks computer knowledge and made this mod with AI, but the AI used could not fix this issue.
 
 - 原版 `SubtitlesPanel` 被置空；Thorn 的 Subtitle HUD 模块会保留一个空框（`HideBackgroundWhenEmpty` 时自动隐藏）。
@@ -257,4 +261,5 @@ Right-click → **Install**, then restart the game: the mod automatically prefer
 - 换 `font_family` 需重启游戏。
 - 歌词在运行时做 NFKC 归一化：CJK 兼容汉字（如 U+F9EC `溺` → `溺`）、变体选择符和多余控制字符会被替换/移除，避免从音乐平台复制的歌词因缺字反复闪烁。
 - 诊断信息写入 `BepInEx/LogOutput.log` 的 `[Jukebox LimbusCompany]` 下（字符归一化、每句落点，以及仍检测到重叠时的警告）。
+- **不支持 CGME 下载器。** 不附带 `yt-dlp`、`ffmpeg`、`ffprobe`、`yt-dlp.sha256`，manifest 也不再声明 Downloader 依赖；URL / YouTube 下载功能不可用，请使用本地音频文件。
 - **已知问题：** 部分情况下歌词仍可能重叠；作者（**6r3²n**）计算机知识不足，使用 AI 制作此 mod，但所使用的 AI 无法修复该问题。

@@ -15,16 +15,21 @@ Download the original Jukebox release from
 They are needed at runtime (Addressables loads the UI prefabs from them) and are
 licensed under Apache-2.0 together with the original project.
 
-## ffmpeg / ffprobe / yt-dlp
+## Runtime libraries
 
-Required by CGMEDownloader. Download the Windows x64 builds:
+The build packages these DLLs from this folder:
 
-- FFmpeg: <https://www.gyan.dev/ffmpeg/builds/> (or any official build)
-- yt-dlp: <https://github.com/yt-dlp/yt-dlp/releases>
+- `RTLTMPro.dll`
+- `SubtitlesParser.dll`
+- `TagLibSharp.dll`
 
-Copy `ffmpeg.exe`, `ffprobe.exe`, `yt-dlp.exe` and `yt-dlp.sha256` into this
-folder. The downloader verifies the yt-dlp hash, so use the matching release and
-keep `yt-dlp.sha256` alongside it.
+Copy them from the original Jukebox 2.3.2 release.
+
+## Downloader binaries (NOT supported)
+
+`ffmpeg.exe`, `ffprobe.exe`, `yt-dlp.exe` and `yt-dlp.sha256` are **intentionally
+not used or shipped**. The CGME Downloader is unsupported in this fork, so URL /
+YouTube downloads are unavailable. Do not add them for a release build.
 
 ## Fonts
 

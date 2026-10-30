@@ -68,10 +68,12 @@ This repository is **source only**. Release packages (DLLs, `Assets/`, ffmpeg/yt
 Runtime-only files are **not** committed here:
 
 - `third_party/Assets/` — catalog + asset bundles taken from the original Jukebox 2.3.2 release.
-- `ffmpeg.exe`, `ffprobe.exe`, `yt-dlp.exe` — third-party binaries required by CGMEDownloader.
+- `third_party/RTLTMPro.dll`, `SubtitlesParser.dll`, `TagLibSharp.dll` — runtime libraries from the original Jukebox release.
 - Windows fonts (Yu Gothic / Microsoft YaHei / Noto Sans JP / SC) are system-provided; release packages bundle Noto Sans JP/SC (SIL OFL 1.1).
 
-See `third_party/README.md` for where to obtain these files.
+**The CGME Downloader is not supported.** `ffmpeg.exe`, `ffprobe.exe`,
+`yt-dlp.exe` and `yt-dlp.sha256` are intentionally not bundled and the
+Downloader dependency is not declared. See `third_party/README.md`.
 
 ## Lyrics / 歌词
 
@@ -90,6 +92,7 @@ Open the Jukebox menu (F4) in Cyber Grind: **LANGUAGE** switches the mod UI (Eng
 
 ## Known limitations / 已知限制
 
+- **The CGME Downloader is not supported** — no `yt-dlp`, `ffmpeg` or `ffprobe` is bundled, so URL/YouTube downloads are unavailable. Use local audio files.
 - **Lyrics may still overlap in some cases; the author (6r3²n) lacks the computer knowledge to fix it.**
 - 部分情况下歌词仍可能重叠；作者（**6r3²n**）计算机知识不足，无法修复该问题。
 - Reuses Jukebox's plugin GUID: cannot be enabled together with the original CybergrindMusicExplorer.

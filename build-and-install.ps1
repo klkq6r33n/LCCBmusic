@@ -29,8 +29,8 @@ Copy-Item (Join-Path $root "_stage\plugins\Jukebox\*.dll") $runtime
 
 $thirdParty = Join-Path $root "third_party"
 if (Test-Path $thirdParty) {
-    $binaries = Get-ChildItem $thirdParty -File -ErrorAction SilentlyContinue
-    if ($binaries) { $binaries | Copy-Item -Destination $runtime -Force }
+    # Runtime libraries only; the CGME Downloader (ffmpeg/ffprobe/yt-dlp) is intentionally unsupported.
+    Get-ChildItem $thirdParty -File -Filter *.dll -ErrorAction SilentlyContinue | Copy-Item -Destination $runtime -Force
     $assets = Join-Path $thirdParty "Assets"
     if (Test-Path $assets) { Copy-Item (Join-Path $assets "*") (Join-Path $runtime "Assets") -Recurse -Force }
 }

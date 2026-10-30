@@ -1,6 +1,6 @@
 - manifestVersion: 1
   name: Claude-JukeboxLimbusCompany
-  authorName: Claude
+  authorName: 6r3²n
   websiteUrl: ''
   displayName: Jukebox LimbusCompany
   description: LimbusCompany lyric performance extension for CybergrindMusicExplorer.
@@ -12,7 +12,6 @@
   loaders: []
   dependencies:
     - BepInEx-BepInExPack-5.4.2305
-    - Flazhik-CGMEDownloader-2.3.2
   incompatibilities: []
   optionalDependencies: []
   versionNumber:
