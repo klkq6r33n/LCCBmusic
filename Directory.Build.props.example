@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <!-- Copy this file to Directory.Build.props and set your ULTRAKILL install.
+         You can also set the ULTRAKILL_DIR environment variable instead. -->
+    <GameDir Condition="'$(GameDir)' == '' and '$(ULTRAKILL_DIR)' != ''">$(ULTRAKILL_DIR)</GameDir>
+    <GameDir Condition="'$(GameDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\ULTRAKILL</GameDir>
+
+    <BepInExCoreDir>$(GameDir)\BepInEx\core\</BepInExCoreDir>
+    <ManagedDir>$(GameDir)\ULTRAKILL_Data\Managed\</ManagedDir>
+    <BepInExPluginsDir>$(GameDir)\BepInEx\plugins\</BepInExPluginsDir>
+    <StagingDir>$(MSBuildThisFileDirectory)_stage\</StagingDir>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,10 @@
+{
+  "name": "JukeboxLimbusCompany",
+  "version_number": "1.0.0",
+  "website_url": "",
+  "description": "LimbusCompany lyric performance extension for CybergrindMusicExplorer.",
+  "dependencies": [
+    "BepInEx-BepInExPack-5.4.2305",
+    "Flazhik-CGMEDownloader-2.3.2"
+  ]
+}

@@ -1,0 +1,23 @@
+Jukebox LimbusCompany
+Copyright 2026 6r3²n
+
+This product is a fork of Jukebox / CybergrindMusicExplorer by Flazhik
+(https://github.com/Flazhik/Jukebox), licensed under the Apache License,
+Version 2.0. The original LICENSE file is retained unmodified.
+
+Changes made in this fork include, but are not limited to:
+- LimbusCompany-style lyric overlay replacing the original subtitle panel.
+- Bilingual SRT sidecars (main + translation) with independent positions.
+- Independent per-cue lyric lines with independent fade-out.
+- In-game language switch and settings panel.
+- Audio visualizer with a time-driven gradient.
+- Text normalization and diagnostic logging.
+
+AI assistance disclosure: this project was developed with AI assistance.
+The author (6r3²n) has limited programming knowledge.
+
+Third-party assets included in release packages (not part of the source):
+- Noto Sans JP / Noto Sans SC, Copyright Google LLC, SIL Open Font License 1.1.
+- ffmpeg / ffprobe, Copyright the FFmpeg developers, LGPL/GPL (see their licenses).
+- yt-dlp, Unlicense-style public domain (see its license).
+- Jukebox 2.3.2 Assets bundles, from the original Jukebox release (Apache-2.0).

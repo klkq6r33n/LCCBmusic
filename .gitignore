@@ -1,0 +1,36 @@
+# ---- .NET build output ----
+[Bb]in/
+[Oo]bj/
+.bin/
+_stage/
+_pkg/
+*.dll
+*.pdb
+!packaging/**/*.dll
+
+# ---- Local / machine-specific ----
+Directory.Build.props
+.install_after_exit.log
+_install_after_exit.log
+
+# ---- Runtime-only third-party files (not redistributed in the repo) ----
+third_party/*
+!third_party/README.md
+!third_party/.gitkeep
+
+# ---- Release archives / logs ----
+*.zip
+*.log
+LimbusShots/
+
+# ---- IDE / OS ----
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+Thumbs.db
+.DS_Store
+
+# ---- Optional: keep huge font binaries out of git; ship them in releases ----
+# packaging/fonts/*.ttf
