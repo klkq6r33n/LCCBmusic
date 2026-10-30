@@ -134,6 +134,11 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private GameObject _bgmUiRoot;
     private RectTransform _bgmContent;
     private TextMeshProUGUI _bgmStatus;
+    private Slider _bgmSeekSlider;
+    private TextMeshProUGUI _bgmTimeText;
+    private TextMeshProUGUI _bgmPauseLabel;
+    private string _bgmLastTimeText;
+    private string _bgmLastPauseText;
     private Image _menuPreviewCoverImage;
     private Image _menuPreviewFrameImage;
     private TextMeshProUGUI _menuPreviewTitleText;
@@ -277,6 +282,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 KeepGameMusicPaused();
             UpdateVisualizer();
             UpdateNowPlayingPanel();
+            if (_bgmPanelOpen && _bgmPage == 0)
+                UpdateBgmPlaybackUi();
             CheckOverlapDiagnostics();
 
             if (_bgmPanelOpen)
@@ -656,6 +663,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             return;
 
         _settingsUi?.CloseStandalone();
+        _bgmSeekSlider = null;
+        _bgmTimeText = null;
+        _bgmPauseLabel = null;
 
         if (_bgmUiRoot != null)
         {
@@ -849,6 +859,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             () => SetBgmSourceFilter(1), 14f,
             _bgmSourceFilter == 1 ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
 
+        BuildBgmPlaybackControls(parent);
+
         if (_bgmTracks.Length == 0)
         {
             var message = _bgmSourceFilter == 1
@@ -895,6 +907,125 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             new Vector2(220f, 44f), RestoreBgmFromUi, 16f);
     }
 
+    private void BuildBgmPlaybackControls(RectTransform parent)
+    {
+        var barRect = CreateUiObject("SeekBar", parent, new Vector2(0f, -120f), new Vector2(600f, 16f));
+        var background = barRect.gameObject.AddComponent<Image>();
+        background.color = new Color(0.16f, 0.16f, 0.18f, 1f);
+        background.raycastTarget = true;
+
+        var fillArea = CreateUiObject("FillArea", barRect, Vector2.zero, new Vector2(600f, 16f));
+        fillArea.anchorMin = Vector2.zero;
+        fillArea.anchorMax = Vector2.one;
+        fillArea.offsetMin = Vector2.zero;
+        fillArea.offsetMax = Vector2.zero;
+
+        var fill = CreateUiObject("Fill", fillArea, Vector2.zero, new Vector2(600f, 16f));
+        fill.anchorMin = Vector2.zero;
+        fill.anchorMax = Vector2.one;
+        fill.offsetMin = Vector2.zero;
+        fill.offsetMax = Vector2.zero;
+
+        var fillImage = fill.gameObject.AddComponent<Image>();
+        fillImage.color = new Color(0.847f, 0.647f, 0.137f, 1f);
+        fillImage.raycastTarget = false;
+
+        var slider = barRect.gameObject.AddComponent<Slider>();
+        slider.fillRect = fill;
+        slider.handleRect = null;
+        slider.targetGraphic = background;
+        slider.direction = Slider.Direction.LeftToRight;
+        slider.minValue = 0f;
+        slider.maxValue = 1f;
+        slider.value = 0f;
+        slider.onValueChanged.AddListener(OnBgmSeekChanged);
+        _bgmSeekSlider = slider;
+
+        _bgmTimeText = CreateUiLabel(parent, "--:-- / --:--", new Vector2(0f, -148f),
+            new Vector2(600f, 24f), 14f, TextAlignmentOptions.Center);
+
+        var pause = CreateUiButton(parent, IsZh ? "暂停" : "PAUSE", new Vector2(0f, -186f),
+            new Vector2(180f, 36f), ToggleBgmPlayback, 15f);
+        _bgmPauseLabel = pause.GetComponentInChildren<TextMeshProUGUI>();
+
+        UpdateBgmPlaybackUi();
+    }
+
+    private void OnBgmSeekChanged(float value)
+    {
+        if (_bgmSource == null || _bgmSource.clip == null)
+            return;
+
+        _bgmSource.time = Mathf.Clamp(value, 0f, _bgmSource.clip.length);
+    }
+
+    private void ToggleBgmPlayback()
+    {
+        if (_bgmSource == null || _bgmSource.clip == null)
+            return;
+
+        if (_bgmSource.isPlaying)
+            _bgmSource.Pause();
+        else
+            _bgmSource.UnPause();
+
+        UpdateBgmPlaybackUi();
+    }
+
+    private void UpdateBgmPlaybackUi()
+    {
+        if (_bgmSeekSlider == null)
+            return;
+
+        var source = _bgmSource;
+        var hasClip = source != null && source.clip != null;
+
+        if (hasClip)
+        {
+            var length = Mathf.Max(0.01f, source.clip.length);
+            if (!Mathf.Approximately(_bgmSeekSlider.maxValue, length))
+                _bgmSeekSlider.maxValue = length;
+
+            var time = Mathf.Clamp(source.time, 0f, length);
+            _bgmSeekSlider.SetValueWithoutNotify(time);
+
+            var text = FormatPlaybackTime(time) + " / " + FormatPlaybackTime(length);
+            if (text != _bgmLastTimeText && _bgmTimeText != null)
+            {
+                _bgmLastTimeText = text;
+                _bgmTimeText.text = text;
+            }
+        }
+        else
+        {
+            _bgmSeekSlider.maxValue = 1f;
+            _bgmSeekSlider.SetValueWithoutNotify(0f);
+            if (_bgmTimeText != null && _bgmLastTimeText != "--:-- / --:--")
+            {
+                _bgmLastTimeText = "--:-- / --:--";
+                _bgmTimeText.text = _bgmLastTimeText;
+            }
+        }
+
+        var playing = hasClip && source.isPlaying;
+        var label = playing ? (IsZh ? "暂停" : "PAUSE") : (IsZh ? "继续" : "RESUME");
+        if (_bgmPauseLabel != null && label != _bgmLastPauseText)
+        {
+            _bgmLastPauseText = label;
+            _bgmPauseLabel.font = LimbusCompanyFonts.MenuFont(label);
+            _bgmPauseLabel.text = label;
+        }
+    }
+
+    private static string FormatPlaybackTime(float seconds)
+    {
+        if (seconds < 0f || float.IsNaN(seconds) || float.IsInfinity(seconds))
+            return "--:--";
+
+        var total = Mathf.FloorToInt(seconds);
+        return (total / 60).ToString("00") + ":" + (total % 60).ToString("00");
+    }
+
     private void BuildBgmSettingsPage(RectTransform parent)
     {
         var host = CreateUiObject("SettingsHost", parent, new Vector2(0f, -10f), new Vector2(560f, 660f));
@@ -906,40 +1037,20 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     {
         var s = LimbusCompanyLyrics.Settings;
 
-        CreateUiLabel(parent, IsZh ? "界面语言" : "LANGUAGE", new Vector2(-160f, 260f), new Vector2(280f, 30f), 16f,
+        CreateUiLabel(parent, IsZh ? "界面语言" : "LANGUAGE", new Vector2(0f, 260f), new Vector2(280f, 30f), 16f,
             TextAlignmentOptions.Center);
-        CreateUiButton(parent, "中文", new Vector2(-160f, 212f), new Vector2(240f, 40f),
+        CreateUiButton(parent, "中文", new Vector2(0f, 212f), new Vector2(240f, 40f),
             () => SetUiLanguage("zh"), 16f, IsZh ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
-        CreateUiButton(parent, "ENGLISH", new Vector2(-160f, 162f), new Vector2(240f, 40f),
+        CreateUiButton(parent, "ENGLISH", new Vector2(0f, 162f), new Vector2(240f, 40f),
             () => SetUiLanguage("en"), 16f, !IsZh ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
 
         var lyricsOn = s == null || s.Enabled;
         var npOn = s != null && s.NowPlayingEnabled;
         CreateUiButton(parent, (IsZh ? "歌词显示：" : "LYRICS: ") + (lyricsOn ? "ON" : "OFF"),
-            new Vector2(-160f, 100f), new Vector2(240f, 40f), ToggleLyricsDisplay, 16f);
+            new Vector2(0f, 100f), new Vector2(240f, 40f), ToggleLyricsDisplay, 16f);
         CreateUiButton(parent, (IsZh ? "曲绘 / 歌名：" : "NOW PLAYING: ") + (npOn ? "ON" : "OFF"),
-            new Vector2(-160f, 50f), new Vector2(240f, 40f), ToggleNowPlaying, 16f);
+            new Vector2(0f, 50f), new Vector2(240f, 40f), ToggleNowPlaying, 16f);
 
-        CreateUiLabel(parent, IsZh ? "曲绘行位置与大小" : "ROW POSITION / SIZE",
-            new Vector2(150f, 260f), new Vector2(300f, 30f), 16f, TextAlignmentOptions.Center);
-        CreateUiButton(parent,
-            IsZh ? "用鼠标调整曲绘行" : "ADJUST ROW WITH MOUSE",
-            new Vector2(150f, 218f), new Vector2(280f, 44f), EnterNowPlayingMouseAdjust, 16f);
-        CreateUiLabel(parent,
-            IsZh
-                ? "点击后：拖动整行移动，滚轮缩放，Esc 完成。"
-                : "After clicking: drag the row, scroll to resize, Esc to finish.",
-            new Vector2(150f, 180f), new Vector2(300f, 32f), 12.5f, TextAlignmentOptions.Center, true);
-
-        CreateUiButton(parent, "^", new Vector2(150f, 140f), new Vector2(50f, 36f), () => NudgeNowPlaying(0, 1), 18f);
-        CreateUiButton(parent, "<", new Vector2(88f, 98f), new Vector2(50f, 36f), () => NudgeNowPlaying(-1, 0), 18f);
-        CreateUiButton(parent, ">", new Vector2(212f, 98f), new Vector2(50f, 36f), () => NudgeNowPlaying(1, 0), 18f);
-        CreateUiButton(parent, "v", new Vector2(150f, 56f), new Vector2(50f, 36f), () => NudgeNowPlaying(0, -1), 18f);
-
-        CreateUiButton(parent, "-", new Vector2(88f, 8f), new Vector2(50f, 36f), () => ResizeNowPlayingCover(-2f), 18f);
-        CreateUiButton(parent, "+", new Vector2(212f, 8f), new Vector2(50f, 36f), () => ResizeNowPlayingCover(2f), 18f);
-        CreateUiButton(parent, IsZh ? "重置位置" : "RESET POSITION", new Vector2(150f, -44f), new Vector2(220f, 36f),
-            ResetNowPlayingPosition, 15f);
     }
 
     private void SelectBgmTrack(int index)
@@ -1166,29 +1277,6 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         var settings = LimbusCompanyLyrics.Settings;
 
-        // 鼠标调整模式：只处理完成/关闭。
-        if (_npMouseAdjust)
-        {
-            if (keyboard.escapeKey.wasPressedThisFrame)
-                ExitNowPlayingMouseAdjust();
-            else if (Pressed(keyboard, ParseKey(settings?.BgmKeyToggle, Key.F5)))
-                CloseBgmPanel();
-            return;
-        }
-
-        // 改键流程优先，避免按键被旧功能抢走。
-        if (_bgmRebindStage == 2)
-        {
-            HandleRebindKey(keyboard, settings);
-            return;
-        }
-
-        if (_bgmRebindStage == 1)
-        {
-            HandleRebindChoice(keyboard, settings);
-            return;
-        }
-
         if (Pressed(keyboard, ParseKey(settings?.BgmKeyToggle, Key.F5)))
         {
             // 血宫内只使用 F4（CGME 菜单）；F5 只在关卡中可用。
@@ -1197,56 +1285,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             return;
         }
 
-        if (!_bgmPanelOpen)
-            return;
-
-        if (_npAdjustTarget != 0)
-        {
-            HandleNowPlayingAdjust(keyboard, settings);
-            return;
-        }
-
-        if (keyboard.escapeKey.wasPressedThisFrame)
-        {
+        if (_bgmPanelOpen && keyboard.escapeKey.wasPressedThisFrame)
             CloseBgmPanel();
-            return;
-        }
-
-        if (Pressed(keyboard, ParseKey(settings?.BgmKeyPrev, Key.LeftBracket)) || keyboard.leftArrowKey.wasPressedThisFrame)
-            CycleBgmTrack(-1);
-
-        if (Pressed(keyboard, ParseKey(settings?.BgmKeyNext, Key.RightBracket)) || keyboard.rightArrowKey.wasPressedThisFrame)
-            CycleBgmTrack(1);
-
-        if (Pressed(keyboard, ParseKey(settings?.BgmKeyReplace, Key.Enter)) || keyboard.numpadEnterKey.wasPressedThisFrame)
-            ApplySelectedBgmTrack();
-
-        if (Pressed(keyboard, ParseKey(settings?.BgmKeyRestore, Key.Backspace)))
-        {
-            StopBgmReplacement();
-            RefreshBgmUiForChange();
-        }
-
-        if (Pressed(keyboard, ParseKey(settings?.BgmKeyLyrics, Key.L)))
-            ToggleLyricsDisplay();
-
-        if (Pressed(keyboard, ParseKey(settings?.BgmKeyNowPlaying, Key.N)))
-            ToggleNowPlaying();
-
-        if (Pressed(keyboard, ParseKey(settings?.BgmKeyLanguage, Key.G)))
-            ToggleLanguageFromKey();
-
-        if (keyboard.kKey.wasPressedThisFrame)
-        {
-            _bgmRebindStage = 1;
-            UpdateBgmPanelStatus();
-        }
-
-        if (keyboard.pKey.wasPressedThisFrame)
-        {
-            _npAdjustTarget = 1;
-            UpdateBgmPanelStatus();
-        }
     }
 
     private static bool CanOpenBgmMenu()
@@ -1588,6 +1628,10 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (_bgmPanel != null)
             _bgmPanel.SetActive(true);
 
+        // 让曲绘行显示在菜单下层：可直接拖动，但不会挡住菜单按钮。
+        if (_npRoot != null && _bgmPanel != null)
+            _npRoot.transform.SetSiblingIndex(_bgmPanel.transform.GetSiblingIndex());
+
         RebuildBgmPanelUi();
         PauseForBgmMenu();
     }
@@ -1915,14 +1959,6 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             return;
         }
 
-        // F5 菜单打开时隐藏曲绘行（鼠标调整模式除外），避免遮挡菜单。
-        if (_bgmPanelOpen && !_npMouseAdjust)
-        {
-            if (_npRoot.activeSelf)
-                _npRoot.SetActive(false);
-            return;
-        }
-
         var song = _player?.State?.Song;
         var songPlaying = _player?.Source != null && _player.Source.isPlaying && song != null;
         var replacementPlaying = BgmReplacing && !string.IsNullOrEmpty(_bgmCurrentPath);
@@ -2038,9 +2074,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 : new Color(0.02f, 0.02f, 0.02f, 0f);
         }
 
-        // 只有鼠标调整模式下才接收拖动/滚轮，避免挡住菜单按钮。
+        // F5 菜单打开时可直接拖动整行/滚轮缩放（菜单暂停中，鼠标可用）。
         if (_npRowImage != null)
-            _npRowImage.raycastTarget = _npMouseAdjust;
+            _npRowImage.raycastTarget = _bgmPanelOpen;
     }
 
     private string _bgmInfoPath;

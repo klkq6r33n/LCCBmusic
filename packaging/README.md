@@ -166,20 +166,20 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 ### Level BGM replacement / 关卡 BGM 取代
 
 - Press **F5** in any level to open the mouse menu. It is separate from the Cyber Grind menu: **F4 works only in the Cyber Grind, F5 only in levels.** Opening the menu pauses the game and unlocks the cursor.
-- **MUSIC**: lists every `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` recursively (page buttons at the bottom); click a track to select it, then **REPLACE LEVEL BGM** or **RESTORE BGM**. The **ALL / ULTRAKILL-OST** buttons switch between the full library and a dedicated `Cybergrind/Music/ULTRAKILL-OST` category (created automatically) for official songs. No official audio is shipped with the mod or downloaded automatically — the folder is for tracks extracted from your own game copy.
+- **MUSIC**: lists every `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` recursively (page buttons at the bottom); click a track to select it, then **REPLACE LEVEL BGM** or **RESTORE BGM**. A **progress bar** shows the replacement track's position — click/drag it to seek — with **PAUSE / RESUME** and elapsed/total time. The **ALL / ULTRAKILL-OST** buttons switch between the full library and a dedicated `Cybergrind/Music/ULTRAKILL-OST` category (created automatically) for official songs. No official audio is shipped with the mod or downloaded automatically — the folder is for tracks extracted from your own game copy.
 - **SETTINGS**: the same LAYOUT / TEXT / MOTION / TRANS / VISUAL pages as the in-Cyber-Grind menu, fully mouse-driven (inputs, toggles, per-page reset).
-- **DISPLAY**: switch **中文 / ENGLISH**, toggle lyrics and the now-playing frame, move/resize the cover and title, and click any key binding to rebind it (press the new key, Esc cancels).
-- Keyboard shortcuts still work: `[` / `]` or **← / →** change track, **Enter** replaces, **Backspace** restores, **L** lyrics, **N** cover, **G** language, **K** rebind (1–8), **P** position, **Esc** closes, **F5** toggles.
+- **DISPLAY**: switch **中文 / ENGLISH**, toggle lyrics and the now-playing row. The row is dragged/resized directly with the mouse while F5 is open (no separate adjustment block or shortcuts).
+- Only **F5** (open/close) and **Esc** (close) remain as keyboard shortcuts; all other shortcuts were removed.
 - **Replace** pauses the game's level music (clean / battle / boss themes) and starts the selected track on a loop. The paused level music keeps its exact position.
 - **Restore** stops the replacement and unpauses the level music, which continues from the point where it was paused. Scene changes also end the replacement automatically.
 - The audio visualizer reads the replacement track while it is active, and reads the game's level music after restoration — so the spectrum works for both.
 - Only local files are used; the CGME Downloader is still unsupported.
 
 - 在任意关卡中按 **F5** 打开鼠标菜单。它与血宫菜单分开：**F4 只在血宫可用，F5 只在关卡可用。** 打开时暂停游戏并解锁鼠标。
-- **MUSIC**：递归列出 `Cybergrind/Music` 下所有 `.mp3` / `.ogg` / `.wav`（底部翻页）；点击曲目选中，再点 **取代关卡 BGM** 或 **归还原 BGM**。顶部的 **全部 / ULTRAKILL-OST** 按钮用于切换完整曲库与专门的 `Cybergrind/Music/ULTRAKILL-OST` 分类（不存在时会自动创建），官方歌曲放进该文件夹即可。mod **不附带也不会自动下载官方音频**，该文件夹用于放置从你自己游戏副本中提取的曲目。
+- **MUSIC**：递归列出 `Cybergrind/Music` 下所有 `.mp3` / `.ogg` / `.wav`（底部翻页）；点击曲目选中，再点 **取代关卡 BGM** 或 **归还原 BGM**。界面带**进度条**（点击/拖动跳转）、**暂停 / 继续**按钮以及已播放/总时长。顶部的 **全部 / ULTRAKILL-OST** 按钮用于切换完整曲库与专门的 `Cybergrind/Music/ULTRAKILL-OST` 分类（不存在时会自动创建），官方歌曲放进该文件夹即可。mod **不附带也不会自动下载官方音频**，该文件夹用于放置从你自己游戏副本中提取的曲目。
 - **SETTINGS**：与血宫内菜单相同的 位置 / 文字 / 动态 / 翻译 / 频谱 五页，全部可用鼠标操作（输入框、开关、单页重置）。
 - **DISPLAY**：切换 **中文 / English**、开关歌词与曲绘框、移动/缩放曲绘与歌名，并点击任意按键绑定后按下新键改绑（Esc 取消）。
-- 键盘快捷键仍可用：`[` / `]` 或 **← / →** 切换曲目，**Enter** 取代，**Backspace** 归还，**L** 歌词，**N** 曲绘，**G** 语言，**K** 改键（1–8），**P** 调位置，**Esc** 关闭，**F5** 开关菜单。
+- 仅保留 **F5**（开关）与 **Esc**（关闭）两个键盘快捷键；其余快捷键已全部移除。
 - **取代**：暂停游戏当前的关卡音乐（clean / battle / boss 三个主题），循环播放选定曲目；被暂停的关卡音乐保留准确进度。
 - **归还**：停止替代曲目并恢复关卡音乐，从暂停的位置继续；切换关卡时也会自动结束取代。
 - 频谱在取代期间读取替代曲目，归还后读取关卡原音乐，两种情况下都有效。
@@ -190,14 +190,14 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - While a Jukebox song or a replaced level track is playing, one horizontal row is drawn: **cover / title / artist** (曲绘 / 曲名 / 作者). The row is **small by default**: the text size is the reference and the cover is only slightly larger than the text (about 1.3×), never the other way around. The title and artist use the **same font size**; the artist is the last item in the row.
 - The cover sits in a ULK-style bordered frame. No cover → the frame stays hollow (only the border is drawn).
 - Cover source, in order: an image with the audio file's base name (`.png` / `.jpg` / `.jpeg`), then `cover` / `folder` / `front` / `album` / `artwork` / `albumart` / `thumb` / `jacket` / `pak` images, then **any other image in the song folder**, then the embedded ID3 picture. Decode results (including failures) are written to the BepInEx log.
-- **Mouse adjustment** (F5 → DISPLAY → **ADJUST ROW WITH MOUSE**): the menu hides, then **drag the whole row** to move it and **scroll the mouse wheel** to change its size; press **Esc** or click **DONE** to finish (the menu closes so you can see the result). The DISPLAY page also has arrow / `-` `+` / reset buttons, and keyboard **P** still works (arrows move, Shift = fine, `-` / `+` resize, P/Esc finish). Changes save immediately.
+- **Mouse adjustment**: while the F5 menu is open, **drag the in-game row** to move it and **scroll the mouse wheel** over it to change its size. There is no separate adjustment block or shortcut; changes save immediately.
 - The **F5 right-hand preview** uses a vertical layout instead: the selected track's cover is shown **above** its title and author. The in-game row stays horizontal (`cover / title / artist`).
 - Config keys: `now_playing_enabled`, `cover_pos_x/y` (row anchor: right edge X and vertical center Y, in % of the screen), `cover_size` (**text/row size**, 10–120, default 32; the cover is about 1.3× this); `title_pos_x/y` are kept for old configs but are no longer used.
 
 - 当 Jukebox 曲目或取代的关卡曲目正在播放时，会绘制**一整行**：**曲绘 / 曲名 / 作者**。整行默认**很小**：以文字大小为基准，曲绘只比文字略大（约 1.3 倍），而不是把文字放大到曲绘那么大。曲名与作者使用**相同字号**，作者排在整行最后。
 - 曲绘外面是 ULK 风格的描边框。没有曲绘时框体镂空（只画边框）。
 - 曲绘来源依次为：与音频同名的图片（`.png` / `.jpg` / `.jpeg`）、`cover` / `folder` / `front` / `album` / `artwork` / `albumart` / `thumb` / `jacket` / `pak` 图片、**歌曲文件夹内任意其他图片**、最后是音频内嵌的 ID3 图片。解码结果（含失败原因）会写入 BepInEx 日志。
-- **鼠标调整**（F5 → DISPLAY → **用鼠标调整曲绘行**）：菜单会隐藏，此时**拖动整行**移动、**滚轮**改变大小，按 **Esc** 或点击 **完成** 结束（结束后菜单关闭并恢复游戏，方便立刻查看效果）。DISPLAY 页也保留方向按钮、`-` `+` 与重置按钮；键盘 **P** 仍可用（方向键移动，Shift 微调，`-` / `+` 缩放，P/Esc 结束）。改动立即保存。
+- **鼠标调整**：F5 菜单打开时，直接**拖动游戏内的曲绘行**移动，鼠标停在上面**滚轮**改变大小；没有独立的调整区块或快捷键，改动立即保存。
 - **F5 右侧预览**使用竖排布局：选中曲目的曲绘在**上**，曲名与作者在**下**；游戏内的曲绘行仍然是横排（`曲绘 / 曲名 / 作者`）。
 - 配置项：`now_playing_enabled`、`cover_pos_x/y`（整行锚点：右边缘 X、垂直中心 Y，屏幕百分比）、`cover_size`（**文字/整行大小**，10–120，默认 32，曲绘约为它的 1.3 倍）；`title_pos_x/y` 仅为兼容旧配置保留，已不再使用。
 
