@@ -252,6 +252,7 @@ Right-click → **Install**, then restart the game: the mod automatically prefer
 - Lyric text is NFKC-normalized at runtime: CJK compatibility ideographs (e.g. U+F9EC `溺` → `溺`), variation selectors and stray control characters are removed, so copy-pasted lyrics cannot flicker as missing glyphs.
 - Diagnostics are written to `BepInEx/LogOutput.log` under `[Jukebox LimbusCompany]` (normalized text, line placement, and a warning if an overlap is still detected).
 - **The CGME Downloader is not supported.** `yt-dlp`, `ffmpeg`, `ffprobe` and `yt-dlp.sha256` are not bundled, and the Downloader dependency is not declared. URL / YouTube downloads are unavailable; local audio files are required.
+- **Only the lyric layer is added.** CGME's non-lyric localization extras and helper scripts are not included; the Jukebox core (player, playlists, menu) is still required and remains as-is.
 - **Known issue:** in some cases lyrics may still overlap; the author (**6r3²n**) lacks computer knowledge and made this mod with AI, but the AI used could not fix this issue.
 
 - 原版 `SubtitlesPanel` 被置空；Thorn 的 Subtitle HUD 模块会保留一个空框（`HideBackgroundWhenEmpty` 时自动隐藏）。
@@ -262,4 +263,5 @@ Right-click → **Install**, then restart the game: the mod automatically prefer
 - 歌词在运行时做 NFKC 归一化：CJK 兼容汉字（如 U+F9EC `溺` → `溺`）、变体选择符和多余控制字符会被替换/移除，避免从音乐平台复制的歌词因缺字反复闪烁。
 - 诊断信息写入 `BepInEx/LogOutput.log` 的 `[Jukebox LimbusCompany]` 下（字符归一化、每句落点，以及仍检测到重叠时的警告）。
 - **不支持 CGME 下载器。** 不附带 `yt-dlp`、`ffmpeg`、`ffprobe`、`yt-dlp.sha256`，manifest 也不再声明 Downloader 依赖；URL / YouTube 下载功能不可用，请使用本地音频文件。
+- **本包只新增歌词层。** 不包含 CGME 的非歌词本地化内容与辅助脚本；Jukebox 核心（播放器、播放列表、菜单）仍是必需部分，保持原样。
 - **已知问题：** 部分情况下歌词仍可能重叠；作者（**6r3²n**）计算机知识不足，使用 AI 制作此 mod，但所使用的 AI 无法修复该问题。
