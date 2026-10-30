@@ -295,6 +295,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 KeepGameMusicPaused();
             UpdateVisualizer();
             UpdateNowPlayingPanel();
+            if (_bgmPanelOpen)
+                UpdateBgmMenuScale();
             if (_bgmPanelOpen && _bgmPage == 0)
                 UpdateBgmPlaybackUi();
             if (_bgmPanelOpen && _bgmPage == 2)
@@ -945,6 +947,24 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             new Vector2(260f, 44f), ApplySelectedBgmTrack, 16f);
         CreateUiButton(parent, IsZh ? "归还原 BGM" : "RESTORE BGM", new Vector2(140f, -300f),
             new Vector2(220f, 44f), RestoreBgmFromUi, 16f);
+    }
+
+    /// <summary>菜单按画布大小自动缩放，避免小分辨率/窄画布被裁切。</summary>
+    private void UpdateBgmMenuScale()
+    {
+        if (_bgmPanelRect == null || _canvas == null)
+            return;
+
+        var rect = _canvas.GetComponent<RectTransform>().rect;
+        var width = rect.width > 1f ? rect.width : 1920f;
+        var height = rect.height > 1f ? rect.height : 1080f;
+
+        var scale = Mathf.Min(1f, Mathf.Min((width - 40f) / 1220f, (height - 40f) / 820f));
+        scale = Mathf.Clamp(scale, 0.5f, 1f);
+
+        var target = new Vector3(scale, scale, 1f);
+        if ((_bgmPanelRect.localScale - target).sqrMagnitude > 0.0001f)
+            _bgmPanelRect.localScale = target;
     }
 
     private void BuildBgmCategoryBar(RectTransform parent)
@@ -2548,7 +2568,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         artist ??= string.Empty;
 
         // cover_size 现在是文字大小；曲绘只比文字略大一圈，而不是把文字放大到曲绘尺寸。
-        var fontSize = Mathf.Clamp(settings.CoverSize, 10f, 120f);
+        // 按画布高度相对 1080p 缩放，使不同宽高比下曲绘行的视觉占比一致。
+        var canvasScale = Mathf.Clamp(height / 1080f, 0.65f, 1.5f);
+        var fontSize = Mathf.Clamp(Mathf.Clamp(settings.CoverSize, 10f, 120f) * canvasScale, 8f, 180f);
         var size = fontSize * 1.3f;
         var changed = title != _npLastTitleText || artist != _npLastArtistText ||
                       !Mathf.Approximately(fontSize, _npLastFontSize);
