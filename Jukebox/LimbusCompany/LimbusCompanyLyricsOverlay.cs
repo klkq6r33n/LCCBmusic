@@ -138,6 +138,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private TextMeshProUGUI _presetStatusText;
     private TMP_InputField _presetNameInput;
     private const int PresetsPerPage = 8;
+    private Slider _npSizeSlider;
+    private TextMeshProUGUI _npSizeValueText;
     private Slider _bgmSeekSlider;
     private TextMeshProUGUI _bgmTimeText;
     private TextMeshProUGUI _bgmPauseLabel;
@@ -295,6 +297,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             UpdateNowPlayingPanel();
             if (_bgmPanelOpen && _bgmPage == 0)
                 UpdateBgmPlaybackUi();
+            if (_bgmPanelOpen && _bgmPage == 2)
+                UpdateNpSizeUi();
             CheckOverlapDiagnostics();
 
             if (_bgmPanelOpen)
@@ -678,6 +682,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         _bgmSeekSlider = null;
         _bgmTimeText = null;
         _bgmPauseLabel = null;
+        _npSizeSlider = null;
+        _npSizeValueText = null;
 
         if (_bgmUiRoot != null)
         {
@@ -1270,6 +1276,97 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         CreateUiButton(parent, (IsZh ? "曲绘 / 歌名：" : "NOW PLAYING: ") + (npOn ? "ON" : "OFF"),
             new Vector2(0f, 50f), new Vector2(240f, 40f), ToggleNowPlaying, 16f);
 
+        CreateUiLabel(parent, IsZh ? "曲绘 / 文字大小" : "COVER / TEXT SIZE",
+            new Vector2(0f, -10f), new Vector2(320f, 28f), 15f, TextAlignmentOptions.Center);
+        _npSizeSlider = CreateUiSlider(parent, new Vector2(0f, -40f), new Vector2(320f, 18f),
+            10f, 120f, s?.CoverSize ?? 32f, OnNpSizeChanged);
+        _npSizeValueText = CreateUiLabel(parent, string.Empty, new Vector2(0f, -66f),
+            new Vector2(200f, 24f), 13f, TextAlignmentOptions.Center);
+        CreateUiButton(parent, IsZh ? "重置位置与大小" : "RESET POSITION & SIZE",
+            new Vector2(0f, -106f), new Vector2(280f, 34f), ResetNowPlayingLayout, 14f);
+
+        UpdateNpSizeUi();
+    }
+
+    private Slider CreateUiSlider(RectTransform parent, Vector2 position, Vector2 size,
+        float min, float max, float value, Action<float> onChange)
+    {
+        var barRect = CreateUiObject("Slider", parent, position, size);
+        var background = barRect.gameObject.AddComponent<Image>();
+        background.color = new Color(0.16f, 0.16f, 0.18f, 1f);
+        background.raycastTarget = true;
+
+        var fillArea = CreateUiObject("FillArea", barRect, Vector2.zero, size);
+        fillArea.anchorMin = Vector2.zero;
+        fillArea.anchorMax = Vector2.one;
+        fillArea.offsetMin = Vector2.zero;
+        fillArea.offsetMax = Vector2.zero;
+
+        var fill = CreateUiObject("Fill", fillArea, Vector2.zero, size);
+        fill.anchorMin = Vector2.zero;
+        fill.anchorMax = Vector2.one;
+        fill.offsetMin = Vector2.zero;
+        fill.offsetMax = Vector2.zero;
+
+        var fillImage = fill.gameObject.AddComponent<Image>();
+        fillImage.color = new Color(0.847f, 0.647f, 0.137f, 1f);
+        fillImage.raycastTarget = false;
+
+        var slider = barRect.gameObject.AddComponent<Slider>();
+        slider.fillRect = fill;
+        slider.handleRect = null;
+        slider.targetGraphic = background;
+        slider.direction = Slider.Direction.LeftToRight;
+        slider.minValue = min;
+        slider.maxValue = max;
+        slider.SetValueWithoutNotify(Mathf.Clamp(value, min, max));
+        slider.onValueChanged.AddListener(v => onChange(v));
+        return slider;
+    }
+
+    private void OnNpSizeChanged(float value)
+    {
+        var s = LimbusCompanyLyrics.Settings;
+        if (s == null)
+            return;
+
+        s.CoverSize = Mathf.Clamp(value, 10f, 120f);
+        LimbusCompanyLyrics.SaveAllSettings();
+        UpdateBgmPanelStatus();
+    }
+
+    private void UpdateNpSizeUi()
+    {
+        if (_npSizeSlider == null)
+            return;
+
+        var s = LimbusCompanyLyrics.Settings;
+        if (s == null)
+            return;
+
+        var value = Mathf.Clamp(s.CoverSize, 10f, 120f);
+        _npSizeSlider.SetValueWithoutNotify(value);
+
+        if (_npSizeValueText != null)
+        {
+            var text = Mathf.RoundToInt(value).ToString();
+            if (_npSizeValueText.text != text)
+                _npSizeValueText.text = text;
+        }
+    }
+
+    private void ResetNowPlayingLayout()
+    {
+        var s = LimbusCompanyLyrics.Settings;
+        if (s == null)
+            return;
+
+        s.CoverPosX = 2f;
+        s.CoverPosY = 90f;
+        s.CoverSize = 32f;
+        LimbusCompanyLyrics.SaveAllSettings();
+        UpdateNpSizeUi();
+        UpdateBgmPanelStatus();
     }
 
     private void BuildBgmPresetsPage(RectTransform parent)
@@ -1587,8 +1684,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (s == null)
             return;
 
-        s.CoverPosX = 84f;
-        s.CoverPosY = 18f;
+        s.CoverPosX = 2f;
+        s.CoverPosY = 90f;
         s.CoverSize = 32f;
         LimbusCompanyLyrics.SaveAllSettings();
         RebuildBgmPanelUi();
@@ -2479,9 +2576,15 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         var totalWidth = size + (titleWidth > 0f ? gap + titleWidth : 0f) +
                          (artistWidth > 0f ? gap + artistWidth : 0f);
 
+        // cover_pos_x 表示整行左边缘（默认左下角），并强制留在屏幕内。
         var anchorX = Mathf.Clamp(settings.CoverPosX, 0f, 100f) / 100f * width;
         var centerY = (0.5f - Mathf.Clamp(settings.CoverPosY, 0f, 100f) / 100f) * height;
-        var left = anchorX - totalWidth;
+        var left = Mathf.Clamp(anchorX, 0f, Mathf.Max(0f, width - totalWidth));
+        centerY = Mathf.Clamp(centerY, -height / 2f + size / 2f, height / 2f - size / 2f);
+
+        // 把实际可见位置写回内存，避免从屏幕外开始拖动。
+        settings.CoverPosX = width > 1f ? left / width * 100f : 0f;
+        settings.CoverPosY = height > 1f ? (0.5f - centerY / height) * 100f : 0f;
 
         var rowRect = _npRoot.GetComponent<RectTransform>();
         rowRect.sizeDelta = new Vector2(totalWidth, size);
@@ -2965,6 +3068,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         EnsureBgmSource();
         BgmReplacing = true;
         _bgmCurrentPath = fullPath;
+        UpdateNowPlayingPanel();
         LoadBgmSubtitleTracks(fullPath);
         BgmStatus = "loading: " + relativePath;
         PauseGameMusic();
