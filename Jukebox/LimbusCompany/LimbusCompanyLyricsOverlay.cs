@@ -1381,7 +1381,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (s == null)
             return;
 
-        s.CoverPosX = 2f;
+        s.CoverPosX = 50f;
         s.CoverPosY = 90f;
         s.CoverSize = 32f;
         LimbusCompanyLyrics.SaveAllSettings();
@@ -1587,8 +1587,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (s == null)
             return;
 
-        s.CoverPosX = Mathf.Clamp(x, 0f, 100f);
-        s.CoverPosY = Mathf.Clamp(y, 0f, 100f);
+        s.CoverPosX = Mathf.Clamp(x, -100f, 200f);
+        s.CoverPosY = Mathf.Clamp(y, -100f, 200f);
 
         if (save)
         {
@@ -1704,7 +1704,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (s == null)
             return;
 
-        s.CoverPosX = 2f;
+        s.CoverPosX = 50f;
         s.CoverPosY = 90f;
         s.CoverSize = 32f;
         LimbusCompanyLyrics.SaveAllSettings();
@@ -2598,19 +2598,13 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         var totalWidth = size + (titleWidth > 0f ? gap + titleWidth : 0f) +
                          (artistWidth > 0f ? gap + artistWidth : 0f);
 
-        // cover_pos_x 表示整行左边缘（默认左下角），并强制留在屏幕内。
-        var anchorX = Mathf.Clamp(settings.CoverPosX, 0f, 100f) / 100f * width;
-        var centerY = (0.5f - Mathf.Clamp(settings.CoverPosY, 0f, 100f) / 100f) * height;
-        var left = Mathf.Clamp(anchorX, 0f, Mathf.Max(0f, width - totalWidth));
-        centerY = Mathf.Clamp(centerY, -height / 2f + size / 2f, height / 2f - size / 2f);
-
-        // 把实际可见位置写回内存，避免从屏幕外开始拖动。
-        settings.CoverPosX = width > 1f ? left / width * 100f : 0f;
-        settings.CoverPosY = height > 1f ? (0.5f - centerY / height) * 100f : 0f;
+        // cover_pos_x/y 表示整行中心；不做屏幕内限制，玩家可以自由放到任意位置。
+        var centerX = Mathf.Clamp(settings.CoverPosX, -100f, 200f) / 100f * width;
+        var centerY = (0.5f - Mathf.Clamp(settings.CoverPosY, -100f, 200f) / 100f) * height;
 
         var rowRect = _npRoot.GetComponent<RectTransform>();
         rowRect.sizeDelta = new Vector2(totalWidth, size);
-        rowRect.anchoredPosition = new Vector2(left + totalWidth / 2f, centerY);
+        rowRect.anchoredPosition = new Vector2(centerX, centerY);
 
         var frameRect = _npFrameImage.GetComponent<RectTransform>();
         frameRect.sizeDelta = new Vector2(size, size);

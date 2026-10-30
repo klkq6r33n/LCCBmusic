@@ -203,8 +203,8 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - The cover sits in a ULK-style bordered frame. No cover → the frame stays hollow (only the border is drawn).
 - Cover source, in order: an image with the audio file's base name (`.png` / `.jpg` / `.jpeg`), then `cover` / `folder` / `front` / `album` / `artwork` / `albumart` / `thumb` / `jacket` / `pak` images, then **any other image in the song folder**, then the embedded ID3 picture. Decode results (including failures) are written to the BepInEx log.
 - If the file has no performer/composer tag, the artist is recovered from an `Artist - Title` file name or song folder name; the title is recovered the same way when the title tag is missing.
-- **Size / position**: F5 → DISPLAY has a **COVER / TEXT SIZE slider (10–120)** and a **RESET POSITION & SIZE** button (bottom-left, size 32). While the menu is open you can also **drag the small cover square** to move the row and **scroll the wheel over that square** to resize. Changes save immediately.
-- The in-game row defaults to the **bottom-left corner** in `cover / title / artist` order and is kept inside the screen even if an old position was off-screen. Its size scales with the canvas height so it looks consistent on different resolutions/aspect ratios, and the F5 window shrinks automatically when the canvas is smaller than the menu.
+- **Size / position**: F5 → DISPLAY has a **COVER / TEXT SIZE slider (10–120)** and a **RESET POSITION & SIZE** button (bottom-center, size 32). While the menu is open you can also **drag the small cover square** to move the row freely and **scroll the wheel over that square** to resize. Changes save immediately.
+- The in-game row defaults to the **bottom-center** in `cover / title / artist` order. Its position is **not restricted** — you can drag it anywhere, including partly off-screen. Its size scales with the canvas height so it looks consistent on different resolutions/aspect ratios, and the F5 window shrinks automatically when the canvas is smaller than the menu.
 - The **F5 right-hand preview** uses a vertical layout instead: the selected track's cover is shown **above** its title and author. The in-game row stays horizontal (`cover / title / artist`).
 - Config keys: `now_playing_enabled`, `cover_pos_x/y` (row anchor: right edge X and vertical center Y, in % of the screen), `cover_size` (**text/row size**, 10–120, default 32; the cover is about 1.3× this); `title_pos_x/y` are kept for old configs but are no longer used.
 
@@ -212,8 +212,8 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - 曲绘外面是 ULK 风格的描边框。没有曲绘时框体镂空（只画边框）。
 - 曲绘来源依次为：与音频同名的图片（`.png` / `.jpg` / `.jpeg`）、`cover` / `folder` / `front` / `album` / `artwork` / `albumart` / `thumb` / `jacket` / `pak` 图片、**歌曲文件夹内任意其他图片**、最后是音频内嵌的 ID3 图片。解码结果（含失败原因）会写入 BepInEx 日志。
 - 如果文件没有作者/作曲标签，会从 `作者 - 曲名` 形式的文件名或歌曲文件夹名补全作者；标题标签缺失时也会按同样方式补全标题。
-- **大小 / 位置**：F5 → DISPLAY 有 **曲绘/文字大小滑块（10–120）** 和 **重置位置与大小** 按钮（左下角，大小 32）。菜单打开时也可以**拖动曲绘小方框**移动整行、在方框上**滚轮**缩放。改动立即保存。
-- 游戏内曲绘行默认出现在**屏幕左下角**，顺序为 `曲绘 / 曲名 / 作者`；即使旧配置的位置在屏幕外，也会被自动拉回屏幕内。曲绘行大小会随画布高度缩放，不同分辨率/宽高比下视觉占比一致；F5 窗口在画布小于菜单时会自动缩小。
+- **大小 / 位置**：F5 → DISPLAY 有 **曲绘/文字大小滑块（10–120）** 和 **重置位置与大小** 按钮（中下，大小 32）。菜单打开时也可以**拖动曲绘小方框自由移动整行**、在方框上**滚轮**缩放。改动立即保存。
+- 游戏内曲绘行默认出现在**屏幕中下**，顺序为 `曲绘 / 曲名 / 作者`。位置**不做屏幕内限制**，可以拖到任意位置（包括部分出屏）。曲绘行大小会随画布高度缩放，不同分辨率/宽高比下视觉占比一致；F5 窗口在画布小于菜单时会自动缩小。
 - **F5 右侧预览**使用竖排布局：选中曲目的曲绘在**上**，曲名与作者在**下**；游戏内的曲绘行仍然是横排（`曲绘 / 曲名 / 作者`）。
 - 配置项：`now_playing_enabled`、`cover_pos_x/y`（整行锚点：右边缘 X、垂直中心 Y，屏幕百分比）、`cover_size`（**文字/整行大小**，10–120，默认 32，曲绘约为它的 1.3 倍）；`title_pos_x/y` 仅为兼容旧配置保留，已不再使用。
 

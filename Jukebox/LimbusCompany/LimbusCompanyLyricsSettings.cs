@@ -136,8 +136,8 @@ public class LimbusCompanyLyricsSettings
     // ---- 当前歌曲曲绘 / 歌名（右上角 ULK 风格框） ----
     public bool NowPlayingEnabled = true;
 
-    /// <summary>曲绘行左边缘的屏幕 X 百分比（默认屏幕左下角）。</summary>
-    public float CoverPosX = 2f;
+    /// <summary>曲绘行中心的屏幕 X 百分比（默认屏幕中下）。</summary>
+    public float CoverPosX = 50f;
 
     /// <summary>曲绘行中心的屏幕 Y 百分比（从顶部算，默认靠下）。</summary>
     public float CoverPosY = 90f;
@@ -275,8 +275,9 @@ public class LimbusCompanyLyricsSettings
         BgmKeyNowPlaying = GetString(s, "bgm_key_now_playing", BgmKeyNowPlaying);
         BgmKeyLanguage = GetString(s, "bgm_key_language", BgmKeyLanguage);
         NowPlayingEnabled = GetBool(s, "now_playing_enabled", NowPlayingEnabled);
-        CoverPosX = Mathf.Clamp(GetFloat(s, "cover_pos_x", CoverPosX), 0f, 100f);
-        CoverPosY = Mathf.Clamp(GetFloat(s, "cover_pos_y", CoverPosY), 0f, 100f);
+        // 不做屏幕内限制：允许玩家把曲绘行放到屏幕边缘甚至部分出屏。
+        CoverPosX = Mathf.Clamp(GetFloat(s, "cover_pos_x", CoverPosX), -100f, 200f);
+        CoverPosY = Mathf.Clamp(GetFloat(s, "cover_pos_y", CoverPosY), -100f, 200f);
         TitlePosX = Mathf.Clamp(GetFloat(s, "title_pos_x", TitlePosX), 0f, 100f);
         TitlePosY = Mathf.Clamp(GetFloat(s, "title_pos_y", TitlePosY), 0f, 100f);
         var coverSize = GetFloat(s, "cover_size", CoverSize);
