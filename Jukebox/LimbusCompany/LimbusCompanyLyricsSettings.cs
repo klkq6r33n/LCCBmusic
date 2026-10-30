@@ -136,8 +136,8 @@ public class LimbusCompanyLyricsSettings
     // ---- 当前歌曲曲绘 / 歌名（右上角 ULK 风格框） ----
     public bool NowPlayingEnabled = true;
 
-    /// <summary>曲绘行中心的屏幕 X 百分比（默认屏幕中下）。</summary>
-    public float CoverPosX = 50f;
+    /// <summary>曲绘行左边缘的屏幕 X 百分比（默认屏幕左下角）。</summary>
+    public float CoverPosX = 2f;
 
     /// <summary>曲绘行中心的屏幕 Y 百分比（从顶部算，默认靠下）。</summary>
     public float CoverPosY = 90f;

@@ -1381,7 +1381,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (s == null)
             return;
 
-        s.CoverPosX = 50f;
+        s.CoverPosX = 2f;
         s.CoverPosY = 90f;
         s.CoverSize = 32f;
         LimbusCompanyLyrics.SaveAllSettings();
@@ -1704,7 +1704,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (s == null)
             return;
 
-        s.CoverPosX = 50f;
+        s.CoverPosX = 2f;
         s.CoverPosY = 90f;
         s.CoverSize = 32f;
         LimbusCompanyLyrics.SaveAllSettings();
@@ -2598,13 +2598,24 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         var totalWidth = size + (titleWidth > 0f ? gap + titleWidth : 0f) +
                          (artistWidth > 0f ? gap + artistWidth : 0f);
 
-        // cover_pos_x/y 表示整行中心；不做屏幕内限制，玩家可以自由放到任意位置。
-        var centerX = Mathf.Clamp(settings.CoverPosX, -100f, 200f) / 100f * width;
+        // cover_pos_x 表示整行左边缘（默认左下角）；使用与菜单相同的防出屏方式：
+        // 始终把整行限制在屏幕安全区内，并同步回内存位置，拖动不会从屏幕外开始。
+        const float margin = 12f;
+        var anchorX = Mathf.Clamp(settings.CoverPosX, -100f, 200f) / 100f * width;
         var centerY = (0.5f - Mathf.Clamp(settings.CoverPosY, -100f, 200f) / 100f) * height;
+
+        var maxLeft = Mathf.Max(margin, width - totalWidth - margin);
+        var left = Mathf.Clamp(anchorX, margin, maxLeft);
+        var minY = -height / 2f + size / 2f + margin;
+        var maxY = height / 2f - size / 2f - margin;
+        centerY = Mathf.Clamp(centerY, minY, maxY);
+
+        settings.CoverPosX = width > 1f ? left / width * 100f : 0f;
+        settings.CoverPosY = height > 1f ? (0.5f - centerY / height) * 100f : 0f;
 
         var rowRect = _npRoot.GetComponent<RectTransform>();
         rowRect.sizeDelta = new Vector2(totalWidth, size);
-        rowRect.anchoredPosition = new Vector2(centerX, centerY);
+        rowRect.anchoredPosition = new Vector2(left + totalWidth / 2f, centerY);
 
         var frameRect = _npFrameImage.GetComponent<RectTransform>();
         frameRect.sizeDelta = new Vector2(size, size);

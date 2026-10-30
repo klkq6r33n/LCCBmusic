@@ -93,7 +93,7 @@
     "bgm_key_now_playing": "N",
     "bgm_key_language": "G",
     "now_playing_enabled": true,
-    "cover_pos_x": 50,
+    "cover_pos_x": 2,
     "cover_pos_y": 90,
     "title_pos_x": 84,
     "title_pos_y": 38,
