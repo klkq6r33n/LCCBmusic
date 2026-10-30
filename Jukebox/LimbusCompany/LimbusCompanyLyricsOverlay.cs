@@ -731,12 +731,12 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             new Vector2(40f, 260f), new Vector2(380f, 30f), 16f, TextAlignmentOptions.Center);
         CreateUiButton(parent,
             IsZh ? "用鼠标调整曲绘行" : "ADJUST ROW WITH MOUSE",
-            new Vector2(40f, 218f), new Vector2(380f, 44f), EnterNowPlayingMouseAdjust, 16f);
+            new Vector2(40f, 222f), new Vector2(380f, 44f), EnterNowPlayingMouseAdjust, 16f);
         CreateUiLabel(parent,
             IsZh
                 ? "点击上面的按钮后：拖动整行移动，滚轮缩放，Esc 完成。"
                 : "After clicking: drag the row to move, scroll to resize, Esc to finish.",
-            new Vector2(40f, 180f), new Vector2(380f, 40f), 12.5f, TextAlignmentOptions.Center, true);
+            new Vector2(40f, 180f), new Vector2(380f, 32f), 12.5f, TextAlignmentOptions.Center, true);
 
         CreateUiButton(parent, "^", new Vector2(50f, 140f), new Vector2(56f, 36f), () => NudgeNowPlaying(0, 1), 18f);
         CreateUiButton(parent, "<", new Vector2(-12f, 98f), new Vector2(56f, 36f), () => NudgeNowPlaying(-1, 0), 18f);
