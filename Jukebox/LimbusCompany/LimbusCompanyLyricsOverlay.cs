@@ -1735,7 +1735,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         artist ??= string.Empty;
 
         var size = Mathf.Clamp(settings.CoverSize, 80f, 600f);
-        var fontSize = Mathf.Clamp(size * 0.28f, 16f, 56f);
+        var fontSize = Mathf.Clamp(size * 0.28f, 16f, 96f);
         var changed = title != _npLastTitleText || artist != _npLastArtistText ||
                       !Mathf.Approximately(fontSize, _npLastFontSize);
         if (changed)
