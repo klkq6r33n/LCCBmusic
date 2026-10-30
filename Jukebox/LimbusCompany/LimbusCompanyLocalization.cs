@@ -845,8 +845,8 @@ public class LimbusCompanyLocalization : MonoBehaviour
                 var y = 84f - i * 36f;
                 CreateButtonAt(rect, "Preset", presetName, new Vector2(-40f, y), new Vector2(380f, 30f),
                     () => ApplyPresetFromPanel(presetName));
-                CreateButtonAt(rect, "PresetDelete", "X", new Vector2(200f, y), new Vector2(50f, 30f),
-                    () => DeletePresetFromPanel(presetName));
+                CreateButtonAt(rect, "PresetDelete", L("DEL", "删除"), new Vector2(200f, y),
+                    new Vector2(60f, 30f), () => DeletePresetFromPanel(presetName));
             }
 
             CreateButtonAt(rect, "PresetPrev", "<", new Vector2(-150f, -215f), new Vector2(100f, 28f),

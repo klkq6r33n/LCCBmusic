@@ -96,6 +96,65 @@ public static class LimbusCompanySongCategories
         }
     }
 
+    /// <summary>删除自定义分类；deleteFolder 为 true 时连同文件夹内所有歌曲一起删除。</summary>
+    public static bool Remove(string name, bool deleteFolder)
+    {
+        name = SanitizeName(name);
+        if (string.IsNullOrEmpty(name) ||
+            string.Equals(name, OstName, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var settings = LimbusCompanyLyrics.Settings;
+        if (settings == null || string.IsNullOrEmpty(settings.FilePath) || !File.Exists(settings.FilePath))
+            return false;
+
+        try
+        {
+            var root = JObject.Parse(File.ReadAllText(settings.FilePath, Encoding.UTF8));
+            if (root[RootKey] is not JArray array)
+                return false;
+
+            var removed = false;
+            for (var i = array.Count - 1; i >= 0; i--)
+            {
+                if (!string.Equals(array[i].Value<string>(), name, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                array.RemoveAt(i);
+                removed = true;
+            }
+
+            if (!removed)
+                return false;
+
+            root[RootKey] = array;
+            File.WriteAllText(settings.FilePath, root.ToString(Formatting.Indented), new UTF8Encoding(false));
+
+            if (deleteFolder)
+            {
+                try
+                {
+                    var folder = Path.Combine(PathsUtils.MusicPath, name);
+                    if (Directory.Exists(folder))
+                        Directory.Delete(folder, true);
+                }
+                catch (Exception e)
+                {
+                    LimbusCompanyLyrics.Log?.LogWarning("删除分类文件夹失败: " + e.Message);
+                }
+            }
+
+            Refresh();
+            LimbusCompanyLyrics.Log?.LogInfo("已删除歌曲分类: " + name);
+            return true;
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("删除歌曲分类失败: " + e.Message);
+            return false;
+        }
+    }
+
     public static string SanitizeName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))

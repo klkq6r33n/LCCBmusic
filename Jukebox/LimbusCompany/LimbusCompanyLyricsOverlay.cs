@@ -160,6 +160,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private string _bgmSelectedCategory; // null/空 = 个人
     private int _categoryPage;
     private bool _addingCategory;
+    private bool _confirmDeleteCategory;
+    private string _categoryPendingDelete;
     private TMP_InputField _categoryNameInput;
     private TextMeshProUGUI _categoryStatusText;
     private const int CategoriesPerPage = 3;
@@ -935,6 +937,12 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     {
         LimbusCompanySongCategories.Refresh();
 
+        if (_confirmDeleteCategory)
+        {
+            BuildDeleteBgmCategoryRow(parent);
+            return;
+        }
+
         if (_addingCategory)
         {
             BuildAddBgmCategoryRow(parent);
@@ -951,7 +959,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         var pages = Mathf.Max(1, (all.Count + CategoriesPerPage - 1) / CategoriesPerPage);
         _categoryPage = Mathf.Clamp(_categoryPage, 0, pages - 1);
         var start = _categoryPage * CategoriesPerPage;
-        var centers = new[] { -200f, -45f, 110f };
+        var centers = new[] { -210f, -60f, 90f };
 
         for (var i = 0; i < CategoriesPerPage; i++)
         {
@@ -966,7 +974,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
             CreateUiButton(parent,
                 string.IsNullOrEmpty(category) ? (IsZh ? "个人" : "PERSONAL") : CategoryLabel(category),
-                new Vector2(centers[i], 288f), new Vector2(145f, 30f),
+                new Vector2(centers[i], 288f), new Vector2(140f, 30f),
                 () => SelectBgmCategory(category), 13f,
                 selected ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
         }
@@ -975,12 +983,74 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         {
             CreateUiButton(parent, "<", new Vector2(-300f, 288f), new Vector2(30f, 30f),
                 () => ChangeCategoryPage(-1), 16f);
-            CreateUiButton(parent, ">", new Vector2(210f, 288f), new Vector2(30f, 30f),
+            CreateUiButton(parent, ">", new Vector2(185f, 288f), new Vector2(30f, 30f),
                 () => ChangeCategoryPage(1), 16f);
         }
 
-        CreateUiButton(parent, "+", new Vector2(275f, 288f), new Vector2(50f, 30f),
+        var canDelete = !string.IsNullOrEmpty(_bgmSelectedCategory) &&
+                        !string.Equals(_bgmSelectedCategory, OstFolderName, StringComparison.OrdinalIgnoreCase);
+        if (canDelete)
+        {
+            CreateUiButton(parent, IsZh ? "删除" : "DEL", new Vector2(235f, 288f), new Vector2(55f, 30f),
+                () =>
+                {
+                    _confirmDeleteCategory = true;
+                    _categoryPendingDelete = _bgmSelectedCategory;
+                    RebuildBgmPanelUi();
+                }, 13f, new Color(0.32f, 0.09f, 0.09f, 1f));
+        }
+
+        CreateUiButton(parent, "+", new Vector2(290f, 288f), new Vector2(40f, 30f),
             () => { _addingCategory = true; _categoryNameInput = null; RebuildBgmPanelUi(); }, 18f);
+    }
+
+    private void BuildDeleteBgmCategoryRow(RectTransform parent)
+    {
+        var name = CategoryLabel(_categoryPendingDelete ?? string.Empty);
+        var warning = IsZh
+            ? $"删除 {name} 及其所有歌曲？不可恢复。"
+            : $"Delete {name} and ALL its songs? Permanent.";
+
+        CreateUiLabel(parent, warning, new Vector2(-50f, 288f), new Vector2(340f, 30f), 12.5f,
+            TextAlignmentOptions.Center);
+        CreateUiButton(parent, IsZh ? "删除" : "DELETE", new Vector2(180f, 288f), new Vector2(80f, 30f),
+            ConfirmDeleteBgmCategory, 13f, new Color(0.5f, 0.1f, 0.1f, 1f));
+        CreateUiButton(parent, IsZh ? "取消" : "CANCEL", new Vector2(262f, 288f), new Vector2(80f, 30f),
+            () =>
+            {
+                _confirmDeleteCategory = false;
+                _categoryPendingDelete = null;
+                RebuildBgmPanelUi();
+            }, 13f);
+    }
+
+    private void ConfirmDeleteBgmCategory()
+    {
+        var name = _categoryPendingDelete;
+        if (string.IsNullOrEmpty(name))
+            return;
+
+        if (BgmReplacing && !string.IsNullOrEmpty(_bgmCurrentPath))
+        {
+            try
+            {
+                var folder = Path.GetFullPath(Path.Combine(PathsUtils.MusicPath, name)) + Path.DirectorySeparatorChar;
+                if (Path.GetFullPath(_bgmCurrentPath).StartsWith(folder, StringComparison.OrdinalIgnoreCase))
+                    StopBgmReplacement();
+            }
+            catch (Exception)
+            {
+                // 路径比较失败时仍继续删除分类。
+            }
+        }
+
+        LimbusCompanySongCategories.Remove(name, true);
+        _confirmDeleteCategory = false;
+        _categoryPendingDelete = null;
+        _bgmSelectedCategory = null;
+        _categoryPage = 0;
+        RefreshBgmTracks();
+        RebuildBgmPanelUi();
     }
 
     private void BuildAddBgmCategoryRow(RectTransform parent)
@@ -1229,8 +1299,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 var presetName = names[index];
                 CreateUiButton(parent, presetName, new Vector2(-60f, 110f - i * 44f), new Vector2(440f, 36f),
                     () => ApplyPresetFromUi(presetName), 14f);
-                CreateUiButton(parent, "X", new Vector2(245f, 110f - i * 44f), new Vector2(50f, 36f),
-                    () => DeletePresetFromUi(presetName), 14f);
+                CreateUiButton(parent, IsZh ? "删除" : "DEL", new Vector2(245f, 110f - i * 44f),
+                    new Vector2(60f, 36f), () => DeletePresetFromUi(presetName), 12.5f,
+                    new Color(0.32f, 0.09f, 0.09f, 1f));
             }
 
             CreateUiButton(parent, IsZh ? "上一页" : "< PAGE", new Vector2(-190f, -260f),
@@ -1903,6 +1974,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         _bgmPage = 0;
         _bgmListOffset = 0;
         _addingCategory = false;
+        _confirmDeleteCategory = false;
+        _categoryPendingDelete = null;
         _categoryNameInput = null;
         _categoryStatusText = null;
         RefreshBgmTracks();
