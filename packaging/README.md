@@ -117,7 +117,7 @@ While the Jukebox menu is open, the **SETTINGS / 设置** button (next to LANGUA
 - **TEXT / 文字**: text color, font size, spacing, stroke color/width, glow color/size/alpha, glow on/off, font family
 - **MOTION / 动态**: shake intensity/speed, fade speed, rise speed, **typewriter on/off + chars per second**, perspective + X/Y strength, lyrics on/off, replace original subtitles
 - **VISUAL / 频谱**: audio visualizer on/off, wave size, max extent (% of screen), position (BOTTOM / TOP / LEFT / RIGHT), bar density (8–256), gradient range (0–1), gradient speed, gradient mode (FIXED 2 / RANGE x~y / MULTI RGB), colour A RGB, colour B RGB, multi RGB (space separated), X mirror — plus an in-panel usage note
-- **F5 mouse menu** (levels only; the Cyber Grind uses **F4** and F5 is ignored there): a clickable menu with MUSIC / SETTINGS / DISPLAY pages — browse `Cybergrind/Music` (the game's built-in Cyber Grind music folder; no audio is bundled), replace/restore the level BGM, switch the UI language, edit every lyric setting, toggle lyrics/now-playing, drag/resize the cover row, and rebind keys. Opening it pauses the game and unlocks the cursor, like the CGME menu.
+- **F5 mouse menu** (levels only; the Cyber Grind uses **F4** and F5 is ignored there): a clickable menu with MUSIC / SETTINGS / DISPLAY pages — browse `Cybergrind/Music` (the game's built-in Cyber Grind music folder; no audio is bundled), replace/restore the level BGM, switch the UI language, edit every lyric setting, toggle lyrics/now-playing, and drag/resize the cover row. The window is split: **left = controls, right = track preview** (cover on top, title and artist below). Opening it pauses the game and forcibly unlocks/shows the cursor, like the CGME menu.
 - **Now-playing frame** (top-right by default): ULK-style bordered frame around the current track's cover art, with the title and artist underneath; when the track has no cover the frame stays hollow. Cover art is read from the audio file's ID3 tag or a same-name / `cover` / `folder` image; its position and size are adjustable.
 - RESET PAGE (resets only the currently open page) / CLOSE
 
@@ -129,7 +129,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - **TEXT / 文字**：文字颜色、字号、字距、描边颜色/宽度、辉光颜色/大小/透明度、辉光开关、字体
 - **MOTION / 动态**：抖动强度/速度、淡入速度、上飘速度、**逐字显示开关 + 每秒字数**、透视与 X/Y 强度、歌词层开关、替换原版字幕
 - **VISUAL / 频谱**：音频可视化开关、波动大小、最大幅度（屏幕百分比）、显示位置（底部/顶部/左侧/右侧）、频谱密度（8–256）、渐变范围（0–1）、渐变强度（速度）、渐变模式（固定双色 / 区间渐变 / 多色渐变）、颜色 A RGB、颜色 B RGB、多色 RGB（空格分隔）、X 轴镜像，面板内附使用说明
-- **F5 鼠标菜单**（仅关卡可用；血宫内只用 **F4**，F5 会被忽略）：可点击的 MUSIC / SETTINGS / DISPLAY 三页——浏览 `Cybergrind/Music`（ULTRAKILL 自带的电子血宫音乐文件夹，mod 不附带音频）、取代/归还关卡 BGM、切换界面语言、修改全部歌词设置、开关歌词/曲绘行、用鼠标拖动缩放曲绘行、重绑按键。打开时暂停游戏并解锁鼠标，操作方式与 CGME 菜单一致。
+- **F5 鼠标菜单**（仅关卡可用；血宫内只用 **F4**，F5 会被忽略）：可点击的 MUSIC / SETTINGS / DISPLAY 三页——浏览 `Cybergrind/Music`（ULTRAKILL 自带的电子血宫音乐文件夹，mod 不附带音频）、取代/归还关卡 BGM、切换界面语言、修改全部歌词设置、开关歌词/曲绘行、用鼠标拖动缩放曲绘行。窗口分为**左侧功能栏**与**右侧曲目预览**（曲绘在上，曲名与作者在下）。打开时暂停游戏并强行解锁/显示鼠标，操作方式与 CGME 菜单一致。
 - **曲绘框**（默认右上角）：ULTRAKILL 风格的描边框住当前歌曲的曲绘，下方显示歌名与歌手；没有曲绘时框体镂空。曲绘从音频文件的 ID3 标签或同名 / `cover` / `folder` 图片读取，位置和大小都可调整。
 - 重置本页（只重置当前打开的页面）/ 关闭
 
@@ -187,17 +187,19 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 
 ### Now-playing row / 曲绘行
 
-- While a Jukebox song or a replaced level track is playing, one horizontal row is drawn: **cover / title / artist** (曲绘 / 曲名 / 作者). Cover and the text block share the same height, and the title and artist use the **same font size**; the artist is the last item in the row.
+- While a Jukebox song or a replaced level track is playing, one horizontal row is drawn: **cover / title / artist** (曲绘 / 曲名 / 作者). The row is **small by default**: the text size is the reference and the cover is only slightly larger than the text (about 1.3×), never the other way around. The title and artist use the **same font size**; the artist is the last item in the row.
 - The cover sits in a ULK-style bordered frame. No cover → the frame stays hollow (only the border is drawn).
 - Cover source, in order: an image with the audio file's base name (`.png` / `.jpg` / `.jpeg`), `cover.*` / `folder.*` in the same folder, then the embedded ID3 picture.
 - **Mouse adjustment** (F5 → DISPLAY → **ADJUST ROW WITH MOUSE**): the menu hides, then **drag the whole row** to move it and **scroll the mouse wheel** to change its size; press **Esc** or click **DONE** to finish (the menu closes so you can see the result). The DISPLAY page also has arrow / `-` `+` / reset buttons, and keyboard **P** still works (arrows move, Shift = fine, `-` / `+` resize, P/Esc finish). Changes save immediately.
-- Config keys: `now_playing_enabled`, `cover_pos_x/y` (row anchor: right edge X and vertical center Y, in % of the screen), `cover_size` (row height); `title_pos_x/y` are kept for old configs but are no longer used.
+- The **F5 right-hand preview** uses a vertical layout instead: the selected track's cover is shown **above** its title and author. The in-game row stays horizontal (`cover / title / artist`).
+- Config keys: `now_playing_enabled`, `cover_pos_x/y` (row anchor: right edge X and vertical center Y, in % of the screen), `cover_size` (**text/row size**, 10–120, default 32; the cover is about 1.3× this); `title_pos_x/y` are kept for old configs but are no longer used.
 
-- 当 Jukebox 曲目或取代的关卡曲目正在播放时，会绘制**一整行**：**曲绘 / 曲名 / 作者**。曲绘与文字块高度相同，曲名与作者使用**相同字号**，作者排在整行最后。
+- 当 Jukebox 曲目或取代的关卡曲目正在播放时，会绘制**一整行**：**曲绘 / 曲名 / 作者**。整行默认**很小**：以文字大小为基准，曲绘只比文字略大（约 1.3 倍），而不是把文字放大到曲绘那么大。曲名与作者使用**相同字号**，作者排在整行最后。
 - 曲绘外面是 ULK 风格的描边框。没有曲绘时框体镂空（只画边框）。
 - 曲绘来源依次为：与音频同名的图片（`.png` / `.jpg` / `.jpeg`）、同目录的 `cover.*` / `folder.*`、音频内嵌的 ID3 图片。
 - **鼠标调整**（F5 → DISPLAY → **用鼠标调整曲绘行**）：菜单会隐藏，此时**拖动整行**移动、**滚轮**改变大小，按 **Esc** 或点击 **完成** 结束（结束后菜单关闭并恢复游戏，方便立刻查看效果）。DISPLAY 页也保留方向按钮、`-` `+` 与重置按钮；键盘 **P** 仍可用（方向键移动，Shift 微调，`-` / `+` 缩放，P/Esc 结束）。改动立即保存。
-- 配置项：`now_playing_enabled`、`cover_pos_x/y`（整行锚点：右边缘 X、垂直中心 Y，屏幕百分比）、`cover_size`（整行高度）；`title_pos_x/y` 仅为兼容旧配置保留，已不再使用。
+- **F5 右侧预览**使用竖排布局：选中曲目的曲绘在**上**，曲名与作者在**下**；游戏内的曲绘行仍然是横排（`曲绘 / 曲名 / 作者`）。
+- 配置项：`now_playing_enabled`、`cover_pos_x/y`（整行锚点：右边缘 X、垂直中心 Y，屏幕百分比）、`cover_size`（**文字/整行大小**，10–120，默认 32，曲绘约为它的 1.3 倍）；`title_pos_x/y` 仅为兼容旧配置保留，已不再使用。
 
 ### Position safety / 位置防重叠与防出屏
 
@@ -245,6 +247,22 @@ Same as the original mod: a **`.srt` file with the exact same filename** next to
 Cybergrind/Music/Mili - Rendezvous/Mili - Rendezvous.mp3
 Cybergrind/Music/Mili - Rendezvous/Mili - Rendezvous.srt
 ```
+
+Folder-form songs are fully supported. Inside the song folder, the main subtitle can be any of:
+
+- `<audio file name>.srt` (preferred);
+- `<folder name>.srt`;
+- any other `.srt` in the folder (files that look like translation sidecars, e.g. `.zh.srt` / `.trans.srt`, are skipped as the main subtitle).
+
+Translation sidecars are also read from the same folder. A level BGM replaced through **F5 → MUSIC** follows the same rules and displays its lyrics from the replacement track's own playback position.
+
+文件夹形式的歌曲已完整支持。歌曲文件夹里的主字幕可以是：
+
+- `<音频文件名>.srt`（优先）；
+- `<文件夹名>.srt`；
+- 该文件夹内任意其他 `.srt`（类似翻译字幕的例如 `.zh.srt` / `.trans.srt` 不会被当作主字幕）。
+
+翻译字幕同样从该文件夹读取。通过 **F5 → MUSIC** 取代的关卡 BGM 也按相同规则读取字幕，并按替代曲目自己的播放进度显示歌词。
 
 ### Bilingual lyrics / 双语歌词
 

@@ -97,7 +97,7 @@
     "cover_pos_y": 18,
     "title_pos_x": 84,
     "title_pos_y": 38,
-    "cover_size": 220
+    "cover_size": 32
   },
   "presets": {
     "通用": { "text": "#fffeef", "stroke": "#d8a523", "glow": "#d8a523" },

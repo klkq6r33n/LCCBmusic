@@ -134,6 +134,15 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private GameObject _bgmUiRoot;
     private RectTransform _bgmContent;
     private TextMeshProUGUI _bgmStatus;
+    private Image _menuPreviewCoverImage;
+    private Image _menuPreviewFrameImage;
+    private TextMeshProUGUI _menuPreviewTitleText;
+    private TextMeshProUGUI _menuPreviewArtistText;
+    private Sprite _menuPreviewSprite;
+    private Texture2D _menuPreviewTexture;
+    private string _menuPreviewPath;
+    private string _menuPreviewTitle;
+    private string _menuPreviewArtist;
     private string _bgmLastStatusText;
     private bool _bgmPanelOpen;
     private string[] _bgmTracks = Array.Empty<string>();
@@ -158,6 +167,12 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private bool _npSpriteOwned;
     private string _npSpritePath;
     private string _bgmCurrentPath;
+    private SubtitleTrack _bgmSubtitleTrack = SubtitleTrack.Empty;
+    private SubtitleTrack _bgmTranslationTrack = SubtitleTrack.Empty;
+    private int _bgmSubtitleIndex = -1;
+    private int _bgmTranslationIndex = -1;
+    private string _bgmSubtitleText;
+    private string _bgmTranslationText;
     private string _npLastTitleText;
     private string _npLastArtistText;
     private float _npLastFontSize = -1f;
@@ -215,6 +230,34 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         ApplyStyle();
     }
 
+    private void LateUpdate()
+    {
+        // 游戏可能在 Update/LateUpdate 里重新锁鼠标；这里在最后强行解除并显示。
+        if (_bgmPanelOpen)
+            ForceCursorForMenu();
+    }
+
+    private static void ForceCursorForMenu()
+    {
+        if (Cursor.lockState != CursorLockMode.None)
+            Cursor.lockState = CursorLockMode.None;
+        if (!Cursor.visible)
+            Cursor.visible = true;
+    }
+
+    private Coroutine _cursorRoutine;
+
+    private IEnumerator ForceCursorLoop()
+    {
+        while (_bgmPanelOpen)
+        {
+            ForceCursorForMenu();
+            yield return new WaitForEndOfFrame();
+        }
+
+        _cursorRoutine = null;
+    }
+
     private void Update()
     {
         try
@@ -224,6 +267,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             PollPlayer();
             PollConfig();
             PollPanelSuppression();
+            UpdateBgmLyrics();
             Animate();
             PollTranslation();
             if (BgmReplacing)
@@ -231,6 +275,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             UpdateVisualizer();
             UpdateNowPlayingPanel();
             CheckOverlapDiagnostics();
+
+            if (_bgmPanelOpen)
+                ForceCursorForMenu();
         }
         catch (Exception e)
         {
@@ -519,7 +566,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = new Vector2(1060f, 820f);
+        rect.sizeDelta = new Vector2(1220f, 820f);
         rect.anchoredPosition = Vector2.zero;
 
         var image = go.AddComponent<Image>();
@@ -614,21 +661,22 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             _bgmUiRoot = null;
         }
 
-        var root = CreateUiObject("BgmUi", _bgmPanelRect, Vector2.zero, new Vector2(1060f, 820f));
+        var root = CreateUiObject("BgmUi", _bgmPanelRect, Vector2.zero, new Vector2(1220f, 820f));
         _bgmUiRoot = root.gameObject;
 
-        CreateUiLabel(root, "JUKEBOX LIMBUSCOMPANY — F5", new Vector2(0f, 378f), new Vector2(880f, 36f), 24f,
+        CreateUiLabel(root, "JUKEBOX LIMBUSCOMPANY — F5", new Vector2(-180f, 378f), new Vector2(720f, 36f), 24f,
             TextAlignmentOptions.Center);
-        CreateUiButton(root, "X", new Vector2(492f, 378f), new Vector2(44f, 34f), CloseBgmPanel, 18f);
+        CreateUiButton(root, "X", new Vector2(570f, 378f), new Vector2(44f, 34f), CloseBgmPanel, 18f);
 
-        CreateUiButton(root, IsZh ? "音乐" : "MUSIC", new Vector2(-450f, 334f), new Vector2(150f, 32f),
+        CreateUiButton(root, IsZh ? "音乐" : "MUSIC", new Vector2(-530f, 334f), new Vector2(150f, 32f),
             () => SwitchBgmPage(0), 15f);
-        CreateUiButton(root, IsZh ? "歌词设置" : "SETTINGS", new Vector2(-290f, 334f), new Vector2(150f, 32f),
+        CreateUiButton(root, IsZh ? "歌词设置" : "SETTINGS", new Vector2(-370f, 334f), new Vector2(150f, 32f),
             () => SwitchBgmPage(1), 15f);
-        CreateUiButton(root, IsZh ? "显示/按键" : "DISPLAY", new Vector2(-130f, 334f), new Vector2(150f, 32f),
+        CreateUiButton(root, IsZh ? "显示" : "DISPLAY", new Vector2(-210f, 334f), new Vector2(150f, 32f),
             () => SwitchBgmPage(2), 15f);
 
-        _bgmContent = CreateUiObject("Content", root, new Vector2(0f, -20f), new Vector2(1000f, 660f));
+        // 左侧：功能与设置；右侧：曲绘在上，曲名、作者在下。
+        _bgmContent = CreateUiObject("Content", root, new Vector2(-290f, -20f), new Vector2(640f, 660f));
 
         switch (_bgmPage)
         {
@@ -643,14 +691,167 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 break;
         }
 
-        CreateUiLabel(root, IsZh
-                ? "L 歌词 · N 曲绘 · G 语言 · K 改键 · P 调位置 · Esc 关闭"
-                : "L lyrics · N cover · G language · K rebind · P position · Esc close",
-            new Vector2(0f, -355f), new Vector2(1000f, 24f), 14f, TextAlignmentOptions.Center);
+        BuildBgmPreview(root);
 
-        _bgmStatus = CreateUiLabel(root, string.Empty, new Vector2(0f, -390f), new Vector2(1000f, 30f), 15f,
+        _bgmStatus = CreateUiLabel(root, string.Empty, new Vector2(-290f, -390f), new Vector2(640f, 30f), 15f,
             TextAlignmentOptions.Center, true);
         UpdateBgmPanelStatus();
+    }
+
+    private void BuildBgmPreview(RectTransform root)
+    {
+        var panelRect = CreateUiObject("PreviewPanel", root, new Vector2(330f, -20f), new Vector2(420f, 660f));
+        var panelImage = panelRect.gameObject.AddComponent<Image>();
+        panelImage.color = new Color(0.045f, 0.045f, 0.055f, 0.9f);
+        panelImage.raycastTarget = false;
+        var panelOutline = panelRect.gameObject.AddComponent<Outline>();
+        panelOutline.effectColor = new Color(0.776f, 0.635f, 0.29f, 0.7f);
+        panelOutline.effectDistance = new Vector2(1f, -1f);
+
+        CreateUiLabel(root, IsZh ? "曲目预览" : "TRACK PREVIEW", new Vector2(330f, 300f),
+            new Vector2(380f, 30f), 18f, TextAlignmentOptions.Center);
+
+        var frameRect = CreateUiObject("PreviewFrame", root, new Vector2(330f, 120f), new Vector2(260f, 260f));
+        _menuPreviewFrameImage = frameRect.gameObject.AddComponent<Image>();
+        _menuPreviewFrameImage.color = new Color(0.02f, 0.02f, 0.02f, 0.78f);
+        _menuPreviewFrameImage.raycastTarget = false;
+        var frameOutline = frameRect.gameObject.AddComponent<Outline>();
+        frameOutline.effectColor = new Color(0.92f, 0.92f, 0.92f, 0.9f);
+        frameOutline.effectDistance = new Vector2(3f, -3f);
+        frameOutline.useGraphicAlpha = false;
+
+        var coverRect = CreateUiObject("PreviewCover", frameRect, Vector2.zero, new Vector2(244f, 244f));
+        _menuPreviewCoverImage = coverRect.gameObject.AddComponent<Image>();
+        _menuPreviewCoverImage.preserveAspect = true;
+        _menuPreviewCoverImage.raycastTarget = false;
+        _menuPreviewCoverImage.enabled = false;
+
+        _menuPreviewTitleText = CreateUiLabel(root, string.Empty, new Vector2(330f, -70f),
+            new Vector2(370f, 110f), 24f, TextAlignmentOptions.Center, true);
+        _menuPreviewArtistText = CreateUiLabel(root, string.Empty, new Vector2(330f, -170f),
+            new Vector2(370f, 70f), 18f, TextAlignmentOptions.Center, true);
+
+        UpdateBgmPreview();
+    }
+
+    private void UpdateBgmPreview()
+    {
+        if (_menuPreviewTitleText == null)
+            return;
+
+        if (_bgmTracks.Length == 0)
+        {
+            _menuPreviewTitle = "-";
+            _menuPreviewArtist = string.Empty;
+            _menuPreviewSprite = null;
+        }
+        else
+        {
+            EnsureMenuPreviewInfo(_bgmTracks[Mathf.Clamp(_bgmIndex, 0, _bgmTracks.Length - 1)]);
+        }
+
+        _menuPreviewTitleText.text = _menuPreviewTitle ?? string.Empty;
+        _menuPreviewArtistText.text = _menuPreviewArtist ?? string.Empty;
+
+        if (_menuPreviewCoverImage != null)
+        {
+            _menuPreviewCoverImage.sprite = _menuPreviewSprite;
+            _menuPreviewCoverImage.enabled = _menuPreviewSprite != null;
+        }
+
+        if (_menuPreviewFrameImage != null)
+        {
+            _menuPreviewFrameImage.color = _menuPreviewSprite != null
+                ? new Color(0.02f, 0.02f, 0.02f, 0.78f)
+                : new Color(0.02f, 0.02f, 0.02f, 0f);
+        }
+    }
+
+    private void EnsureMenuPreviewInfo(string relativePath)
+    {
+        if (string.IsNullOrEmpty(relativePath) || relativePath == _menuPreviewPath)
+            return;
+
+        _menuPreviewPath = relativePath;
+        _menuPreviewTitle = Path.GetFileNameWithoutExtension(relativePath);
+        _menuPreviewArtist = string.Empty;
+
+        if (_menuPreviewSprite != null)
+        {
+            Destroy(_menuPreviewSprite);
+            _menuPreviewSprite = null;
+        }
+        if (_menuPreviewTexture != null)
+        {
+            Destroy(_menuPreviewTexture);
+            _menuPreviewTexture = null;
+        }
+
+        var fullPath = Path.IsPathRooted(relativePath)
+            ? relativePath
+            : Path.Combine(PathsUtils.MusicPath, relativePath);
+
+        Sprite cover = null;
+
+        try
+        {
+            var directory = Path.GetDirectoryName(fullPath);
+            var baseName = Path.GetFileNameWithoutExtension(fullPath);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                var candidates = new[]
+                {
+                    Path.Combine(directory, baseName + ".png"),
+                    Path.Combine(directory, baseName + ".jpg"),
+                    Path.Combine(directory, baseName + ".jpeg"),
+                    Path.Combine(directory, "cover.png"),
+                    Path.Combine(directory, "cover.jpg"),
+                    Path.Combine(directory, "folder.png"),
+                    Path.Combine(directory, "folder.jpg")
+                };
+
+                foreach (var candidate in candidates)
+                {
+                    if (!File.Exists(candidate))
+                        continue;
+
+                    cover = CreateSpriteFromFile(candidate);
+                    if (cover != null)
+                        break;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("读取预览曲绘失败: " + e.Message);
+        }
+
+        try
+        {
+            using var tagFile = TagLib.File.Create(fullPath);
+            var tag = tagFile.Tag;
+            if (tag != null)
+            {
+                if (!string.IsNullOrEmpty(tag.Title))
+                    _menuPreviewTitle = tag.Title;
+
+                var performer = tag.FirstPerformer;
+                if (string.IsNullOrEmpty(performer))
+                    performer = tag.FirstAlbumArtist;
+                if (!string.IsNullOrEmpty(performer))
+                    _menuPreviewArtist = performer;
+
+                if (cover == null && tag.Pictures != null && tag.Pictures.Length > 0)
+                    cover = CreateSprite(tag.Pictures[0].Data.Data);
+            }
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("读取预览标签失败: " + e.Message);
+        }
+
+        _menuPreviewSprite = cover;
+        _menuPreviewTexture = cover?.texture;
     }
 
     private void SwitchBgmPage(int page)
@@ -683,28 +884,28 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
             var captured = index;
             var selected = index == _bgmIndex;
-            CreateUiButton(parent, ShortName(_bgmTracks[index]),
-                new Vector2(-100f, 250f - i * 46f), new Vector2(720f, 40f),
+            CreateUiButton(parent, TrackLabel(_bgmTracks[index]),
+                new Vector2(0f, 250f - i * 46f), new Vector2(600f, 40f),
                 () => SelectBgmTrack(captured), 15f,
                 selected ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
         }
 
-        CreateUiButton(parent, IsZh ? "上一页" : "< PAGE", new Vector2(-250f, -248f), new Vector2(180f, 40f),
+        CreateUiButton(parent, IsZh ? "上一页" : "< PAGE", new Vector2(-190f, -248f), new Vector2(160f, 40f),
             () => ChangeBgmTrackPage(-1), 15f);
-        CreateUiLabel(parent, (page + 1) + " / " + pages, new Vector2(0f, -248f), new Vector2(180f, 30f), 16f,
+        CreateUiLabel(parent, (page + 1) + " / " + pages, new Vector2(0f, -248f), new Vector2(160f, 30f), 16f,
             TextAlignmentOptions.Center);
-        CreateUiButton(parent, IsZh ? "下一页" : "PAGE >", new Vector2(250f, -248f), new Vector2(180f, 40f),
+        CreateUiButton(parent, IsZh ? "下一页" : "PAGE >", new Vector2(190f, -248f), new Vector2(160f, 40f),
             () => ChangeBgmTrackPage(1), 15f);
 
-        CreateUiButton(parent, IsZh ? "取代关卡 BGM" : "REPLACE LEVEL BGM", new Vector2(-170f, -300f),
-            new Vector2(300f, 44f), ApplySelectedBgmTrack, 16f);
-        CreateUiButton(parent, IsZh ? "归还原 BGM" : "RESTORE BGM", new Vector2(180f, -300f),
-            new Vector2(260f, 44f), RestoreBgmFromUi, 16f);
+        CreateUiButton(parent, IsZh ? "取代关卡 BGM" : "REPLACE LEVEL BGM", new Vector2(-140f, -300f),
+            new Vector2(260f, 44f), ApplySelectedBgmTrack, 16f);
+        CreateUiButton(parent, IsZh ? "归还原 BGM" : "RESTORE BGM", new Vector2(140f, -300f),
+            new Vector2(220f, 44f), RestoreBgmFromUi, 16f);
     }
 
     private void BuildBgmSettingsPage(RectTransform parent)
     {
-        var host = CreateUiObject("SettingsHost", parent, new Vector2(110f, -10f), new Vector2(560f, 660f));
+        var host = CreateUiObject("SettingsHost", parent, new Vector2(0f, -10f), new Vector2(560f, 660f));
         _settingsUi ??= GetComponent<LimbusCompanyLocalization>();
         _settingsUi?.OpenStandalone(host);
     }
@@ -713,53 +914,40 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     {
         var s = LimbusCompanyLyrics.Settings;
 
-        CreateUiLabel(parent, IsZh ? "界面语言" : "LANGUAGE", new Vector2(-330f, 260f), new Vector2(260f, 30f), 16f,
+        CreateUiLabel(parent, IsZh ? "界面语言" : "LANGUAGE", new Vector2(-160f, 260f), new Vector2(280f, 30f), 16f,
             TextAlignmentOptions.Center);
-        CreateUiButton(parent, "中文", new Vector2(-330f, 212f), new Vector2(240f, 40f),
+        CreateUiButton(parent, "中文", new Vector2(-160f, 212f), new Vector2(240f, 40f),
             () => SetUiLanguage("zh"), 16f, IsZh ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
-        CreateUiButton(parent, "ENGLISH", new Vector2(-330f, 162f), new Vector2(240f, 40f),
+        CreateUiButton(parent, "ENGLISH", new Vector2(-160f, 162f), new Vector2(240f, 40f),
             () => SetUiLanguage("en"), 16f, !IsZh ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
 
         var lyricsOn = s == null || s.Enabled;
         var npOn = s != null && s.NowPlayingEnabled;
         CreateUiButton(parent, (IsZh ? "歌词显示：" : "LYRICS: ") + (lyricsOn ? "ON" : "OFF"),
-            new Vector2(-330f, 100f), new Vector2(240f, 40f), ToggleLyricsDisplay, 16f);
+            new Vector2(-160f, 100f), new Vector2(240f, 40f), ToggleLyricsDisplay, 16f);
         CreateUiButton(parent, (IsZh ? "曲绘 / 歌名：" : "NOW PLAYING: ") + (npOn ? "ON" : "OFF"),
-            new Vector2(-330f, 50f), new Vector2(240f, 40f), ToggleNowPlaying, 16f);
+            new Vector2(-160f, 50f), new Vector2(240f, 40f), ToggleNowPlaying, 16f);
 
-        CreateUiLabel(parent, IsZh ? "曲绘行（鼠标拖动 / 滚轮缩放）" : "NOW-PLAYING ROW (drag / scroll)",
-            new Vector2(40f, 260f), new Vector2(380f, 30f), 16f, TextAlignmentOptions.Center);
+        CreateUiLabel(parent, IsZh ? "曲绘行位置与大小" : "ROW POSITION / SIZE",
+            new Vector2(150f, 260f), new Vector2(300f, 30f), 16f, TextAlignmentOptions.Center);
         CreateUiButton(parent,
             IsZh ? "用鼠标调整曲绘行" : "ADJUST ROW WITH MOUSE",
-            new Vector2(40f, 222f), new Vector2(380f, 44f), EnterNowPlayingMouseAdjust, 16f);
+            new Vector2(150f, 218f), new Vector2(280f, 44f), EnterNowPlayingMouseAdjust, 16f);
         CreateUiLabel(parent,
             IsZh
-                ? "点击上面的按钮后：拖动整行移动，滚轮缩放，Esc 完成。"
-                : "After clicking: drag the row to move, scroll to resize, Esc to finish.",
-            new Vector2(40f, 180f), new Vector2(380f, 32f), 12.5f, TextAlignmentOptions.Center, true);
+                ? "点击后：拖动整行移动，滚轮缩放，Esc 完成。"
+                : "After clicking: drag the row, scroll to resize, Esc to finish.",
+            new Vector2(150f, 180f), new Vector2(300f, 32f), 12.5f, TextAlignmentOptions.Center, true);
 
-        CreateUiButton(parent, "^", new Vector2(50f, 140f), new Vector2(56f, 36f), () => NudgeNowPlaying(0, 1), 18f);
-        CreateUiButton(parent, "<", new Vector2(-12f, 98f), new Vector2(56f, 36f), () => NudgeNowPlaying(-1, 0), 18f);
-        CreateUiButton(parent, ">", new Vector2(112f, 98f), new Vector2(56f, 36f), () => NudgeNowPlaying(1, 0), 18f);
-        CreateUiButton(parent, "v", new Vector2(50f, 56f), new Vector2(56f, 36f), () => NudgeNowPlaying(0, -1), 18f);
+        CreateUiButton(parent, "^", new Vector2(150f, 140f), new Vector2(50f, 36f), () => NudgeNowPlaying(0, 1), 18f);
+        CreateUiButton(parent, "<", new Vector2(88f, 98f), new Vector2(50f, 36f), () => NudgeNowPlaying(-1, 0), 18f);
+        CreateUiButton(parent, ">", new Vector2(212f, 98f), new Vector2(50f, 36f), () => NudgeNowPlaying(1, 0), 18f);
+        CreateUiButton(parent, "v", new Vector2(150f, 56f), new Vector2(50f, 36f), () => NudgeNowPlaying(0, -1), 18f);
 
-        CreateUiButton(parent, "-", new Vector2(-12f, 8f), new Vector2(56f, 36f), () => ResizeNowPlayingCover(-5f), 18f);
-        CreateUiButton(parent, "+", new Vector2(112f, 8f), new Vector2(56f, 36f), () => ResizeNowPlayingCover(5f), 18f);
-        CreateUiButton(parent, IsZh ? "重置位置" : "RESET POSITION", new Vector2(50f, -44f), new Vector2(220f, 36f),
+        CreateUiButton(parent, "-", new Vector2(88f, 8f), new Vector2(50f, 36f), () => ResizeNowPlayingCover(-2f), 18f);
+        CreateUiButton(parent, "+", new Vector2(212f, 8f), new Vector2(50f, 36f), () => ResizeNowPlayingCover(2f), 18f);
+        CreateUiButton(parent, IsZh ? "重置位置" : "RESET POSITION", new Vector2(150f, -44f), new Vector2(220f, 36f),
             ResetNowPlayingPosition, 15f);
-
-        CreateUiLabel(parent, IsZh ? "快捷键绑定" : "KEY BINDINGS", new Vector2(360f, 260f),
-            new Vector2(300f, 30f), 16f, TextAlignmentOptions.Center);
-
-        for (var i = 0; i < ActionNames.Length; i++)
-        {
-            var action = i;
-            var y = 212f - i * 40f;
-            CreateUiLabel(parent, ActionName(action, IsZh), new Vector2(268f, y), new Vector2(190f, 30f), 14f,
-                TextAlignmentOptions.Left);
-            CreateUiButton(parent, KeyLabel(GetBinding(action, s)), new Vector2(410f, y), new Vector2(120f, 32f),
-                () => BeginMouseRebind(action), 14f);
-        }
     }
 
     private void SelectBgmTrack(int index)
@@ -838,7 +1026,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (s == null || Mathf.Approximately(scroll, 0f))
             return;
 
-        s.CoverSize = Mathf.Clamp(s.CoverSize + (scroll > 0f ? 10f : -10f), 80f, 600f);
+        s.CoverSize = Mathf.Clamp(s.CoverSize + (scroll > 0f ? 2f : -2f), 10f, 120f);
         LimbusCompanyLyrics.SaveAllSettings();
         UpdateBgmPanelStatus();
     }
@@ -922,7 +1110,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (s == null)
             return;
 
-        s.CoverSize = Mathf.Clamp(s.CoverSize + delta, 80f, 600f);
+        s.CoverSize = Mathf.Clamp(s.CoverSize + delta, 10f, 120f);
         LimbusCompanyLyrics.SaveAllSettings();
         UpdateBgmPanelStatus();
     }
@@ -935,7 +1123,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         s.CoverPosX = 84f;
         s.CoverPosY = 18f;
-        s.CoverSize = 220f;
+        s.CoverSize = 32f;
         LimbusCompanyLyrics.SaveAllSettings();
         RebuildBgmPanelUi();
     }
@@ -1114,6 +1302,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 OptionsManager.Instance.paused = true;
 
             _bgmPaused = true;
+            ForceCursorForMenu();
         }
         catch (Exception e)
         {
@@ -1360,9 +1549,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         var resize = 0f;
         if (keyboard.minusKey.wasPressedThisFrame || keyboard.numpadMinusKey.wasPressedThisFrame)
-            resize = -5f;
+            resize = -2f;
         if (keyboard.equalsKey.wasPressedThisFrame || keyboard.numpadPlusKey.wasPressedThisFrame)
-            resize = 5f;
+            resize = 2f;
 
         if (resize != 0f)
         {
@@ -1400,6 +1589,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         RefreshBgmTracks();
         EnsureMouseEventSystem();
 
+        if (_cursorRoutine == null)
+            _cursorRoutine = StartCoroutine(ForceCursorLoop());
+
         if (_bgmPanel != null)
             _bgmPanel.SetActive(true);
 
@@ -1421,6 +1613,12 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         if (_bgmPanel != null)
             _bgmPanel.SetActive(false);
+
+        if (_cursorRoutine != null)
+        {
+            StopCoroutine(_cursorRoutine);
+            _cursorRoutine = null;
+        }
 
         ResumeFromBgmMenu();
         DestroyTempEventSystem();
@@ -1734,8 +1932,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         title ??= string.Empty;
         artist ??= string.Empty;
 
-        var size = Mathf.Clamp(settings.CoverSize, 80f, 600f);
-        var fontSize = Mathf.Clamp(size * 0.28f, 16f, 96f);
+        // cover_size 现在是文字大小；曲绘只比文字略大一圈，而不是把文字放大到曲绘尺寸。
+        var fontSize = Mathf.Clamp(settings.CoverSize, 10f, 120f);
+        var size = fontSize * 1.3f;
         var changed = title != _npLastTitleText || artist != _npLastArtistText ||
                       !Mathf.Approximately(fontSize, _npLastFontSize);
         if (changed)
@@ -1754,7 +1953,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             _npArtist.ForceMeshUpdate();
         }
 
-        var gap = Mathf.Max(10f, size * 0.08f);
+        var gap = Mathf.Max(6f, size * 0.30f);
         var titleWidth = title.Length > 0 ? Mathf.Min(_npTitle.preferredWidth, width * 0.45f) : 0f;
         var artistWidth = artist.Length > 0 ? Mathf.Min(_npArtist.preferredWidth, width * 0.30f) : 0f;
         var totalWidth = size + (titleWidth > 0f ? gap + titleWidth : 0f) +
@@ -1772,7 +1971,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         frameRect.sizeDelta = new Vector2(size, size);
         frameRect.anchoredPosition = new Vector2(-totalWidth / 2f + size / 2f, 0f);
 
-        var pad = Mathf.Clamp(size * 0.03f, 3f, 10f);
+        var pad = Mathf.Clamp(size * 0.06f, 1.5f, 6f);
         var coverRect = _npCoverImage.GetComponent<RectTransform>();
         coverRect.sizeDelta = new Vector2(size - pad * 2f, size - pad * 2f);
         coverRect.anchoredPosition = Vector2.zero;
@@ -1942,6 +2141,15 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         }
     }
 
+    private static string TrackLabel(string relativePath)
+    {
+        if (string.IsNullOrEmpty(relativePath))
+            return "-";
+
+        var label = relativePath.Replace('\\', '/');
+        return label.Length <= 64 ? label : label.Substring(0, 61) + "...";
+    }
+
     private static string ShortName(string path)
     {
         if (string.IsNullOrEmpty(path))
@@ -1951,6 +2159,128 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (string.IsNullOrEmpty(name))
             name = path;
         return name.Length <= 56 ? name : name.Substring(0, 53) + "...";
+    }
+
+    private void LoadBgmSubtitleTracks(string path)
+    {
+        _bgmSubtitleTrack = SubtitleTrack.Empty;
+        _bgmTranslationTrack = SubtitleTrack.Empty;
+        _bgmSubtitleIndex = -1;
+        _bgmTranslationIndex = -1;
+        _bgmSubtitleText = null;
+        _bgmTranslationText = null;
+
+        if (string.IsNullOrEmpty(path))
+            return;
+
+        try
+        {
+            var mainFile = new FileInfo(path);
+            var srt = FindMainSrt(mainFile);
+            if (srt != null)
+                _bgmSubtitleTrack = SubtitleParser.FromFile(srt);
+
+            var transPath = FindTranslationSidecar(srt ?? mainFile);
+            if (transPath != null)
+                _bgmTranslationTrack = SubtitleParser.FromFile(new FileInfo(transPath));
+
+            LimbusCompanyLyrics.Log?.LogInfo(
+                $"关卡歌词: {srt?.FullName ?? "(无)"} (主 {_bgmSubtitleTrack.Lines.Count} 行 / 翻译 {_bgmTranslationTrack.Lines.Count} 行)");
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("读取关卡歌词失败: " + e.Message);
+        }
+    }
+
+    /// <summary>兼容文件夹形式的歌曲：优先同名 .srt，其次文件夹同名 .srt，最后目录内任意主字幕。</summary>
+    private static FileInfo FindMainSrt(FileInfo audio)
+    {
+        var direct = SubtitleFiles.MainSidecar(audio);
+        if (direct != null && direct.Exists)
+            return direct;
+
+        var directory = audio?.DirectoryName;
+        if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
+            return null;
+
+        var folderName = new DirectoryInfo(directory).Name;
+        var folderSrt = Path.Combine(directory, folderName + ".srt");
+        if (File.Exists(folderSrt))
+            return new FileInfo(folderSrt);
+
+        foreach (var candidate in Directory.GetFiles(directory, "*.srt"))
+        {
+            var name = Path.GetFileNameWithoutExtension(candidate).ToLowerInvariant();
+            if (name.EndsWith(".zh") || name.EndsWith(".cn") || name.EndsWith(".chs") ||
+                name.EndsWith(".cht") || name.EndsWith(".ja") || name.EndsWith(".jp") ||
+                name.EndsWith(".trans") || name.EndsWith(".translation") ||
+                name.EndsWith(".中文") || name.EndsWith(".翻译") ||
+                name.EndsWith("_zh") || name.EndsWith("_cn") || name.EndsWith("_ja") ||
+                name.EndsWith("_trans") || name.EndsWith("_translation"))
+                continue;
+
+            return new FileInfo(candidate);
+        }
+
+        return null;
+    }
+
+    /// <summary>用 F5 取代关卡 BGM 时，按音频进度显示同目录的 .srt 歌词。</summary>
+    private void UpdateBgmLyrics()
+    {
+        if (!BgmReplacing || _bgmSource == null || !_bgmSource.isPlaying)
+            return;
+
+        var s = LimbusCompanyLyrics.Settings;
+        if (s == null || !s.Enabled)
+            return;
+
+        if (_bgmSubtitleTrack == null || _bgmSubtitleTrack.Lines.Count == 0)
+            return;
+
+        var index = _bgmSubtitleTrack.IndexAt(_bgmSource.time, _bgmSubtitleIndex);
+        _bgmSubtitleIndex = index;
+        var text = index >= 0 ? _bgmSubtitleTrack.Lines[index].Text : string.Empty;
+
+        // 文本变化，或歌词刚被重新启用时，重新送进歌词层。
+        if (text != _bgmSubtitleText || (text.Length > 0 && _shownText == null))
+        {
+            _bgmSubtitleText = text;
+            OnSubtitleChanged(text);
+        }
+    }
+
+    /// <summary>关卡 BGM 取代时的翻译歌词。</summary>
+    private void UpdateBgmTranslation(LimbusCompanyLyricsSettings s)
+    {
+        var available = s.Enabled && s.TranslationEnabled && _bgmSource != null &&
+                        _bgmSource.isPlaying && _bgmTranslationTrack != null &&
+                        _bgmTranslationTrack.Lines.Count > 0;
+
+        if (!available)
+        {
+            _bgmTranslationText = null;
+            _transTargetAlpha = 0f;
+            return;
+        }
+
+        var index = _bgmTranslationTrack.IndexAt(_bgmSource.time, _bgmTranslationIndex);
+        _bgmTranslationIndex = index;
+
+        if (index < 0)
+        {
+            _bgmTranslationText = null;
+            _transTargetAlpha = 0f;
+            return;
+        }
+
+        var text = _bgmTranslationTrack.Lines[index].Text;
+        if (text != _bgmTranslationText)
+        {
+            _bgmTranslationText = text;
+            ShowTranslation(text);
+        }
     }
 
     private AudioSource EnsureBgmSource()
@@ -2002,6 +2332,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         EnsureBgmSource();
         BgmReplacing = true;
         _bgmCurrentPath = fullPath;
+        LoadBgmSubtitleTracks(fullPath);
         BgmStatus = "loading: " + relativePath;
         PauseGameMusic();
 
@@ -2057,6 +2388,17 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         _bgmCurrentPath = null;
         // 下次取代时重新读取标签/曲绘（旧曲绘可能已随曲目切换销毁）。
         _bgmInfoPath = null;
+
+        // 结束关卡歌词/翻译的显示。
+        _bgmSubtitleTrack = SubtitleTrack.Empty;
+        _bgmTranslationTrack = SubtitleTrack.Empty;
+        _bgmSubtitleIndex = -1;
+        _bgmTranslationIndex = -1;
+        _bgmSubtitleText = null;
+        _bgmTranslationText = null;
+        _translationIndex = -1;
+        _transTargetAlpha = 0f;
+        OnSubtitleChanged(string.Empty);
 
         if (_bgmLoadRoutine != null)
         {
@@ -2579,7 +2921,11 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (_player == null)
         {
             BuildUi();
-            HideImmediate();
+
+            // 关卡内没有 JukeboxMusicPlayer；使用 F5 取代 BGM 时歌词由字幕文件驱动，
+            // 不能在每帧把它清掉。
+            if (!BgmReplacing)
+                HideImmediate();
 
             if (Time.unscaledTime < _nextPlayerScan)
                 return;
@@ -3391,6 +3737,14 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         var s = LimbusCompanyLyrics.Settings;
         if (s == null)
             return;
+
+        // F5 关卡 BGM 取代：翻译歌词来自音频同目录的字幕文件。
+        if (BgmReplacing)
+        {
+            UpdateBgmTranslation(s);
+            FadeTranslation(s);
+            return;
+        }
 
         if (_player != null)
         {

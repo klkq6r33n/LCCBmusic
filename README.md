@@ -32,9 +32,9 @@ This repository is **source only**. Release packages (DLLs, `Assets/`, ffmpeg/yt
 - Typewriter, fade, shake, rise, perspective, random rotation, custom colors/stroke/glow.
 - Audio visualizer: time-driven hue gradient, bar density, size, position (bottom/top/left/right), X mirror, black outline, own canvas below the game UI.
 - Level BGM replacement (standalone **F5** panel, independent of the Cyber Grind menu): pick any `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` to replace the current level music; restoring resumes the level BGM from the exact paused position. The visualizer follows both the replacement and the level music.
-- **F5 mouse menu** (levels only; the Cyber Grind keeps **F4** and ignores F5): MUSIC / SETTINGS / DISPLAY pages with the level BGM browser, every lyric setting, 中文 / ENGLISH switching, lyrics and now-playing toggles, mouse drag/resize for the now-playing row, and key rebinding. Opening it pauses the game and unlocks the cursor.
+- **F5 mouse menu** (levels only; the Cyber Grind keeps **F4** and ignores F5): MUSIC / SETTINGS / DISPLAY pages with the level BGM browser, every lyric setting, 中文 / ENGLISH switching, lyrics and now-playing toggles, and mouse drag/resize for the now-playing row. The window is split into a **left control column** and a **right track preview** (cover on top, title and artist below). Opening it pauses the game and forcibly shows/unlocks the cursor.
 - Keyboard shortcuts remain available: **L** lyrics, **N** now-playing, **G** language, **K** rebind (1–8), **P** position, **Esc** close.
-- Now-playing **row**: cover / title / artist drawn on one line (cover first, artist last). The cover and text block share the same height, the title and artist use the same font size, and the cover keeps a ULK-style border (hollow when the track has no cover). Cover from ID3 or a same-name / `cover` / `folder` image. Drag the whole row with the mouse and scroll to resize (F5 → DISPLAY → ADJUST ROW WITH MOUSE).
+- Now-playing **row**: cover / title / artist drawn on one line (cover first, artist last), small by default — the text size is the reference and the cover is only ~1.3× the text. Title and artist share the same font size, and the cover keeps a ULK-style border (hollow when the track has no cover). Cover from ID3 or a same-name / `cover` / `folder` image. Drag the whole row with the mouse and scroll to resize (F5 → DISPLAY → ADJUST ROW WITH MOUSE).
 - In-menu LANGUAGE (English default / 中文) and SETTINGS panel with numeric inputs.
 - NFKC text normalization (fixes compatibility ideographs such as U+F9EC) and diagnostic logging.
 
@@ -93,6 +93,8 @@ Cybergrind/Music/Artist - Track/Artist - Track.srt
 ```
 
 Optional translation sidecar: `Track.zh.srt`, `Track.cn.srt`, `Track.chs.srt`, `Track.cht.srt`, `Track.ja.srt`, `Track.jp.srt`, `Track.trans.srt`, `Track.translation.srt`, `Track.中文.srt`, `Track.翻译.srt`, `Track_zh.srt`, `Track_cn.srt`, `Track_ja.srt`, `Track_trans.srt`.
+
+Folder-form songs are supported: the main subtitle can be `<audio>.srt`, `<folder name>.srt`, or any non-translation `.srt` inside the folder. Level BGM replaced via **F5 → MUSIC** reads the same sidecars and drives the lyric layer from its own playback position.
 
 ## Settings / 设置
 

@@ -139,7 +139,9 @@ public class LimbusCompanyLyricsSettings
     public float CoverPosY = 18f;
     public float TitlePosX = 84f;
     public float TitlePosY = 38f;
-    public float CoverSize = 220f;
+
+    /// <summary>曲绘行大小（同时决定曲名/作者字号；默认与文字同高的小尺寸）。</summary>
+    public float CoverSize = 32f;
 
     // ---- 运行时状态 ----
     public string FilePath;
@@ -273,7 +275,11 @@ public class LimbusCompanyLyricsSettings
         CoverPosY = Mathf.Clamp(GetFloat(s, "cover_pos_y", CoverPosY), 0f, 100f);
         TitlePosX = Mathf.Clamp(GetFloat(s, "title_pos_x", TitlePosX), 0f, 100f);
         TitlePosY = Mathf.Clamp(GetFloat(s, "title_pos_y", TitlePosY), 0f, 100f);
-        CoverSize = Mathf.Clamp(GetFloat(s, "cover_size", CoverSize), 80f, 600f);
+        var coverSize = GetFloat(s, "cover_size", CoverSize);
+        // 旧版把 cover_size 当作 160-600 的大曲绘图；新版是曲绘/文字同高的小尺寸。
+        if (coverSize > 120f)
+            coverSize = 32f;
+        CoverSize = Mathf.Clamp(coverSize, 10f, 120f);
     }
 
     public static string NormalizeGradientMode(string value)
