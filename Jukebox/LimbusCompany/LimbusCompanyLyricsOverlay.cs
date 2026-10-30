@@ -134,6 +134,10 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private GameObject _bgmUiRoot;
     private RectTransform _bgmContent;
     private TextMeshProUGUI _bgmStatus;
+    private int _presetPage;
+    private TextMeshProUGUI _presetStatusText;
+    private TMP_InputField _presetNameInput;
+    private const int PresetsPerPage = 8;
     private Slider _bgmSeekSlider;
     private TextMeshProUGUI _bgmTimeText;
     private TextMeshProUGUI _bgmPauseLabel;
@@ -686,7 +690,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             () => SwitchBgmPage(0), 15f);
         CreateUiButton(root, IsZh ? "歌词设置" : "SETTINGS", new Vector2(-370f, 334f), new Vector2(150f, 32f),
             () => SwitchBgmPage(1), 15f);
-        CreateUiButton(root, IsZh ? "显示" : "DISPLAY", new Vector2(-210f, 334f), new Vector2(150f, 32f),
+        CreateUiButton(root, IsZh ? "预设" : "PRESETS", new Vector2(-210f, 334f), new Vector2(150f, 32f),
+            () => SwitchBgmPage(3), 15f);
+        CreateUiButton(root, IsZh ? "显示" : "DISPLAY", new Vector2(-50f, 334f), new Vector2(150f, 32f),
             () => SwitchBgmPage(2), 15f);
 
         // 左侧：功能与设置；右侧：曲绘在上，曲名、作者在下。
@@ -699,6 +705,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 break;
             case 2:
                 BuildBgmDisplayPage(_bgmContent);
+                break;
+            case 3:
+                BuildBgmPresetsPage(_bgmContent);
                 break;
             default:
                 BuildBgmMusicPage(_bgmContent);
@@ -853,10 +862,10 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
     private void BuildBgmMusicPage(RectTransform parent)
     {
-        CreateUiButton(parent, IsZh ? "全部" : "ALL", new Vector2(-170f, 288f), new Vector2(140f, 30f),
+        CreateUiButton(parent, IsZh ? "个人" : "PERSONAL", new Vector2(-150f, 288f), new Vector2(180f, 30f),
             () => SetBgmSourceFilter(0), 14f,
             _bgmSourceFilter == 0 ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
-        CreateUiButton(parent, OstFolderName, new Vector2(20f, 288f), new Vector2(240f, 30f),
+        CreateUiButton(parent, OstFolderName, new Vector2(80f, 288f), new Vector2(240f, 30f),
             () => SetBgmSourceFilter(1), 14f,
             _bgmSourceFilter == 1 ? new Color(0.24f, 0.20f, 0.08f, 1f) : (Color?)null);
 
@@ -868,7 +877,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 ? (IsZh
                     ? "ULTRAKILL-OST 文件夹为空。\n把官方歌曲放进 Cybergrind/Music/ULTRAKILL-OST。"
                     : "ULTRAKILL-OST is empty.\nPut official songs in Cybergrind/Music/ULTRAKILL-OST.")
-                : (IsZh ? "Cybergrind/Music 中没有音频文件。" : "No audio files in Cybergrind/Music.");
+                : (IsZh
+                    ? "没有个人歌曲。\n把音频放进 Cybergrind/Music（ULTRAKILL-OST 之外）。"
+                    : "No personal songs.\nPut audio in Cybergrind/Music (outside ULTRAKILL-OST).");
             CreateUiLabel(parent, message, new Vector2(0f, 120f), new Vector2(600f, 80f), 17f,
                 TextAlignmentOptions.Center, true);
             CreateUiButton(parent, IsZh ? "归还原 BGM" : "RESTORE BGM", new Vector2(0f, -300f),
@@ -1052,6 +1063,149 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         CreateUiButton(parent, (IsZh ? "曲绘 / 歌名：" : "NOW PLAYING: ") + (npOn ? "ON" : "OFF"),
             new Vector2(0f, 50f), new Vector2(240f, 40f), ToggleNowPlaying, 16f);
 
+    }
+
+    private void BuildBgmPresetsPage(RectTransform parent)
+    {
+        LimbusCompanyPresets.Refresh();
+        var names = LimbusCompanyPresets.Names;
+
+        CreateUiLabel(parent, IsZh ? "预设" : "PRESETS", new Vector2(0f, 260f), new Vector2(600f, 32f), 20f,
+            TextAlignmentOptions.Center);
+
+        _presetNameInput = CreateUiInput(parent, string.Empty, new Vector2(-90f, 205f), new Vector2(380f, 36f));
+        CreateUiButton(parent, IsZh ? "保存当前" : "SAVE CURRENT", new Vector2(225f, 205f),
+            new Vector2(150f, 36f), SavePresetFromUi, 15f);
+
+        _presetStatusText = CreateUiLabel(parent, string.Empty, new Vector2(0f, 160f),
+            new Vector2(600f, 26f), 13f, TextAlignmentOptions.Center);
+
+        if (names.Count == 0)
+        {
+            CreateUiLabel(parent, IsZh ? "还没有预设。输入名称后点“保存当前”。" : "No presets yet. Type a name and click SAVE CURRENT.",
+                new Vector2(0f, 60f), new Vector2(600f, 40f), 15f, TextAlignmentOptions.Center);
+        }
+        else
+        {
+            var pages = Mathf.Max(1, (names.Count + PresetsPerPage - 1) / PresetsPerPage);
+            _presetPage = Mathf.Clamp(_presetPage, 0, pages - 1);
+            var start = _presetPage * PresetsPerPage;
+
+            for (var i = 0; i < PresetsPerPage; i++)
+            {
+                var index = start + i;
+                if (index >= names.Count)
+                    break;
+
+                var presetName = names[index];
+                CreateUiButton(parent, presetName, new Vector2(-60f, 110f - i * 44f), new Vector2(440f, 36f),
+                    () => ApplyPresetFromUi(presetName), 14f);
+                CreateUiButton(parent, "X", new Vector2(245f, 110f - i * 44f), new Vector2(50f, 36f),
+                    () => DeletePresetFromUi(presetName), 14f);
+            }
+
+            CreateUiButton(parent, IsZh ? "上一页" : "< PAGE", new Vector2(-190f, -260f),
+                new Vector2(160f, 36f), () => ChangePresetPage(-1), 14f);
+            CreateUiLabel(parent, (_presetPage + 1) + " / " + pages, new Vector2(0f, -260f),
+                new Vector2(160f, 28f), 14f, TextAlignmentOptions.Center);
+            CreateUiButton(parent, IsZh ? "下一页" : "PAGE >", new Vector2(190f, -260f),
+                new Vector2(160f, 36f), () => ChangePresetPage(1), 14f);
+        }
+
+        CreateUiLabel(parent,
+            IsZh ? "点击预设名称应用；X 删除；用相同名称保存会覆盖。" : "Click a preset to apply; X deletes; saving with the same name overwrites.",
+            new Vector2(0f, -305f), new Vector2(600f, 32f), 12.5f, TextAlignmentOptions.Center, true);
+    }
+
+    private TMP_InputField CreateUiInput(RectTransform parent, string value, Vector2 position, Vector2 size)
+    {
+        var rect = CreateUiObject("Input", parent, position, size);
+        var image = rect.gameObject.AddComponent<Image>();
+        image.color = new Color(0.09f, 0.09f, 0.10f, 1f);
+
+        var outline = rect.gameObject.AddComponent<Outline>();
+        outline.effectColor = new Color(0.776f, 0.635f, 0.29f, 0.9f);
+        outline.effectDistance = new Vector2(1f, -1f);
+
+        var textRect = CreateUiObject("Text", rect, Vector2.zero, size);
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(8f, 2f);
+        textRect.offsetMax = new Vector2(-8f, -2f);
+
+        var text = textRect.gameObject.AddComponent<TextMeshProUGUI>();
+        text.font = LimbusCompanyFonts.MenuFont(value);
+        text.fontSize = 15f;
+        text.color = new Color(0.937f, 0.902f, 0.812f, 1f);
+        text.alignment = TextAlignmentOptions.Left;
+        text.enableWordWrapping = false;
+        text.overflowMode = TextOverflowModes.Overflow;
+        text.raycastTarget = false;
+
+        var input = rect.gameObject.AddComponent<TMP_InputField>();
+        input.targetGraphic = image;
+        input.textComponent = text;
+        input.textViewport = textRect;
+        input.lineType = TMP_InputField.LineType.SingleLine;
+        input.text = value;
+        input.onValueChanged.AddListener(v => text.font = LimbusCompanyFonts.MenuFont(v));
+        return input;
+    }
+
+    private void SavePresetFromUi()
+    {
+        var name = _presetNameInput != null ? _presetNameInput.text : string.Empty;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            SetPresetStatus(IsZh ? "请输入预设名称。" : "Enter a preset name.");
+            return;
+        }
+
+        if (LimbusCompanyPresets.Save(name))
+        {
+            _presetPage = 0;
+            RebuildBgmPanelUi();
+        }
+        else
+        {
+            SetPresetStatus(IsZh ? "保存失败。" : "Save failed.");
+        }
+    }
+
+    private void ApplyPresetFromUi(string name)
+    {
+        if (LimbusCompanyPresets.Apply(name))
+        {
+            RebuildBgmPanelUi();
+        }
+        else
+        {
+            SetPresetStatus(IsZh ? "应用失败。" : "Apply failed.");
+        }
+    }
+
+    private void DeletePresetFromUi(string name)
+    {
+        LimbusCompanyPresets.Delete(name);
+        _presetPage = 0;
+        RebuildBgmPanelUi();
+    }
+
+    private void ChangePresetPage(int delta)
+    {
+        LimbusCompanyPresets.Refresh();
+        var pages = Mathf.Max(1, (LimbusCompanyPresets.Names.Count + PresetsPerPage - 1) / PresetsPerPage);
+        _presetPage = Mathf.Clamp(_presetPage + delta, 0, pages - 1);
+        RebuildBgmPanelUi();
+    }
+
+    private void SetPresetStatus(string text)
+    {
+        if (_presetStatusText == null)
+            return;
+
+        _presetStatusText.font = LimbusCompanyFonts.MenuFont(text);
+        _presetStatusText.text = text;
     }
 
     private void SelectBgmTrack(int index)
@@ -1698,7 +1852,18 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         tracks.Sort(StringComparer.OrdinalIgnoreCase);
         _bgmAllTracks = tracks.ToArray();
+
+        // 打开时默认回到上次选中曲目所属的分类（个人 / ULTRAKILL-OST）。
+        var settings = LimbusCompanyLyrics.Settings;
+        _bgmSourceFilter = settings != null && IsOstTrack(settings.BgmTrack) ? 1 : 0;
         ApplyBgmSourceFilter();
+
+        // 当前分类为空时自动切到另一个分类。
+        if (_bgmTracks.Length == 0 && _bgmAllTracks.Length > 0)
+        {
+            _bgmSourceFilter = _bgmSourceFilter == 0 ? 1 : 0;
+            ApplyBgmSourceFilter();
+        }
     }
 
     private static bool IsOstTrack(string relativePath)
@@ -1709,18 +1874,22 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
     private void ApplyBgmSourceFilter()
     {
-        if (_bgmSourceFilter == 1)
+        var filtered = new List<string>();
+        foreach (var track in _bgmAllTracks)
         {
-            var filtered = new List<string>();
-            foreach (var track in _bgmAllTracks)
+            if (_bgmSourceFilter == 1)
+            {
                 if (IsOstTrack(track))
                     filtered.Add(track);
-            _bgmTracks = filtered.ToArray();
+            }
+            else if (!IsOstTrack(track))
+            {
+                // 个人分类：ULTRAKILL-OST 之外的所有歌曲。
+                filtered.Add(track);
+            }
         }
-        else
-        {
-            _bgmTracks = _bgmAllTracks;
-        }
+
+        _bgmTracks = filtered.ToArray();
 
         _bgmIndex = 0;
         if (_bgmTracks.Length == 0)
@@ -1730,8 +1899,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         var index = settings != null ? Array.IndexOf(_bgmTracks, settings.BgmTrack) : -1;
         if (index >= 0)
             _bgmIndex = index;
-        else if (settings != null)
-            settings.BgmTrack = _bgmTracks[0];
+        // 只是切换分类浏览时不覆盖已保存的曲目，切回另一分类时还能恢复选择。
     }
 
     private void SetBgmSourceFilter(int filter)

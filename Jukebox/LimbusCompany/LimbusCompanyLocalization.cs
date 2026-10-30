@@ -33,6 +33,10 @@ public class LimbusCompanyLocalization : MonoBehaviour
     private bool _panelOpen;
     private bool _rebuildPending;
     private int _page;
+    private int _presetPage;
+    private TextMeshProUGUI _presetStatusText;
+    private TMP_InputField _presetNameInput;
+    private const int PresetsPerPage = 8;
 
     /// <summary>F5 菜单内嵌设置页时，把设置面板建到这个容器里。</summary>
     private RectTransform _standaloneHost;
@@ -325,16 +329,18 @@ public class LimbusCompanyLocalization : MonoBehaviour
         CreateLabel(rect, "Subtitle", "Jukebox LimbusCompany v" + Jukebox.JukeboxPluginInfo.Version,
             new Vector2(0f, 270f), new Vector2(500f, 20f), 13f, TextAlignmentOptions.Center);
 
-        CreateButtonAt(rect, "TabLayout", L("LAYOUT", "位置"), new Vector2(-216f, 236f), new Vector2(100f, 28f),
+        CreateButtonAt(rect, "TabLayout", L("LAYOUT", "位置"), new Vector2(-205f, 236f), new Vector2(80f, 28f),
             () => SwitchPage(0));
-        CreateButtonAt(rect, "TabText", L("TEXT", "文字"), new Vector2(-108f, 236f), new Vector2(100f, 28f),
+        CreateButtonAt(rect, "TabText", L("TEXT", "文字"), new Vector2(-123f, 236f), new Vector2(80f, 28f),
             () => SwitchPage(1));
-        CreateButtonAt(rect, "TabMotion", L("MOTION", "动态"), new Vector2(0f, 236f), new Vector2(100f, 28f),
+        CreateButtonAt(rect, "TabMotion", L("MOTION", "动态"), new Vector2(-41f, 236f), new Vector2(80f, 28f),
             () => SwitchPage(2));
-        CreateButtonAt(rect, "TabTrans", L("TRANS", "翻译"), new Vector2(108f, 236f), new Vector2(100f, 28f),
+        CreateButtonAt(rect, "TabTrans", L("TRANS", "翻译"), new Vector2(41f, 236f), new Vector2(80f, 28f),
             () => SwitchPage(3));
-        CreateButtonAt(rect, "TabVisual", L("VISUAL", "频谱"), new Vector2(216f, 236f), new Vector2(100f, 28f),
+        CreateButtonAt(rect, "TabVisual", L("VISUAL", "频谱"), new Vector2(123f, 236f), new Vector2(80f, 28f),
             () => SwitchPage(4));
+        CreateButtonAt(rect, "TabPresets", L("PRESET", "预设"), new Vector2(205f, 236f), new Vector2(80f, 28f),
+            () => SwitchPage(5));
 
         var y = 188f;
         // VISUAL has more rows (gradient modes/RGB); use a slightly tighter spacing.
@@ -401,7 +407,7 @@ public class LimbusCompanyLocalization : MonoBehaviour
                 new Vector2(0f, -208f), new Vector2(470f, 88f), 13f, TextAlignmentOptions.TopLeft);
             info.enableWordWrapping = true;
         }
-        else
+        else if (_page == 4)
         {
             AddToggleRow(rect, ref y, step, L("Audio visualizer", "音频可视化"), () => S.VisualizerEnabled, () => S.VisualizerEnabled = !S.VisualizerEnabled);
             AddInputRow(rect, ref y, step, L("Wave size (x)", "波动大小 (倍)"), F(S.VisualizerAmplitude), v => S.VisualizerAmplitude = Mathf.Clamp(v, 0.1f, 5f));
@@ -422,6 +428,10 @@ public class LimbusCompanyLocalization : MonoBehaviour
                   "模式：FIXED 2=双色流动；RANGE=双色来回；MULTI=多色色标。\nRGB 格式：R,G,B，用 , 或 ， 分隔；多色之间用空格。\n渐变范围 0=颜色 A 单色；渐变强度=渐变速度。"),
                 new Vector2(0f, -205f), new Vector2(480f, 82f), 11.5f, TextAlignmentOptions.TopLeft);
             info.enableWordWrapping = true;
+        }
+        else
+        {
+            BuildPresetsPage(rect);
         }
 
         CreateButtonAt(rect, "Reset", L("RESET PAGE", "重置本页"), new Vector2(-110f, -286f), new Vector2(180f, 36f), () =>
@@ -690,7 +700,7 @@ public class LimbusCompanyLocalization : MonoBehaviour
         label.text = text;
     }
 
-    private void CreateInput(RectTransform parent, string name, string value, Vector2 position, Vector2 size,
+    private TMP_InputField CreateInput(RectTransform parent, string name, string value, Vector2 position, Vector2 size,
         Action<string> onEndEdit)
     {
         var go = new GameObject(name, typeof(RectTransform));
@@ -732,6 +742,8 @@ public class LimbusCompanyLocalization : MonoBehaviour
         input.lineType = TMP_InputField.LineType.SingleLine;
         input.text = value;
         input.onEndEdit.AddListener(v => onEndEdit(v));
+        input.onValueChanged.AddListener(v => text.font = MenuFont(v));
+        return input;
     }
 
     private static string NormalizeColor(string value, string fallback)
@@ -793,6 +805,119 @@ public class LimbusCompanyLocalization : MonoBehaviour
     private static string BoolText(bool value)
     {
         return IsChinese() ? (value ? "开" : "关") : (value ? "ON" : "OFF");
+    }
+
+    private void BuildPresetsPage(RectTransform rect)
+    {
+        LimbusCompanyPresets.Refresh();
+        var names = LimbusCompanyPresets.Names;
+
+        CreateLabel(rect, "PresetTitle", L("PRESETS", "预设"), new Vector2(0f, 200f),
+            new Vector2(480f, 28f), 18f, TextAlignmentOptions.Center);
+
+        _presetNameInput = CreateInput(rect, "PresetName", string.Empty, new Vector2(-70f, 160f),
+            new Vector2(300f, 30f), _ => { });
+        CreateButtonAt(rect, "PresetSave", L("SAVE CURRENT", "保存当前"), new Vector2(190f, 160f),
+            new Vector2(120f, 30f), SavePresetFromPanel);
+
+        _presetStatusText = CreateLabelObject(rect, "PresetStatus", string.Empty, new Vector2(0f, 127f),
+            new Vector2(480f, 24f), 12.5f, TextAlignmentOptions.Center);
+
+        if (names.Count == 0)
+        {
+            CreateLabel(rect, "PresetEmpty", L("No presets yet. Type a name and click SAVE CURRENT.",
+                    "还没有预设。输入名称后点“保存当前”。"),
+                new Vector2(0f, 50f), new Vector2(480f, 40f), 14f, TextAlignmentOptions.Center);
+        }
+        else
+        {
+            var pages = Mathf.Max(1, (names.Count + PresetsPerPage - 1) / PresetsPerPage);
+            _presetPage = Mathf.Clamp(_presetPage, 0, pages - 1);
+            var start = _presetPage * PresetsPerPage;
+
+            for (var i = 0; i < PresetsPerPage; i++)
+            {
+                var index = start + i;
+                if (index >= names.Count)
+                    break;
+
+                var presetName = names[index];
+                var y = 84f - i * 36f;
+                CreateButtonAt(rect, "Preset", presetName, new Vector2(-40f, y), new Vector2(380f, 30f),
+                    () => ApplyPresetFromPanel(presetName));
+                CreateButtonAt(rect, "PresetDelete", "X", new Vector2(200f, y), new Vector2(50f, 30f),
+                    () => DeletePresetFromPanel(presetName));
+            }
+
+            CreateButtonAt(rect, "PresetPrev", "<", new Vector2(-150f, -215f), new Vector2(100f, 28f),
+                () => ChangePresetPage(-1));
+            CreateLabel(rect, "PresetPage", (_presetPage + 1) + " / " + pages, new Vector2(0f, -215f),
+                new Vector2(120f, 24f), 13f, TextAlignmentOptions.Center);
+            CreateButtonAt(rect, "PresetNext", ">", new Vector2(150f, -215f), new Vector2(100f, 28f),
+                () => ChangePresetPage(1));
+        }
+
+        var hint = CreateLabelObject(rect, "PresetHint",
+            L("Click a preset to apply; X deletes; saving with the same name overwrites.",
+                "点击预设名称应用；X 删除；用相同名称保存会覆盖。"),
+            new Vector2(0f, -252f), new Vector2(480f, 28f), 12f, TextAlignmentOptions.Center);
+        hint.enableWordWrapping = true;
+    }
+
+    private void SavePresetFromPanel()
+    {
+        var name = _presetNameInput != null ? _presetNameInput.text : string.Empty;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            SetPresetStatus(L("Enter a preset name.", "请输入预设名称。"));
+            return;
+        }
+
+        if (LimbusCompanyPresets.Save(name))
+        {
+            _presetPage = 0;
+            RebuildPanel();
+        }
+        else
+        {
+            SetPresetStatus(L("Save failed.", "保存失败。"));
+        }
+    }
+
+    private void ApplyPresetFromPanel(string name)
+    {
+        if (LimbusCompanyPresets.Apply(name))
+        {
+            RebuildPanel();
+        }
+        else
+        {
+            SetPresetStatus(L("Apply failed.", "应用失败。"));
+        }
+    }
+
+    private void DeletePresetFromPanel(string name)
+    {
+        LimbusCompanyPresets.Delete(name);
+        _presetPage = 0;
+        RebuildPanel();
+    }
+
+    private void ChangePresetPage(int delta)
+    {
+        LimbusCompanyPresets.Refresh();
+        var pages = Mathf.Max(1, (LimbusCompanyPresets.Names.Count + PresetsPerPage - 1) / PresetsPerPage);
+        _presetPage = Mathf.Clamp(_presetPage + delta, 0, pages - 1);
+        RebuildPanel();
+    }
+
+    private void SetPresetStatus(string text)
+    {
+        if (_presetStatusText == null)
+            return;
+
+        _presetStatusText.font = MenuFont(text);
+        _presetStatusText.text = text;
     }
 
     /// <summary>只重置当前页面的设置。</summary>

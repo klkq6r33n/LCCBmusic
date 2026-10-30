@@ -36,6 +36,7 @@ This repository is **source only**. Release packages (DLLs, `Assets/`, ffmpeg/yt
 - Only **F5** (open/close) and **Esc** (close) remain as keyboard shortcuts; other shortcuts were removed.
 - Now-playing **row**: cover / title / artist drawn on one line (cover first, artist last), small by default — the text size is the reference and the cover is only ~1.3× the text. Title and artist share the same font size, and the cover keeps a ULK-style border (hollow when the track has no cover). Cover from a same-name image, common cover names (`cover` / `folder` / `front` / `album` / `artwork` …), any image in the song folder, or the embedded ID3 picture. While F5 is open, drag the row directly and scroll over it to resize.
 - In-menu LANGUAGE (English default / 中文) and SETTINGS panel with numeric inputs.
+- **User presets**: the F4 SETTINGS panel has a **PRESET** tab and the F5 menu has a **PRESETS** tab. Type a name and save the current lyric/visualizer/row style, apply any saved preset with a click, or delete it. Presets live under `"user_presets"` in `lyric_config.json`; language, BGM track/key bindings and the master lyrics switch are not included.
 - NFKC text normalization (fixes compatibility ideographs such as U+F9EC) and diagnostic logging.
 
 ## Requirements / 依赖
@@ -100,7 +101,7 @@ Folder-form songs are supported: the main subtitle can be `<audio>.srt`, `<folde
 
 Open the Jukebox menu (F4) in Cyber Grind: **LANGUAGE** switches the mod UI (English default, 中文 second); **SETTINGS** opens LAYOUT / TEXT / MOTION / TRANS / VISUAL pages. All values are numeric/text inputs and are saved to `BepInEx/config/LimbusCompany/lyric_config.json` immediately.
 
-Press **F5** in any level for the mouse menu (F4 is the Cyber Grind menu only; F5 is ignored there). MUSIC selects and replaces/restores the level BGM, with a draggable progress bar, elapsed/total time and PAUSE/RESUME; **ALL / ULTRAKILL-OST** switches to a dedicated `Cybergrind/Music/ULTRAKILL-OST` category (created automatically) for official songs. SETTINGS mirrors the LAYOUT / TEXT / MOTION / TRANS / VISUAL pages; DISPLAY switches 中文 / ENGLISH and toggles lyrics and the now-playing row. While F5 is open, drag the in-game row directly and scroll over it to resize. The left side holds the controls, the right side previews the selected track's cover above its title and artist. Only **F5** and **Esc** remain as keyboard shortcuts.
+Press **F5** in any level for the mouse menu (F4 is the Cyber Grind menu only; F5 is ignored there). MUSIC selects and replaces/restores the level BGM, with a draggable progress bar, elapsed/total time and PAUSE/RESUME; **PERSONAL / ULTRAKILL-OST** switches between personal songs (outside the OST folder) and a dedicated `Cybergrind/Music/ULTRAKILL-OST` category (created automatically) for official songs. SETTINGS mirrors the LAYOUT / TEXT / MOTION / TRANS / VISUAL pages; DISPLAY switches 中文 / ENGLISH and toggles lyrics and the now-playing row. While F5 is open, drag the in-game row directly and scroll over it to resize. The left side holds the controls, the right side previews the selected track's cover above its title and artist. Only **F5** and **Esc** remain as keyboard shortcuts.
 
 ## Known limitations / 已知限制
 

@@ -109,6 +109,16 @@ Changes are hot-reloaded within one second (font family needs a restart).
 - 选择会写回 `lyric_config.json` 的 `"language"`（`en`/`zh`），下次启动自动生效。
 - 中文模式**只翻译本 mod 自己的界面**（LANGUAGE / SETTINGS 按钮、设置面板与 F5 菜单），原版 CGME 菜单保持英文。
 
+### User presets / 玩家预设
+
+- **F4**: open the mod's SETTINGS panel and use the new **PRESET** tab. Type a name, click **SAVE CURRENT** to store the current lyric/visualizer/row settings, click a preset name to apply it, and **X** to delete it.
+- **F5**: open the **PRESETS** tab for the same save/apply/delete actions (paged list).
+- Presets are stored in `lyric_config.json` under `"user_presets"`, alongside the `settings` object. Saving with an existing name overwrites it. Language, BGM track/key bindings and the master `enabled` switch are intentionally not part of a preset.
+
+- **F4**：打开本 mod 的 SETTINGS 面板，使用新增的 **预设（PRESET）** 页。输入名称后点 **保存当前**，即可把当前歌词 / 频谱 / 曲绘行设置存为预设；点击预设名称应用，点 **X** 删除。
+- **F5**：打开 **PRESETS** 页，同样可以保存 / 应用 / 删除（列表可翻页）。
+- 预设保存在 `lyric_config.json` 的 `"user_presets"` 下，与 `settings` 并列。用相同名称保存会覆盖；语言、BGM 曲目/快捷键与歌词层总开关不会写入预设。
+
 ### In-game feature settings / 游戏内功能设置
 
 While the Jukebox menu is open, the **SETTINGS / 设置** button (next to LANGUAGE) opens a 3-page panel where every value is a **numeric / text input field** (no coarse presets):
@@ -166,7 +176,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 ### Level BGM replacement / 关卡 BGM 取代
 
 - Press **F5** in any level to open the mouse menu. It is separate from the Cyber Grind menu: **F4 works only in the Cyber Grind, F5 only in levels.** Opening the menu pauses the game and unlocks the cursor.
-- **MUSIC**: lists every `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` recursively (page buttons at the bottom); click a track to select it, then **REPLACE LEVEL BGM** or **RESTORE BGM**. A **progress bar** shows the replacement track's position — click/drag it to seek — with **PAUSE / RESUME** and elapsed/total time. The **ALL / ULTRAKILL-OST** buttons switch between the full library and a dedicated `Cybergrind/Music/ULTRAKILL-OST` category (created automatically) for official songs. No official audio is shipped with the mod or downloaded automatically — the folder is for tracks extracted from your own game copy.
+- **MUSIC**: lists every `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` recursively (page buttons at the bottom); click a track to select it, then **REPLACE LEVEL BGM** or **RESTORE BGM**. A **progress bar** shows the replacement track's position — click/drag it to seek — with **PAUSE / RESUME** and elapsed/total time. The **PERSONAL / ULTRAKILL-OST** buttons at the top switch between personal songs (everything outside the OST folder) and a dedicated `Cybergrind/Music/ULTRAKILL-OST` category (created automatically) for official songs. No official audio is shipped with the mod or downloaded automatically — the folder is for tracks extracted from your own game copy.
 - **SETTINGS**: the same LAYOUT / TEXT / MOTION / TRANS / VISUAL pages as the in-Cyber-Grind menu, fully mouse-driven (inputs, toggles, per-page reset).
 - **DISPLAY**: switch **中文 / ENGLISH**, toggle lyrics and the now-playing row. The row is dragged/resized directly with the mouse while F5 is open (no separate adjustment block or shortcuts).
 - Only **F5** (open/close) and **Esc** (close) remain as keyboard shortcuts; all other shortcuts were removed.
@@ -176,7 +186,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - Only local files are used; the CGME Downloader is still unsupported.
 
 - 在任意关卡中按 **F5** 打开鼠标菜单。它与血宫菜单分开：**F4 只在血宫可用，F5 只在关卡可用。** 打开时暂停游戏并解锁鼠标。
-- **MUSIC**：递归列出 `Cybergrind/Music` 下所有 `.mp3` / `.ogg` / `.wav`（底部翻页）；点击曲目选中，再点 **取代关卡 BGM** 或 **归还原 BGM**。界面带**进度条**（点击/拖动跳转）、**暂停 / 继续**按钮以及已播放/总时长。顶部的 **全部 / ULTRAKILL-OST** 按钮用于切换完整曲库与专门的 `Cybergrind/Music/ULTRAKILL-OST` 分类（不存在时会自动创建），官方歌曲放进该文件夹即可。mod **不附带也不会自动下载官方音频**，该文件夹用于放置从你自己游戏副本中提取的曲目。
+- **MUSIC**：递归列出 `Cybergrind/Music` 下所有 `.mp3` / `.ogg` / `.wav`（底部翻页）；点击曲目选中，再点 **取代关卡 BGM** 或 **归还原 BGM**。界面带**进度条**（点击/拖动跳转）、**暂停 / 继续**按钮以及已播放/总时长。顶部的 **个人 / ULTRAKILL-OST** 分类按钮：个人 = `ULTRAKILL-OST` 之外的所有歌曲；ULTRAKILL-OST = 专门的 `Cybergrind/Music/ULTRAKILL-OST` 文件夹（不存在时会自动创建），官方歌曲放进该文件夹即可。mod **不附带也不会自动下载官方音频**，该文件夹用于放置从你自己游戏副本中提取的曲目。
 - **SETTINGS**：与血宫内菜单相同的 位置 / 文字 / 动态 / 翻译 / 频谱 五页，全部可用鼠标操作（输入框、开关、单页重置）。
 - **DISPLAY**：切换 **中文 / English**、开关歌词与曲绘框、移动/缩放曲绘与歌名，并点击任意按键绑定后按下新键改绑（Esc 取消）。
 - 仅保留 **F5**（开关）与 **Esc**（关闭）两个键盘快捷键；其余快捷键已全部移除。
