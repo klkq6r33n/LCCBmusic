@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using Jukebox.Components;
 using Jukebox.UI.Subtitles;
 using JukeboxCore.Logging;
@@ -30,6 +31,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private bool _visWasShown;
     private bool _visSpectrumLogged;
     private AudioSource _visLastSource;
+    private HashSet<string> _ostBgmNames;
+    private bool _ostBgmNamesLoaded;
     private readonly Image[] _visBars = new Image[256];
     private readonly float[] _spectrum = new float[512];
     private CanvasGroup _group;
@@ -1917,7 +1920,11 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 return true;
 
             var scene = SceneHelper.CurrentScene;
-            return scene != "Main Menu" && scene != "Bootstrap" && NewMovement.Instance != null;
+            if (scene == "Main Menu" || scene == "Bootstrap")
+                return false;
+            if (scene == "Intro")
+                return true;
+            return NewMovement.Instance != null;
         }
         catch (Exception)
         {
@@ -3602,7 +3609,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         var bestVolume = -1f;
         foreach (var source in GetGameMusicThemes())
         {
-            if (source == null || !source.isPlaying)
+            if (source == null || !source.isPlaying || IsCyberGrindLoopClip(source.clip))
                 continue;
 
             if (source.volume > bestVolume)
@@ -3616,7 +3623,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         RefreshSceneThemeSources();
         foreach (var source in _sceneThemeSources)
         {
-            if (source == null || !source.isPlaying)
+            if (source == null || !source.isPlaying || IsCyberGrindLoopClip(source.clip))
                 continue;
 
             if (source.volume > bestVolume)
@@ -3632,6 +3639,85 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             best = FindLongLoopingMusicSource();
 
         return best;
+    }
+
+    /// <summary>血宫特供曲：文件名带 (Loop) / Loop Instrumental，不参与关卡 BGM 自动识别。</summary>
+    private static bool IsCyberGrindLoopClip(AudioClip clip)
+    {
+        if (clip == null)
+            return false;
+
+        var name = clip.name ?? string.Empty;
+        return name.IndexOf("(Loop", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               name.IndexOf("loop instrumental", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private static string NormalizeBgmName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return string.Empty;
+
+        var normalized = name.Replace('_', ' ').Trim().ToLowerInvariant();
+        while (normalized.Contains("  "))
+            normalized = normalized.Replace("  ", " ");
+        return normalized;
+    }
+
+    /// <summary>读取 ULTRAKILL-OST 文件夹，建立关卡 BGM 名称白名单（排除 (Loop) 特供曲）。</summary>
+    private void EnsureOstBgmNames()
+    {
+        if (_ostBgmNamesLoaded)
+            return;
+
+        _ostBgmNamesLoaded = true;
+        _ostBgmNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            var folder = Path.Combine(PathsUtils.MusicPath, "ULTRAKILL-OST");
+            if (!Directory.Exists(folder))
+                return;
+
+            foreach (var file in Directory.GetFiles(folder, "*", SearchOption.AllDirectories))
+            {
+                var extension = Path.GetExtension(file);
+                if (!extension.Equals(".ogg", StringComparison.OrdinalIgnoreCase) &&
+                    !extension.Equals(".wav", StringComparison.OrdinalIgnoreCase) &&
+                    !extension.Equals(".mp3", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var name = Path.GetFileNameWithoutExtension(file);
+                if (name.IndexOf("(Loop", StringComparison.OrdinalIgnoreCase) >= 0)
+                    continue;
+
+                _ostBgmNames.Add(NormalizeBgmName(name));
+            }
+
+            LimbusCompanyLyrics.Log?.LogInfo($"关卡 BGM 白名单: {_ostBgmNames.Count} 项 (ULTRAKILL-OST)");
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("读取 ULTRAKILL-OST 失败: " + e.Message);
+        }
+    }
+
+    /// <summary>判断 clip 是否属于关卡 BGM：OST 白名单 / 关卡编号 / Intro。</summary>
+    private bool IsOstBgmClip(AudioClip clip)
+    {
+        if (clip == null || IsCyberGrindLoopClip(clip))
+            return false;
+
+        var name = NormalizeBgmName(clip.name);
+        if (name.Contains("intro"))
+            return true;
+
+        EnsureOstBgmNames();
+        if (_ostBgmNames != null && _ostBgmNames.Contains(name))
+            return true;
+
+        // 关卡编号：0-1 / 1-2 / 2-S / P-1 等（数字+字母）。
+        return Regex.IsMatch(name,
+            @"(^|[^0-9a-z])([0-9]+-[0-9a-z]+|[0-9]+-[se]|p-[0-9]+)($|[^0-9a-z])");
     }
 
     private AudioSource _cachedLoopMusic;
@@ -3667,18 +3753,25 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 if (length < 8f)
                     continue;
 
-                var name = ((source.gameObject.name ?? "") + " " + (source.clip.name ?? ""))
-                    .ToLowerInvariant();
-                if (name.Contains("sfx") || name.Contains("effect") || name.Contains("ambient"))
-                    continue;
+                var isBgm = IsOstBgmClip(source.clip);
 
-                if (candidates.Count < 12)
+                if (candidates.Count < 16)
                 {
                     candidates.Add($"{source.gameObject.name}|clip={source.clip.name}|len={length:0.0}|" +
-                                   $"loop={source.loop}|vol={source.volume:0.00}|play={source.isPlaying}");
+                                   $"loop={source.loop}|vol={source.volume:0.00}|play={source.isPlaying}|bgm={isBgm}");
                 }
 
+                if (!isBgm)
+                    continue;
+
+                var name = NormalizeBgmName(source.clip.name);
                 var score = source.volume + (source.loop ? 0.25f : 0f);
+
+                // 环境类曲目优先级降低，避免压过主 BGM。
+                if (name.Contains("drone") || name.Contains("ambiance") ||
+                    name.Contains("ambient") || name.Contains("tension") || name.Contains("calm"))
+                    score -= 0.5f;
+
                 if (score > bestScore)
                 {
                     bestScore = score;
@@ -3706,6 +3799,17 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     {
         if (_visRoot == null)
             return;
+
+        // 选关/主菜单/Intro 等非可玩场景不显示可视化。
+        if (!IsInPlayableLevel())
+        {
+            _visWasShown = false;
+            _visLastSource = null;
+            _visSpectrumLogged = false;
+            if (_visRoot.activeSelf)
+                _visRoot.SetActive(false);
+            return;
+        }
 
         var s = LimbusCompanyLyrics.Settings;
         var spectrumSource = GetVisualizerSource(s);
