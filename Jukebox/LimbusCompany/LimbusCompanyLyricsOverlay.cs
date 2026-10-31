@@ -1908,6 +1908,23 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                scene.IndexOf("Endless", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
+    /// <summary>当前是否处于可玩的关卡（用于 AudioListener 频谱兜底）。</summary>
+    private static bool IsInPlayableLevel()
+    {
+        try
+        {
+            if (IsCyberGrindScene())
+                return true;
+
+            var scene = SceneHelper.CurrentScene;
+            return scene != "Main Menu" && scene != "Bootstrap" && NewMovement.Instance != null;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
     private static bool CanOpenBgmMenu()
     {
         try
@@ -3622,14 +3639,17 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         var s = LimbusCompanyLyrics.Settings;
         var spectrumSource = GetVisualizerSource(s);
-        var show = s != null && s.VisualizerEnabled && spectrumSource != null;
+
+        // 多段关卡（如 7-4）可能拿不到具体 AudioSource；此时退回 AudioListener 的总输出频谱。
+        var useListener = spectrumSource == null && IsInPlayableLevel();
+        var show = s != null && s.VisualizerEnabled && (spectrumSource != null || useListener);
 
         if (show != _visWasShown || spectrumSource != _visLastSource)
         {
             _visWasShown = show;
             _visLastSource = spectrumSource;
             LimbusCompanyLyrics.Log?.LogInfo(
-                $"音频可视化: show={show}, enabled={s?.VisualizerEnabled}, " +
+                $"音频可视化: show={show}, enabled={s?.VisualizerEnabled}, listener={useListener}, " +
                 $"source={(spectrumSource != null ? spectrumSource.gameObject.name : "(null)")}, " +
                 $"clip={(spectrumSource?.clip != null ? spectrumSource.clip.name : "(null)")}, " +
                 $"playing={spectrumSource?.isPlaying}, volume={spectrumSource?.volume}, " +
@@ -3647,7 +3667,10 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (!_visRoot.activeSelf)
             _visRoot.SetActive(true);
 
-        spectrumSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
+        if (spectrumSource != null)
+            spectrumSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
+        else
+            AudioListener.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
 
         if (!_visSpectrumLogged)
         {
@@ -3657,7 +3680,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 if (_spectrum[i] > maxSample)
                     maxSample = _spectrum[i];
 
-            LimbusCompanyLyrics.Log?.LogInfo($"频谱峰值: {maxSample:0.000000} (source={spectrumSource.gameObject.name})");
+            LimbusCompanyLyrics.Log?.LogInfo(
+                $"频谱峰值: {maxSample:0.000000} (source={(spectrumSource != null ? spectrumSource.gameObject.name : "AudioListener")})");
         }
 
         var rootRect = _visRoot.GetComponent<RectTransform>();
