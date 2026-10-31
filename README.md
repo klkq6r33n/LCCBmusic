@@ -8,7 +8,11 @@
 
 > **AI disclosure / AI 说明**
 > This project was made with AI assistance. The author (**6r3²n**) has limited programming knowledge and used AI to build it.
-> 本项目在 AI 辅助下完成。作者（**6r3²n**）计算机知识有限，使用 AI 制作了此 mod。
+> 本项目在 AI 辅助下完成。作者（**6r3²n**）计算机知识有限，使用 AI 制作了此扩展。
+>
+> **Independent extension / 独立扩展**
+> This is an unofficial add-on. It is not affiliated with or endorsed by Flazhik (CybergrindMusicExplorer) or greycsont.
+> 本扩展为非官方附加组件，与 Flazhik（CybergrindMusicExplorer）及 greycsont 无隶属或背书关系。
 >
 > **Known issue:** in some cases lyrics may still overlap; the author lacks the computer knowledge to fix it.
 > **已知问题：** 部分情况下歌词仍可能重叠；作者计算机知识不足，无法修复该问题。
@@ -28,7 +32,7 @@ This repository is **source only**. Release packages contain just `JukeboxLimbus
 - Bilingual lyrics: `Track.srt` + optional `Track.zh.srt` / `.cn` / `.ja` / `.trans` sidecars, shown simultaneously at separate positions.
 - Independent lyric lines: a tight next cue does not replace the previous line in place; the old line keeps fading at its own position while the new one is placed elsewhere (avoids close-time overlap).
 - Full-screen random position by default, plus fixed anchors (top-left … bottom-right) and editable X/Y ranges.
-- Independent font sizes for main/translation; ULTRAKILL font for Latin lines, dynamic CJK font for Japanese/Chinese.
+- Independent font sizes for main/translation; ULTRAKILL font for Latin lines, and the CJK coverage provided by CGME 2.3.0+ / Fffffff for Japanese/Chinese/Korean (system-font fallback only if missing).
 - Typewriter, fade, shake, rise, perspective, random rotation, custom colors/stroke/glow.
 - Audio visualizer: time-driven hue gradient, bar density, size, position (bottom/top/left/right), X mirror, black outline, own canvas below the game UI.
 - Level BGM replacement (standalone **F5** panel, independent of the Cyber Grind menu): pick any `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` to replace the current level music; restoring resumes the level BGM from the exact paused position. While replacing, **every** source under the game's `MusicManager` — including multi-segment clean/battle/boss sources and USTManager-driven ones — is paused and muted, so nothing plays over the replacement. The replacement clip is prefixed `LCCB_` so USTManager never replaces it a second time. The visualizer follows both the replacement and the level music.

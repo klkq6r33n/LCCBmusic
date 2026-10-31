@@ -5,6 +5,7 @@ Prerequisites: **CybergrindMusicExplorer (CGME) 2.3.2+** and **greycsont-Fffffff
 Downloader: this package ships no downloader binaries; CGME handles its own downloader.
 Install: install this zip with r2modman / Thunderstore Mod Manager, or extract it into the ULTRAKILL folder (runtime file: BepInEx/plugins/Claude-JukeboxLimbusCompany/JukeboxLimbusCompany.dll).
 Optional: **ZedDev-USTManager** is supported — F5 replacement pauses/mutes multi-segment and UST-driven soundtrack sources, and USTManager will not replace the F5 track.
+Disclaimer: this is an **independent, unofficial extension**. It is not affiliated with or endorsed by Flazhik (CybergrindMusicExplorer) or greycsont. It contains AI-assisted content; see the AI disclosure.
 Lyrics: put Track.srt next to Track.mp3. Optional translation: also add Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt. Both lines are shown at different, non-overlapping positions.
 Songs: this mod bundles no audio. Every song is read from ULTRAKILL's built-in Cyber Grind music folder (ULTRAKILL/Cybergrind/Music); put your audio there.
 UI: default language is English. In the Jukebox menu (F4) use LANGUAGE to switch to Chinese and SETTINGS for precise numeric inputs (position, color, font size, motion, translation).
@@ -16,6 +17,7 @@ Special thanks to greycsont for the ULTRAKILL font, and to Flazhik and the Jukeb
 下载器：本包不附带下载器程序；下载功能由 CGME 自身负责。
 安装：用 r2modman / Thunderstore Mod Manager 安装本 zip，或直接解压到 ULTRAKILL 游戏根目录（运行文件：BepInEx/plugins/Claude-JukeboxLimbusCompany/JukeboxLimbusCompany.dll）。
 可选：**ZedDev-USTManager** 已适配——F5 取代时会暂停/静音多段与 UST 驱动的关卡音乐音源，USTManager 也不会把 F5 替代曲再替换一次。
+声明：本扩展为**独立、非官方**作品，与 Flazhik（CybergrindMusicExplorer）及 greycsont 无隶属或背书关系。本项目含 AI 辅助内容，详见 AI 说明。
 歌词：把 Track.srt 放在 Track.mp3 同目录。可选翻译：再放 Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt，两行歌词会在不同且不重叠的位置同时显示。
 歌曲：本 mod **不附带任何音频**，所有歌曲均读取自 ULTRAKILL 自带的电子血宫音乐文件夹（ULTRAKILL/Cybergrind/Music），把音频放进该文件夹即可。
 界面：默认英文。在 Jukebox 菜单（F4）用 LANGUAGE 切换中文，用 SETTINGS 精确填写位置、颜色、字号、动态与翻译。
@@ -27,6 +29,10 @@ Special thanks to greycsont for the ULTRAKILL font, and to Flazhik and the Jukeb
 # Jukebox LimbusCompany
 
 **Author / 作者：6r3²n**
+
+> **AI disclosure / AI 说明**
+> This project was made with AI assistance; the author (**6r3²n**) has limited programming knowledge and used AI to build it.
+> 本项目在 AI 辅助下完成；作者（**6r3²n**）计算机知识有限，使用 AI 制作了此扩展。
 
 **LimbusCompany lyric performance extension for CybergrindMusicExplorer.**
 
@@ -319,14 +325,14 @@ Track_zh.srt   Track_cn.srt   Track_ja.srt    Track_trans.srt
 
 ## Fonts / 字体
 
-This extension ships **no font files**. Latin text uses ULTRAKILL's own TMP font (through greycsont-Fffffff / CGME); CJK text uses an installed system font turned into a dynamic TMP asset (Yu Gothic → Microsoft YaHei → DengXian → …). Install **Noto Sans JP / Noto Sans SC** on your system if you want a specific look.
+This extension ships **no font files**. Latin text uses ULTRAKILL's own TMP font (through greycsont-Fffffff / CGME); CJK text uses the CJK coverage already provided by CGME 2.3.0+ / Fffffff. Only if no host font is available does it fall back to an installed system font turned into a dynamic TMP asset (Yu Gothic → Microsoft YaHei → DengXian → Malgun Gothic → …).
 
 本扩展**不附带字体文件**。英文使用 ULTRAKILL 自带的 TMP 字体（经 greycsont-Fffffff / CGME）；中日文使用系统已安装的字体动态生成（Yu Gothic → Microsoft YaHei → 等线 → …）。想要特定观感可自行在系统中安装 **Noto Sans JP / Noto Sans SC**。
 
 ## Known limitations / 已知限制
 
 - The original `SubtitlesPanel` is blanked. Thorn's Subtitle HUD module keeps an empty frame (auto-hidden when `HideBackgroundWhenEmpty`).
-- Fonts are chosen per line: English / Latin lines use the ULTRAKILL official font (the Jukebox subtitle panel font, i.e. the game UI font; if unavailable, loaded TMP fonts named VCR/ULTRAKILL/OSD are tried). CJK lines use the panel font if it has CJK glyphs, otherwise a system font turned into a dynamic TMP asset (Yu Gothic → Microsoft YaHei → DengXian → …).
+- Fonts are chosen per line: English / Latin lines use the ULTRAKILL official font (the Jukebox subtitle panel font, i.e. the game UI font; if unavailable, loaded TMP fonts named VCR/ULTRAKILL/OSD are tried). CJK lines use the panel font (CGME 2.3.0+ / Fffffff already includes CJK coverage); only when no host font exists does it create a dynamic system font (Yu Gothic → Microsoft YaHei → DengXian → Malgun Gothic → …).
 - Outline/glow depend on the TMP shader variants shipped with the game; glow may be missing if the variant was stripped.
 - Changing `font_family` requires a restart.
 - Lyric text is NFKC-normalized at runtime: CJK compatibility ideographs (e.g. U+F9EC `溺` → `溺`), variation selectors and stray control characters are removed, so copy-pasted lyrics cannot flicker as missing glyphs.

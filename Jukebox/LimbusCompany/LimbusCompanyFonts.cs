@@ -108,10 +108,16 @@ public static class LimbusCompanyFonts
         if (_cached != null)
             return _cached;
 
+        // CGME 2.3.0+ / Fffffff 已经提供中·日·韩字库与回退，优先直接使用它们的字体。
         var panel = UnityEngine.Object.FindObjectOfType<SubtitlesPanel>();
-        if (panel != null && panel.text != null && panel.text.font != null && HasAsianGlyphs(panel.text.font))
+        if (panel != null && panel.text != null && panel.text.font != null)
             _cached = panel.text.font;
 
+        if (_cached == null && TMP_Settings.defaultFontAsset != null &&
+            HasAsianGlyphs(TMP_Settings.defaultFontAsset))
+            _cached = TMP_Settings.defaultFontAsset;
+
+        // 只有宿主字库确实不可用时，才自行生成系统字体。
         if (_cached == null)
             _cached = CreateSystemFont();
 
@@ -143,8 +149,11 @@ public static class LimbusCompanyFonts
             "Microsoft YaHei",
             "Noto Sans JP",
             "Noto Sans SC",
+            "Noto Sans KR",
             "Noto Sans CJK JP",
             "Noto Sans CJK SC",
+            "Noto Sans CJK KR",
+            "Malgun Gothic",
             "等线 Light",
             "等线",
             "DengXian",
@@ -205,7 +214,8 @@ public static class LimbusCompanyFonts
     {
         try
         {
-            return font.HasCharacter('あ', false, false) && font.HasCharacter('中', false, false);
+            // searchFallbacks: true —— CGME / Fffffff 的 CJK 字库在回退表里。
+            return font.HasCharacter('あ', true, false) && font.HasCharacter('中', true, false);
         }
         catch (Exception)
         {

@@ -2,7 +2,7 @@
   "name": "JukeboxLimbusCompany",
   "version_number": "2.0.0",
   "website_url": "https://github.com/klkq6r33n/LCCBmusic",
-  "description": "LimbusCompany lyric performance extension for CybergrindMusicExplorer.",
+  "description": "Independent LimbusCompany lyric UI extension for CybergrindMusicExplorer. Not affiliated with Flazhik.",
   "dependencies": [
     "BepInEx-BepInExPack-5.4.2305",
     "Flazhik-CybergrindMusicExplorer-2.3.2",
