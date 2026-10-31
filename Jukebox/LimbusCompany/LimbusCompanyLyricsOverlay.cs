@@ -3322,6 +3322,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             }
         }
         _musicManagerOffSaved = false;
+        _musicManagerInstance = null;
+        _musicManagerOffField = null;
 
         _pausedThemes.RemoveAll(src => src == null);
         foreach (var source in _pausedThemes)
@@ -3377,6 +3379,13 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     /// <summary>取代期间强制关闭 MusicManager，阻止它继续驱动多段关卡 BGM。</summary>
     private void ForceMusicManagerOff()
     {
+        // 切场景后缓存的实例可能已被销毁；UnityEngine.Object 的 == null 才能正确判断。
+        if (_musicManagerInstance is UnityEngine.Object unityObject && unityObject == null)
+        {
+            _musicManagerInstance = null;
+            _musicManagerOffField = null;
+        }
+
         try
         {
             if (_musicManagerInstance == null || _musicManagerOffField == null)
