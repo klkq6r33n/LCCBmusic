@@ -27,6 +27,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 {
     private Canvas _canvas;
     private GameObject _visRoot;
+    private bool _visWasShown;
+    private bool _visSpectrumLogged;
+    private AudioSource _visLastSource;
     private readonly Image[] _visBars = new Image[256];
     private readonly float[] _spectrum = new float[512];
     private CanvasGroup _group;
@@ -593,6 +596,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         _visRoot.SetActive(false);
         _visRoot.transform.SetSiblingIndex(0);
+        LimbusCompanyLyrics.Log?.LogInfo("音频可视化控件已创建。");
     }
 
     // ------------------------------------------------------------------ level BGM replacement
@@ -3570,7 +3574,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (s == null || !s.VisualizerEnabled)
             return null;
 
-        if (BgmReplacing && _bgmSource != null && _bgmSource.isPlaying)
+        // 取代期间即使曲目正在加载/游戏暂停，也以替代音源作为波形来源。
+        if (BgmReplacing && _bgmSource != null && _bgmSource.clip != null)
             return _bgmSource;
 
         if (_player != null && _player.Source != null && _player.Source.isPlaying)
@@ -3590,6 +3595,23 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             }
         }
 
+        // 多段关卡 BGM 可能不在 MusicManager 下：补扫场景主题音源。
+        if (best == null)
+        {
+            RefreshSceneThemeSources();
+            foreach (var source in _sceneThemeSources)
+            {
+                if (source == null || !source.isPlaying)
+                    continue;
+
+                if (source.volume > bestVolume)
+                {
+                    best = source;
+                    bestVolume = source.volume;
+                }
+            }
+        }
+
         return best;
     }
 
@@ -3601,8 +3623,22 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         var s = LimbusCompanyLyrics.Settings;
         var spectrumSource = GetVisualizerSource(s);
         var show = s != null && s.VisualizerEnabled && spectrumSource != null;
+
+        if (show != _visWasShown || spectrumSource != _visLastSource)
+        {
+            _visWasShown = show;
+            _visLastSource = spectrumSource;
+            LimbusCompanyLyrics.Log?.LogInfo(
+                $"音频可视化: show={show}, enabled={s?.VisualizerEnabled}, " +
+                $"source={(spectrumSource != null ? spectrumSource.gameObject.name : "(null)")}, " +
+                $"clip={(spectrumSource?.clip != null ? spectrumSource.clip.name : "(null)")}, " +
+                $"playing={spectrumSource?.isPlaying}, volume={spectrumSource?.volume}, " +
+                $"themes={GetGameMusicThemes().Length}, sceneThemes={_sceneThemeSources.Count}");
+        }
+
         if (!show)
         {
+            _visSpectrumLogged = false;
             if (_visRoot.activeSelf)
                 _visRoot.SetActive(false);
             return;
@@ -3612,6 +3648,17 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             _visRoot.SetActive(true);
 
         spectrumSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
+
+        if (!_visSpectrumLogged)
+        {
+            _visSpectrumLogged = true;
+            var maxSample = 0f;
+            for (var i = 0; i < _spectrum.Length; i++)
+                if (_spectrum[i] > maxSample)
+                    maxSample = _spectrum[i];
+
+            LimbusCompanyLyrics.Log?.LogInfo($"频谱峰值: {maxSample:0.000000} (source={spectrumSource.gameObject.name})");
+        }
 
         var rootRect = _visRoot.GetComponent<RectTransform>();
         var size = rootRect.rect.size;
