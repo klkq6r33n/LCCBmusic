@@ -242,6 +242,10 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (_bgmPanelOpen)
             CloseBgmPanel();
 
+        // 兜底：场景切换后无论菜单状态如何都解除玩家输入锁，
+        // 防止上一场景遗留的 F5 暂停状态让键盘失效。
+        ResumeFromBgmMenu(true);
+
         // 切关卡时结束取代，避免继续静音新关卡的 BGM。
         if (BgmReplacing)
             StopBgmReplacement();
@@ -256,7 +260,33 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     {
         // 游戏可能在 Update/LateUpdate 里重新锁鼠标；这里在最后强行解除并显示。
         if (_bgmPanelOpen)
+        {
             ForceCursorForMenu();
+
+            // 面板若因场景切换/异常被隐藏，仍然走正常关闭流程。
+            if (_bgmPanel == null || !_bgmPanel.activeSelf)
+                CloseBgmPanel();
+        }
+        else
+        {
+            // 看门狗：菜单已不在前台却仍有本 mod 的暂停状态时强制恢复，避免键盘失效。
+            var stateActive = false;
+            try
+            {
+                stateActive = GameStateManager.Instance != null &&
+                              GameStateManager.Instance.IsStateActive(BgmPauseStateKey);
+            }
+            catch (Exception)
+            {
+                // 忽略检测失败。
+            }
+
+            if (_bgmPaused || stateActive)
+            {
+                LimbusCompanyLyrics.Log?.LogWarning("检测到 F5 暂停状态残留，强制恢复游戏输入。");
+                ResumeFromBgmMenu(true);
+            }
+        }
     }
 
     private static void ForceCursorForMenu()
@@ -1796,8 +1826,33 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         if (Pressed(keyboard, ParseKey(settings?.BgmKeyToggle, Key.F5)))
         {
+            if (_bgmPanelOpen)
+            {
+                CloseBgmPanel();
+                return;
+            }
+
+            // 手动兜底：如果上次关闭后仍残留暂停/输入锁，F5 直接恢复而不是再次打开。
+            var stateActive = false;
+            try
+            {
+                stateActive = GameStateManager.Instance != null &&
+                              GameStateManager.Instance.IsStateActive(BgmPauseStateKey);
+            }
+            catch (Exception)
+            {
+                // 忽略检测失败。
+            }
+
+            if (_bgmPaused || stateActive)
+            {
+                LimbusCompanyLyrics.Log?.LogWarning("F5：恢复正常游戏输入。");
+                ResumeFromBgmMenu(true);
+                return;
+            }
+
             // 血宫内只使用 F4（CGME 菜单）；F5 只在关卡中可用。
-            if (_bgmPanelOpen || CanOpenBgmMenu())
+            if (CanOpenBgmMenu())
                 ToggleBgmPanel();
             return;
         }
@@ -1883,6 +1938,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
             _bgmPaused = true;
             ForceCursorForMenu();
+            LimbusCompanyLyrics.Log?.LogInfo("F5 菜单已暂停游戏输入。");
         }
         catch (Exception e)
         {
@@ -1899,19 +1955,20 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         }
     }
 
-    private void ResumeFromBgmMenu()
+    private void ResumeFromBgmMenu(bool force = false)
     {
-        if (!_bgmPaused)
+        if (!_bgmPaused && !force)
             return;
 
         try
         {
-            GameStateManager.Instance.PopState(BgmPauseStateKey);
+            if (GameStateManager.Instance != null)
+                GameStateManager.Instance.PopState(BgmPauseStateKey);
             if (OptionsManager.Instance != null)
                 OptionsManager.Instance.paused = false;
 
             var timeController = TimeController.Instance;
-            if (timeController != null)
+            if (timeController != null && timeController.timeScale > 0f)
                 Time.timeScale = timeController.timeScale * timeController.timeScaleModifier;
 
             if (CameraController.Instance != null)
@@ -1926,6 +1983,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             LimbusCompanyLyrics.Log?.LogWarning("F5 菜单恢复游戏失败: " + e.Message);
         }
 
+        if (_bgmPaused)
+            LimbusCompanyLyrics.Log?.LogInfo("F5 菜单已恢复游戏输入。");
         _bgmPaused = false;
     }
 
@@ -2200,24 +2259,30 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         _bgmRebindStage = 0;
         _npAdjustTarget = 0;
         _npMouseAdjust = false;
-        CleanupNowPlayingAdjustHint();
 
-        _settingsUi?.CloseStandalone();
-
-        if (_bgmPanel != null)
-            _bgmPanel.SetActive(false);
-
-        if (_cursorRoutine != null)
+        try
         {
-            StopCoroutine(_cursorRoutine);
-            _cursorRoutine = null;
+            CleanupNowPlayingAdjustHint();
+            _settingsUi?.CloseStandalone();
+
+            if (_bgmPanel != null)
+                _bgmPanel.SetActive(false);
+
+            if (_cursorRoutine != null)
+            {
+                StopCoroutine(_cursorRoutine);
+                _cursorRoutine = null;
+            }
         }
+        finally
+        {
+            // 强制恢复：即使上面任何一步抛异常，也一定解除暂停/输入锁。
+            ResumeFromBgmMenu(true);
+            DestroyTempEventSystem();
 
-        ResumeFromBgmMenu();
-        DestroyTempEventSystem();
-
-        if (wasEditing)
-            LimbusCompanyLyrics.SaveAllSettings();
+            if (wasEditing)
+                LimbusCompanyLyrics.SaveAllSettings();
+        }
     }
 
     private void RefreshBgmTracks()
