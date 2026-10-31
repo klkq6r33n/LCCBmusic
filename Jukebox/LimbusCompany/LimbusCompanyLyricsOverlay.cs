@@ -11,6 +11,7 @@ using JukeboxCore.Logging;
 using JukeboxCore.Songs.Models;
 using JukeboxCore.Subtitles;
 using JukeboxCore.Utils;
+using Newtonsoft.Json.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -34,6 +35,11 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private float _nextVisStatsLog;
     private HashSet<string> _ostBgmNames;
     private bool _ostBgmNamesLoaded;
+    private static Dictionary<string, HashSet<string>> _levelBgmMap;
+    private static bool _levelBgmMapLoaded;
+    private HashSet<string> _currentLevelBgmNames = new(StringComparer.OrdinalIgnoreCase);
+    private bool _currentLevelHasMap;
+    private string _currentLevelKey = string.Empty;
     private readonly Image[] _visBars = new Image[256];
     private readonly float[] _spectrum = new float[512];
     private CanvasGroup _group;
@@ -3606,6 +3612,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (_player != null && _player.Source != null && _player.Source.isPlaying)
             return _player.Source;
 
+        RefreshMusicChangerClips();
+        RefreshCurrentLevelBgm();
+
         AudioSource best = null;
         var bestVolume = -1f;
         foreach (var source in GetGameMusicThemes())
@@ -3702,6 +3711,126 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         }
     }
 
+    private static string NormalizeSceneKey(string scene)
+    {
+        if (string.IsNullOrEmpty(scene))
+            return string.Empty;
+
+        var key = scene.Trim().ToLowerInvariant();
+        if (key.StartsWith("level "))
+            key = key.Substring("level ".Length).Trim();
+        key = key.Replace('_', ' ');
+        return key;
+    }
+
+    /// <summary>读取随扩展打包的“各关卡本地 BGM clip 表”。</summary>
+    private void EnsureLevelBgmMap()
+    {
+        if (_levelBgmMapLoaded)
+            return;
+
+        _levelBgmMapLoaded = true;
+
+        try
+        {
+            var asm = typeof(LimbusCompanyLyrics).Assembly;
+            using var stream = asm.GetManifestResourceStream("Jukebox.limbuscompany.level_bgm.json");
+            if (stream == null)
+                return;
+
+            using var reader = new StreamReader(stream, Encoding.UTF8);
+            var root = JObject.Parse(reader.ReadToEnd());
+            _levelBgmMap = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var property in root.Properties())
+            {
+                var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (property.Value is JArray array)
+                {
+                    foreach (var token in array)
+                    {
+                        var name = NormalizeBgmName(token.ToString());
+                        if (!string.IsNullOrEmpty(name))
+                            set.Add(name);
+                    }
+                }
+
+                _levelBgmMap[NormalizeSceneKey(property.Name)] = set;
+            }
+
+            LimbusCompanyLyrics.Log?.LogInfo($"关卡 BGM 表: {_levelBgmMap.Count} 个关卡");
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("读取关卡 BGM 表失败: " + e.Message);
+        }
+    }
+
+    private void RefreshCurrentLevelBgm()
+    {
+        string key;
+        try
+        {
+            key = NormalizeSceneKey(SceneHelper.CurrentScene);
+        }
+        catch (Exception)
+        {
+            key = string.Empty;
+        }
+
+        if (key == _currentLevelKey)
+            return;
+
+        _currentLevelKey = key;
+        EnsureLevelBgmMap();
+
+        _currentLevelHasMap = _levelBgmMap != null &&
+                              _levelBgmMap.TryGetValue(key, out var names);
+
+        if (_currentLevelHasMap)
+            _currentLevelBgmNames = new HashSet<string>(_levelBgmMap[key], StringComparer.OrdinalIgnoreCase);
+        else
+            _currentLevelBgmNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        LimbusCompanyLyrics.Log?.LogInfo(
+            $"当前关卡 BGM 表: {key} ({_currentLevelBgmNames.Count} 项): " +
+            string.Join(" | ", _currentLevelBgmNames));
+    }
+
+    private static bool IsSfxLikeName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return true;
+
+        return name.Contains("shopmusic") || name.Contains("gong") || name.Contains("doorbell") ||
+               name.Contains("noise") || name.Contains("guitar hit") || name.Contains("transition chord") ||
+               name.Contains("orchestra hit") || name.Contains("chimes") || name.Contains("hurtbreak");
+    }
+
+    /// <summary>当前关卡的主 BGM：本地 BGM 表 / 关卡编号 / Intro。</summary>
+    private bool IsCurrentLevelBgmClip(AudioClip clip)
+    {
+        if (clip == null || IsCyberGrindLoopClip(clip))
+            return false;
+
+        var name = NormalizeBgmName(clip.name);
+        if (IsSfxLikeName(name))
+            return false;
+
+        if (_currentLevelBgmNames != null && _currentLevelBgmNames.Contains(name))
+            return true;
+
+        if (!string.IsNullOrEmpty(_currentLevelKey) &&
+            Regex.IsMatch(name,
+                @"(^|[^0-9a-z])" + Regex.Escape(_currentLevelKey) + @"($|[^0-9a-z])"))
+            return true;
+
+        if (name.Contains("intro") && IsOstBgmClip(clip))
+            return true;
+
+        return false;
+    }
+
     /// <summary>判断 clip 是否属于关卡 BGM：OST 白名单 / 关卡编号 / Intro。</summary>
     private bool IsOstBgmClip(AudioClip clip)
     {
@@ -3709,6 +3838,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             return false;
 
         var name = NormalizeBgmName(clip.name);
+        if (IsSfxLikeName(name))
+            return false;
+
         if (name.Contains("intro"))
             return true;
 
@@ -3723,6 +3855,59 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
     private AudioSource _cachedLoopMusic;
     private float _nextLoopMusicScan;
+    private readonly HashSet<AudioClip> _musicChangerClips = new();
+    private float _nextMusicChangerScan;
+    private string _musicChangerClipLog = string.Empty;
+
+    /// <summary>收集场景内 MusicChanger 引用的正式 BGM clips（clean/battle/boss/Intro）。</summary>
+    private void RefreshMusicChangerClips()
+    {
+        if (Time.unscaledTime < _nextMusicChangerScan)
+            return;
+
+        _nextMusicChangerScan = Time.unscaledTime + 0.5f;
+
+        try
+        {
+            var type = Type.GetType("MusicChanger, Assembly-CSharp");
+            if (type == null)
+                return;
+
+            var cleanField = type.GetField("clean", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            var battleField = type.GetField("battle", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            var bossField = type.GetField("boss", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+            var found = FindObjectsOfType(type);
+            var names = new List<string>();
+
+            foreach (var obj in found)
+            {
+                if (obj is not Component component)
+                    continue;
+
+                foreach (var field in new[] { cleanField, battleField, bossField })
+                {
+                    if (field?.GetValue(component) is AudioClip clip && clip != null)
+                    {
+                        if (_musicChangerClips.Add(clip))
+                            names.Add(clip.name);
+                    }
+                }
+            }
+
+            var log = string.Join(" | ", names);
+            if (log != _musicChangerClipLog)
+            {
+                _musicChangerClipLog = log;
+                LimbusCompanyLyrics.Log?.LogInfo(
+                    $"MusicChanger BGM 数量: {_musicChangerClips.Count} ({log})");
+            }
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("读取 MusicChanger 失败: " + e.Message);
+        }
+    }
 
     /// <summary>在场景里寻找正在播放的循环长音频（BGM 兜底）。</summary>
     private AudioSource FindLongLoopingMusicSource()
@@ -3751,15 +3936,20 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                     continue;
 
                 var length = source.clip.length;
-                if (length < 8f)
+                if (length < 4f)
                     continue;
 
-                var isBgm = IsOstBgmClip(source.clip);
+                var isChangerBgm = _musicChangerClips.Contains(source.clip);
+                var isLevelBgm = IsCurrentLevelBgmClip(source.clip);
+                // 有关卡本地 BGM 表时严格按表选择；没有表才退回 OST/关卡编号规则。
+                var isBgm = isLevelBgm || isChangerBgm ||
+                            (!_currentLevelHasMap && IsOstBgmClip(source.clip));
 
                 if (candidates.Count < 16)
                 {
                     candidates.Add($"{source.gameObject.name}|clip={source.clip.name}|len={length:0.0}|" +
-                                   $"loop={source.loop}|vol={source.volume:0.00}|play={source.isPlaying}|bgm={isBgm}");
+                                   $"loop={source.loop}|vol={source.volume:0.00}|play={source.isPlaying}|" +
+                                   $"bgm={isBgm}|level={isLevelBgm}|changer={isChangerBgm}");
                 }
 
                 if (!isBgm)
@@ -3767,6 +3957,12 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
                 var name = NormalizeBgmName(source.clip.name);
                 var score = source.volume + (source.loop ? 0.25f : 0f);
+
+                // 本地 BGM 表和 MusicChanger 登记的曲目优先。
+                if (isLevelBgm)
+                    score += 3f;
+                if (isChangerBgm)
+                    score += 2f;
 
                 // 环境类曲目优先级降低，避免压过主 BGM。
                 if (name.Contains("drone") || name.Contains("ambiance") ||

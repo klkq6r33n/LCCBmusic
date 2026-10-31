@@ -17,6 +17,8 @@
         <Compile Include="..\Jukebox\LimbusCompany\*.cs"/>
         <EmbeddedResource Include="..\Jukebox\LimbusCompany\lyric_config.json"
                           LogicalName="Jukebox.limbuscompany.default.json"/>
+        <EmbeddedResource Include="level_bgm.json"
+                          LogicalName="Jukebox.limbuscompany.level_bgm.json"/>
     </ItemGroup>
     <ItemGroup>
         <!-- 以 CGME 本体作为扩展宿主的编译引用；发布包不包含这些 DLL。 -->
