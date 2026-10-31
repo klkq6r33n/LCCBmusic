@@ -124,9 +124,24 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private AudioSource _bgmSource;
     private Coroutine _bgmLoadRoutine;
     private readonly List<AudioSource> _pausedThemes = new();
-    private readonly Dictionary<AudioSource, bool> _themeMuteState = new();
+
+    private struct ThemeState
+    {
+        public bool Mute;
+        public float Volume;
+    }
+
+    private readonly Dictionary<AudioSource, ThemeState> _themeMuteState = new();
     private AudioSource[] _musicThemesCache = Array.Empty<AudioSource>();
     private float _nextMusicThemeScan;
+    private readonly List<AudioSource> _sceneThemeSources = new();
+    private float _nextSceneThemeScan;
+    private float _nextManagerFind;
+
+    private object _musicManagerInstance;
+    private FieldInfo _musicManagerOffField;
+    private bool _musicManagerOffSaved;
+    private bool _musicManagerOffOriginal;
     public bool BgmReplacing { get; private set; }
     public string BgmStatus { get; private set; } = "";
 
@@ -2425,6 +2440,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             return;
 
         var track = _bgmTracks[_bgmIndex];
+        LimbusCompanyLyrics.Log?.LogInfo("点击取代关卡 BGM: " + track);
         var settings = LimbusCompanyLyrics.Settings;
         if (settings != null)
         {
@@ -3174,6 +3190,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     /// <summary>用 Cybergrind/Music 中的曲目取代当前关卡 BGM。</summary>
     public bool StartBgmReplacement(string relativePath)
     {
+        LimbusCompanyLyrics.Log?.LogInfo("请求取代关卡 BGM: " + (relativePath ?? "(null)"));
         if (string.IsNullOrWhiteSpace(relativePath))
         {
             BgmStatus = "no track selected";
@@ -3284,10 +3301,27 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         foreach (var pair in _themeMuteState)
         {
-            if (pair.Key != null)
-                pair.Key.mute = pair.Value;
+            if (pair.Key == null)
+                continue;
+
+            pair.Key.mute = pair.Value.Mute;
+            pair.Key.volume = pair.Value.Volume;
         }
         _themeMuteState.Clear();
+        _sceneThemeSources.Clear();
+
+        if (_musicManagerOffSaved && _musicManagerInstance != null && _musicManagerOffField != null)
+        {
+            try
+            {
+                _musicManagerOffField.SetValue(_musicManagerInstance, _musicManagerOffOriginal);
+            }
+            catch (Exception)
+            {
+                // 忽略反射失败。
+            }
+        }
+        _musicManagerOffSaved = false;
 
         _pausedThemes.RemoveAll(src => src == null);
         foreach (var source in _pausedThemes)
@@ -3302,16 +3336,123 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
     private void PauseGameMusic()
     {
-        foreach (var source in GetGameMusicThemes())
+        RefreshSceneThemeSources(true);
+        ForceMusicManagerOff();
+
+        var themes = GetGameMusicThemes();
+        LimbusCompanyLyrics.Log?.LogInfo(
+            $"暂停关卡 BGM 音源: MusicManager={themes.Length}, 场景内主题音源={_sceneThemeSources.Count}");
+
+        foreach (var source in themes)
+        {
+            LimbusCompanyLyrics.Log?.LogInfo(
+                $"  MusicManager 音源: {source.gameObject.name} clip={source.clip?.name ?? "(null)"}");
             PauseGameTheme(source);
+        }
+        foreach (var source in _sceneThemeSources)
+        {
+            LimbusCompanyLyrics.Log?.LogInfo(
+                $"  场景主题音源: {source.gameObject.name} clip={source.clip?.name ?? "(null)"}");
+            PauseGameTheme(source);
+        }
     }
 
     private void KeepGameMusicPaused()
     {
         _pausedThemes.RemoveAll(src => src == null);
-        // 取代期间每帧重新收集，覆盖 MusicChanger/USTManager 切换出的多段 BGM 音源。
+
+        // 每帧把 MusicManager.off 置为 true：MusicManager.Update 会把所有主题音量清零，
+        // 这样即使某个多段音源没有被上面的列表收集到，也不会发声。
+        ForceMusicManagerOff();
+
+        // 取代期间每帧重新收集 MusicManager 音源，并定期扫描场景里
+        // 不在 MusicManager 下的 CleanTheme / BattleTheme / BossTheme 音源。
+        RefreshSceneThemeSources();
         foreach (var source in GetGameMusicThemes(true))
             PauseGameTheme(source);
+        foreach (var source in _sceneThemeSources)
+            PauseGameTheme(source);
+    }
+
+    /// <summary>取代期间强制关闭 MusicManager，阻止它继续驱动多段关卡 BGM。</summary>
+    private void ForceMusicManagerOff()
+    {
+        try
+        {
+            if (_musicManagerInstance == null || _musicManagerOffField == null)
+            {
+                var type = Type.GetType("MusicManager, Assembly-CSharp");
+                if (type == null)
+                    return;
+
+                PropertyInfo instanceProperty = null;
+                for (var current = type; current != null && instanceProperty == null; current = current.BaseType)
+                    instanceProperty = current.GetProperty("Instance",
+                        BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+
+                _musicManagerInstance = instanceProperty?.GetValue(null);
+                if (_musicManagerInstance == null)
+                    _musicManagerInstance = FindObjectOfType(type);
+
+                _musicManagerOffField = type.GetField("off",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            }
+        }
+        catch (Exception)
+        {
+            return;
+        }
+
+        if (_musicManagerInstance == null || _musicManagerOffField == null)
+            return;
+
+        try
+        {
+            if (!_musicManagerOffSaved)
+            {
+                _musicManagerOffOriginal = (bool)_musicManagerOffField.GetValue(_musicManagerInstance);
+                _musicManagerOffSaved = true;
+            }
+
+            _musicManagerOffField.SetValue(_musicManagerInstance, true);
+        }
+        catch (Exception)
+        {
+            // 忽略反射失败。
+        }
+    }
+
+    /// <summary>扫描场景里以 CleanTheme/BattleTheme/BossTheme 为 clip 的音源（多段关卡 BGM 可能不在 MusicManager 下）。</summary>
+    private void RefreshSceneThemeSources(bool force = false)
+    {
+        _sceneThemeSources.RemoveAll(src => src == null);
+
+        if (!force && Time.unscaledTime < _nextSceneThemeScan)
+            return;
+
+        _nextSceneThemeScan = Time.unscaledTime + 0.5f;
+
+        try
+        {
+            foreach (var source in FindObjectsOfType<AudioSource>())
+            {
+                if (source == null || source.clip == null)
+                    continue;
+
+                var clipName = source.clip.name ?? string.Empty;
+                if (!clipName.Equals("CleanTheme", StringComparison.OrdinalIgnoreCase) &&
+                    !clipName.Equals("BattleTheme", StringComparison.OrdinalIgnoreCase) &&
+                    !clipName.Equals("BossTheme", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (!_sceneThemeSources.Contains(source))
+                    _sceneThemeSources.Add(source);
+            }
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("扫描场景音乐音源失败: " + e.Message);
+        }
     }
 
     private void PauseGameTheme(AudioSource source)
@@ -3319,10 +3460,11 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (source == null)
             return;
 
-        // 静音可以挡住 USTManager / MusicChanger 在同一帧重新 Play 的多段 BGM。
+        // 静音 + 音量归零，挡住 USTManager / MusicChanger 在同一帧重新 Play 的多段 BGM。
         if (!_themeMuteState.ContainsKey(source))
-            _themeMuteState[source] = source.mute;
+            _themeMuteState[source] = new ThemeState { Mute = source.mute, Volume = source.volume };
         source.mute = true;
+        source.volume = 0f;
 
         // 只记录真正在播放的音源，归还时不会把原本就暂停的音乐错误地唤醒。
         if (source.isPlaying)
@@ -3366,6 +3508,12 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 
             var instance = instanceProperty?.GetValue(null);
+            if (instance == null && Time.unscaledTime >= _nextManagerFind)
+            {
+                // Instance 尚未建立时，退回到场景中查找 MusicManager。
+                _nextManagerFind = Time.unscaledTime + 1f;
+                instance = FindObjectOfType(type);
+            }
             if (instance == null)
                 return _musicThemesCache = Array.Empty<AudioSource>();
 
@@ -3379,6 +3527,16 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 foreach (var theme in themes)
                     if (theme != null && !list.Contains(theme))
                         list.Add(theme);
+            }
+
+            // allThemes 可能为空/尚未初始化；显式读取 clean / battle / boss / target 四段音源。
+            foreach (var themeName in new[] { "cleanTheme", "battleTheme", "bossTheme", "targetTheme" })
+            {
+                var themeField = type.GetField(themeName,
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (themeField?.GetValue(instance) is AudioSource themeSource &&
+                    themeSource != null && !list.Contains(themeSource))
+                    list.Add(themeSource);
             }
 
             // 多段 BGM / USTManager 可能创建或替换 MusicManager 下的其它 AudioSource。
