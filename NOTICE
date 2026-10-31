@@ -1,23 +1,22 @@
-Jukebox LimbusCompany
+Jukebox LimbusCompany — LimbusCompany lyric extension for CybergrindMusicExplorer
 Copyright 2026 6r3²n
 
-This product is a fork of Jukebox / CybergrindMusicExplorer by Flazhik
-(https://github.com/Flazhik/Jukebox), licensed under the Apache License,
-Version 2.0. The original LICENSE file is retained unmodified.
+This product is an add-on extension for Jukebox / CybergrindMusicExplorer by
+Flazhik (https://github.com/Flazhik/Jukebox), licensed under the Apache
+License, Version 2.0. It depends on CybergrindMusicExplorer at runtime.
 
-Changes made in this fork include, but are not limited to:
-- LimbusCompany-style lyric overlay replacing the original subtitle panel.
-- Bilingual SRT sidecars (main + translation) with independent positions.
-- Independent per-cue lyric lines with independent fade-out.
-- In-game language switch and settings panel.
-- Audio visualizer with a time-driven gradient.
-- Text normalization and diagnostic logging.
+The extension does NOT redistribute CybergrindMusicExplorer's assemblies
+(Jukebox.dll, JukeboxCore.dll, Jukebox.ThornExtensions.dll), its Addressables
+assets, its third-party libraries (RTLTMPro, SubtitlesParser, TagLibSharp),
+its downloader, or any fonts. Those remain part of the original packages and
+are governed by their own licenses. See the CybergrindMusicExplorer package
+for its LICENSE and NOTICE.
+
+The extension source in this repository is original work by 6r3²n and is
+licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This project contains no ffmpeg, ffprobe or yt-dlp binaries, and does not
+download them.
 
 AI assistance disclosure: this project was developed with AI assistance.
-The author (6r3²n) has limited programming knowledge.
-
-Third-party assets included in release packages (not part of the source):
-- Noto Sans JP / Noto Sans SC, Copyright Google LLC, SIL Open Font License 1.1.
-- ffmpeg / ffprobe, Copyright the FFmpeg developers, LGPL/GPL (see their licenses).
-- yt-dlp, Unlicense-style public domain (see its license).
-- Jukebox 2.3.2 Assets bundles, from the original Jukebox release (Apache-2.0).
+The author (6r3²n) has limited programming knowledge and used AI to build it.

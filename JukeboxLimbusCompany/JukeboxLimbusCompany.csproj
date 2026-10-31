@@ -3,26 +3,53 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <OutputType>Library</OutputType>
-        <RootNamespace>Jukebox</RootNamespace>
-        <AssemblyName>Jukebox</AssemblyName>
+        <RootNamespace>Jukebox.LimbusCompany</RootNamespace>
+        <AssemblyName>JukeboxLimbusCompany</AssemblyName>
         <LangVersion>latest</LangVersion>
         <OutputPath>.bin\</OutputPath>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <DebugType>none</DebugType>
         <DebugSymbols>false</DebugSymbols>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="..\JukeboxCore\JukeboxCore.csproj"/>
+        <Compile Include="LimbusCompanyPlugin.cs"/>
+        <Compile Include="..\Jukebox\LimbusCompany\*.cs"/>
+        <EmbeddedResource Include="..\Jukebox\LimbusCompany\lyric_config.json"
+                          LogicalName="Jukebox.limbuscompany.default.json"/>
     </ItemGroup>
     <ItemGroup>
-        <Reference Include="0Harmony">
-            <HintPath>$(BepInExCoreDir)0Harmony.dll</HintPath>
+        <!-- 以 CGME 本体作为扩展宿主的编译引用；发布包不包含这些 DLL。 -->
+        <Reference Include="Jukebox">
+            <HintPath>$(CgmeRefDir)Jukebox.dll</HintPath>
+            <Private>false</Private>
         </Reference>
+        <Reference Include="JukeboxCore">
+            <HintPath>$(CgmeRefDir)JukeboxCore.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Jukebox.ThornExtensions">
+            <HintPath>$(CgmeRefDir)Jukebox.ThornExtensions.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="SubtitlesParser">
+            <HintPath>$(CgmeRefDir)SubtitlesParser.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="RTLTMPro">
+            <HintPath>$(CgmeRefDir)RTLTMPro.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+    <ItemGroup>
         <Reference Include="Assembly-CSharp">
             <HintPath>$(ManagedDir)Assembly-CSharp.dll</HintPath>
         </Reference>
         <Reference Include="BepInEx">
             <HintPath>$(BepInExCoreDir)BepInEx.dll</HintPath>
+        </Reference>
+        <Reference Include="0Harmony">
+            <HintPath>$(BepInExCoreDir)0Harmony.dll</HintPath>
         </Reference>
         <Reference Include="UnityEngine">
             <HintPath>$(ManagedDir)UnityEngine.dll</HintPath>
@@ -32,15 +59,6 @@
         </Reference>
         <Reference Include="UnityTextMeshPro">
             <HintPath>$(ManagedDir)Unity.TextMeshPro.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngineAudioModule">
-            <HintPath>$(ManagedDir)UnityEngine.AudioModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.CoreModule">
-            <HintPath>$(ManagedDir)UnityEngine.CoreModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UI">
-            <HintPath>$(ManagedDir)UnityEngine.UI.dll</HintPath>
         </Reference>
         <Reference Include="UnityEngine.AudioModule">
             <HintPath>$(ManagedDir)UnityEngine.AudioModule.dll</HintPath>
@@ -75,9 +93,6 @@
         <Reference Include="UnityEngine.ImageConversionModule">
             <HintPath>$(ManagedDir)UnityEngine.ImageConversionModule.dll</HintPath>
         </Reference>
-        <Reference Include="TagLibSharp, Version=2.3.0.0, Culture=neutral, PublicKeyToken=db62eba44689b5b0, processorArchitecture=MSIL">
-            <HintPath>$(MSBuildThisFileDirectory)..\JukeboxCore\lib\TagLibSharp.dll</HintPath>
-        </Reference>
         <Reference Include="UnityEngine.Addressables">
             <HintPath>$(ManagedDir)Unity.Addressables.dll</HintPath>
         </Reference>
@@ -87,14 +102,9 @@
         <Reference Include="Newtonsoft.Json">
             <HintPath>$(ManagedDir)Newtonsoft.Json.dll</HintPath>
         </Reference>
-        <Reference Include="Facepunch.Steamworks">
-            <HintPath>$(ManagedDir)Facepunch.Steamworks.Win64.dll</HintPath>
+        <Reference Include="TagLibSharp">
+            <HintPath>$(CgmeRefDir)TagLibSharp.dll</HintPath>
+            <Private>false</Private>
         </Reference>
     </ItemGroup>
-    <ItemGroup>
-        <EmbeddedResource Include="LimbusCompany\lyric_config.json" LogicalName="Jukebox.limbuscompany.default.json"/>
-    </ItemGroup>
-    <Target Name="CopyModDlls" AfterTargets="CopyFilesToOutputDirectory">
-        <Copy SourceFiles="$(OutDir)/$(AssemblyName).dll" DestinationFolder="$(BepInExPluginsDir)Jukebox\"/>
-    </Target>
 </Project>

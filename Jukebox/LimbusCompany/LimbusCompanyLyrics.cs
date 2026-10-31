@@ -13,6 +13,9 @@ namespace Jukebox.LimbusCompany;
 /// </summary>
 public static class LimbusCompanyLyrics
 {
+    /// <summary>本扩展的版本（发布包与插件声明共用）。</summary>
+    public const string Version = "2.0.0";
+
     public static LimbusCompanyLyricsSettings Settings { get; private set; }
 
     /// <summary>本 mod 独立日志源（不会被 JukeboxDownloader 的初始化覆盖）。</summary>
@@ -38,6 +41,9 @@ public static class LimbusCompanyLyrics
             {
                 if (!BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("greycsont.ultrakill.fffffff"))
                     Log.LogWarning("未检测到 Fffffff（greycsont-Fffffff）。它是必需的字库前置，部分字符可能无法显示。");
+
+                if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("dev.zeddevstuff.ustmanager"))
+                    Log.LogInfo("检测到 USTManager：F5 取代时会暂停/静音 MusicManager 下的多段 BGM 音源。");
             }
             catch (Exception)
             {

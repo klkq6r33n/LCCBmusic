@@ -1,13 +1,17 @@
 <Project>
   <PropertyGroup>
-    <!-- Copy this file to Directory.Build.props and set your ULTRAKILL install.
+    <!-- Copy this file to Directory.Build.props and set your paths.
          You can also set the ULTRAKILL_DIR environment variable instead. -->
-    <GameDir Condition="'$(GameDir)' == '' and '$(ULTRAKILL_DIR)' != ''">$(ULTRAKILL_DIR)</GameDir>
-    <GameDir Condition="'$(GameDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\ULTRAKILL</GameDir>
+    <ULTRAKILLPath Condition="'$(ULTRAKILLPath)' == '' and '$(ULTRAKILL_DIR)' != ''">$(ULTRAKILL_DIR)</ULTRAKILLPath>
+    <ULTRAKILLPath Condition="'$(ULTRAKILLPath)' == ''">C:\Program Files (x86)\Steam\steamapps\common\ULTRAKILL</ULTRAKILLPath>
 
-    <BepInExCoreDir>$(GameDir)\BepInEx\core\</BepInExCoreDir>
-    <ManagedDir>$(GameDir)\ULTRAKILL_Data\Managed\</ManagedDir>
-    <BepInExPluginsDir>$(GameDir)\BepInEx\plugins\</BepInExPluginsDir>
-    <StagingDir>$(MSBuildThisFileDirectory)_stage\</StagingDir>
+    <BepInExCoreDir>$(ULTRAKILLPath)\BepInEx\core\</BepInExCoreDir>
+    <ManagedDir>$(ULTRAKILLPath)\ULTRAKILL_Data\Managed\</ManagedDir>
+    <BepInExPluginsDir>$(ULTRAKILLPath)\BepInEx\plugins\</BepInExPluginsDir>
+
+    <!-- Reference-only copies of the original CybergrindMusicExplorer 2.3.2
+         DLLs (Jukebox.dll, JukeboxCore.dll, Jukebox.ThornExtensions.dll,
+         SubtitlesParser.dll, RTLTMPro.dll, TagLibSharp.dll). Not shipped. -->
+    <CgmeRefDir>$(MSBuildThisFileDirectory)third_party\cgme_ref\</CgmeRefDir>
   </PropertyGroup>
 </Project>

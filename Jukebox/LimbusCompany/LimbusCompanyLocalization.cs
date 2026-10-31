@@ -326,7 +326,7 @@ public class LimbusCompanyLocalization : MonoBehaviour
 
         CreateLabel(rect, "Title", L("LYRICS SETTINGS", "歌词设置"), new Vector2(0f, 296f),
             new Vector2(500f, 40f), 24f, TextAlignmentOptions.Center);
-        CreateLabel(rect, "Subtitle", "Jukebox LimbusCompany v" + Jukebox.JukeboxPluginInfo.Version,
+        CreateLabel(rect, "Subtitle", "Jukebox LimbusCompany v" + LimbusCompanyLyrics.Version,
             new Vector2(0f, 270f), new Vector2(500f, 20f), 13f, TextAlignmentOptions.Center);
 
         CreateButtonAt(rect, "TabLayout", L("LAYOUT", "位置"), new Vector2(-205f, 236f), new Vector2(80f, 28f),

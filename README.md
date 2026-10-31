@@ -17,11 +17,11 @@
 
 ## What is this / 这是什么
 
-A standalone fork of **Flazhik/Jukebox (CybergrindMusicExplorer) 2.3.1** that replaces Jukebox's Cyber Grind subtitle panel with a LimbusCompany-style lyric layer: colors, outline, glow, font size/spacing, shake, fade, rise, random angle, pseudo-perspective and position ranges.
+An **extension DLL** for **Flazhik/Jukebox (CybergrindMusicExplorer) 2.3.2**. CGME stays installed and enabled; this assembly only adds a LimbusCompany-style lyric layer (colors, outline, glow, font size/spacing, shake, fade, rise, random angle, pseudo-perspective and position ranges) and blanks the original subtitle panel at runtime. It does not replace or redistribute CGME's assemblies.
 
-基于 **Flazhik/Jukebox (CybergrindMusicExplorer) 2.3.1** 的独立分支，把 Jukebox 的 Cyber Grind 字幕面板替换为 LimbusCompany 演出风格歌词层。
+**Flazhik/Jukebox (CybergrindMusicExplorer) 2.3.2 的扩展 DLL。** CGME 保持安装并启用；本程序集只追加 LimbusCompany 演出风格歌词层，并在运行时清空原版字幕面板，不替换、也不重新分发 CGME 的程序集。
 
-This repository is **source only**. Release packages (DLLs, `Assets/`, ffmpeg/yt-dlp binaries, fonts) are built from it; see [Build](#build--构建).
+This repository is **source only**. Release packages contain just `JukeboxLimbusCompany.dll`; see [Build](#build--构建).
 
 ## Features / 功能
 
@@ -31,7 +31,7 @@ This repository is **source only**. Release packages (DLLs, `Assets/`, ffmpeg/yt
 - Independent font sizes for main/translation; ULTRAKILL font for Latin lines, dynamic CJK font for Japanese/Chinese.
 - Typewriter, fade, shake, rise, perspective, random rotation, custom colors/stroke/glow.
 - Audio visualizer: time-driven hue gradient, bar density, size, position (bottom/top/left/right), X mirror, black outline, own canvas below the game UI.
-- Level BGM replacement (standalone **F5** panel, independent of the Cyber Grind menu): pick any `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` to replace the current level music; restoring resumes the level BGM from the exact paused position. The visualizer follows both the replacement and the level music.
+- Level BGM replacement (standalone **F5** panel, independent of the Cyber Grind menu): pick any `.mp3` / `.ogg` / `.wav` under `Cybergrind/Music` to replace the current level music; restoring resumes the level BGM from the exact paused position. While replacing, **every** source under the game's `MusicManager` — including multi-segment clean/battle/boss sources and USTManager-driven ones — is paused and muted, so nothing plays over the replacement. The replacement clip is prefixed `LCCB_` so USTManager never replaces it a second time. The visualizer follows both the replacement and the level music.
 - **F5 mouse menu** (levels only; the Cyber Grind keeps **F4** and ignores F5): MUSIC / SETTINGS / DISPLAY pages with the level BGM browser, every lyric setting, 中文 / ENGLISH switching, lyrics and now-playing toggles. MUSIC includes a draggable **progress bar**, elapsed/total time and **PAUSE / RESUME**. The window is split into a **left control column** and a **right track preview** (cover on top, title and artist below). Opening it pauses the game and forcibly shows/unlocks the cursor.
 - Only **F5** (open/close) and **Esc** (close) remain as keyboard shortcuts; other shortcuts were removed.
 - Now-playing **row**: cover / title / artist drawn on one line (cover first, artist last), small by default and anchored at the **bottom-left** (2%, 90%) — the text size is the reference and the cover is only ~1.3× the text. Like the F5 menu, the row is kept inside a 12 px safe area and uses the current window size (Screen size / canvas scale) for sizing and positioning, so window resizes and resolution changes re-adapt immediately. Title and artist share the same font size, and the cover keeps a ULK-style border (hollow when the track has no cover). Cover from a same-name image, common cover names (`cover` / `folder` / `front` / `album` / `artwork` …), any image in the song folder, or the embedded ID3 picture. If performer/composer tags are missing, the artist is recovered from an `Artist - Title` file or folder name. F5 → DISPLAY has a size slider (10–120) and reset button; while F5 is open you can also drag the cover square and scroll over it to resize.
@@ -42,10 +42,11 @@ This repository is **source only**. Release packages (DLLs, `Assets/`, ffmpeg/yt
 ## Requirements / 依赖
 
 - ULTRAKILL (Unity Mono) + **BepInEx 5.4.23** (x64).
+- **CybergrindMusicExplorer 2.3.2+** — a required Thunderstore dependency and the host of this extension. Keep it **enabled**; do not install the old 1.x standalone fork.
 - **greycsont-Fffffff** (ULTRAKILL font fallback mod) — declared as a required Thunderstore dependency; install it from Thunderstore or r2modman.
+- **ZedDev-USTManager** — optional, supported. F5 replacement pauses/mutes multi-segment and UST-driven soundtrack sources, and USTManager cannot replace the F5 track.
 - .NET SDK 8 or newer (`global.json` pins the SDK feature band).
-- The game's managed assemblies and BepInEx core assemblies for compilation.
-- **Disable `Flazhik-CybergrindMusicExplorer`** when using this mod: the fork reuses its assembly names and plugin GUID (`dev.flazhik.jukebox`) because Addressables bundles bind scripts by assembly name and CGMEDownloader depends on that GUID.
+- The game's managed assemblies, BepInEx core assemblies, and the original CGME 2.3.2 DLLs for compilation.
 
 ## Build / 构建
 
@@ -56,30 +57,22 @@ This repository is **source only**. Release packages (DLLs, `Assets/`, ffmpeg/yt
    <GameDir>D:\SteamLibrary\steamapps\common\ULTRAKILL</GameDir>
    ```
 
-3. Build the three projects:
+3. Install **CybergrindMusicExplorer 2.3.2** (and BepInEx) first, then copy its `Jukebox.dll`, `JukeboxCore.dll`, `Jukebox.ThornExtensions.dll`, `SubtitlesParser.dll`, `RTLTMPro.dll` and `TagLibSharp.dll` into `third_party/cgme_ref/`. These are **reference-only** and are neither committed nor shipped.
+
+4. Build the extension:
 
    ```powershell
-   dotnet build JukeboxCore/JukeboxCore.csproj -c Release
-   dotnet build Jukebox/Jukebox.csproj -c Release
-   dotnet build Jukebox.ThornExtensions/Jukebox.ThornExtensions.csproj -c Release
+   dotnet build JukeboxLimbusCompany/JukeboxLimbusCompany.csproj -c Release
    ```
 
-4. `build-and-install.ps1` packages the DLLs and installs them into an r2modman profile:
+5. `build-and-install.ps1` packages `JukeboxLimbusCompany.dll` and installs it into an r2modman profile:
 
    ```powershell
    .\build-and-install.ps1 -Profile "C:\Users\<you>\AppData\Roaming\r2modmanPlus-local\ULTRAKILL\profiles\<profile>"
    # or set ULTRAKILL_PROFILE and run without -Profile
    ```
 
-Runtime-only files are **not** committed here:
-
-- `third_party/Assets/` — catalog + asset bundles taken from the original Jukebox 2.3.2 release.
-- `third_party/RTLTMPro.dll`, `SubtitlesParser.dll`, `TagLibSharp.dll` — runtime libraries from the original Jukebox release.
-- Windows fonts (Yu Gothic / Microsoft YaHei / Noto Sans JP / SC) are system-provided; release packages bundle Noto Sans JP/SC (SIL OFL 1.1).
-
-**The CGME Downloader is not supported.** `ffmpeg.exe`, `ffprobe.exe`,
-`yt-dlp.exe` and `yt-dlp.sha256` are intentionally not bundled and the
-Downloader dependency is not declared. See `third_party/README.md`.
+Nothing from CGME is redistributed: no `Assets/` bundles, no `RTLTMPro.dll` / `SubtitlesParser.dll` / `TagLibSharp.dll`, no fonts, and no downloader binaries (`yt-dlp` / `ffmpeg` / `ffprobe`). At runtime CGME supplies all of those.
 
 ## Lyrics / 歌词
 
@@ -106,20 +99,20 @@ Press **F5** in any level for the mouse menu (F4 is the Cyber Grind menu only; F
 
 ## Known limitations / 已知限制
 
-- **The CGME Downloader is not supported** — no `yt-dlp`, `ffmpeg` or `ffprobe` is bundled, so URL/YouTube downloads are unavailable. Use local audio files.
+- **No downloader is bundled** — `yt-dlp`, `ffmpeg` and `ffprobe` are not included. URL/YouTube downloading is provided by CGME itself when its Downloader is installed.
 - **Lyrics may still overlap in some cases; the author (6r3²n) lacks the computer knowledge to fix it.**
 - 部分情况下歌词仍可能重叠；作者（**6r3²n**）计算机知识不足，无法修复该问题。
 - **The cover / title / artist row position and its window adaptation may still be inaccurate in some window sizes or aspect ratios; the author (6r3²n) lacks the computer knowledge to fully fix it.**
 - **曲绘 / 曲名 / 作者行的位置及其窗口自适应，在部分窗口尺寸或宽高比下仍可能不准确；作者（6r3²n）计算机知识不足，无法完全修复。**
-- Reuses Jukebox's plugin GUID: cannot be enabled together with the original CybergrindMusicExplorer.
+- Requires CybergrindMusicExplorer 2.3.2+ enabled. The old 1.x standalone fork (which reused CGME's GUID) must be removed first.
 - Font family changes require a restart; glow depends on TMP shader variants shipped with the game.
 
 ## Credits / 特别感谢
 
-- **Flazhik and the Jukebox / CybergrindMusicExplorer team** — original mod and source (Apache-2.0), which this fork is based on.
+- **Flazhik and the Jukebox / CybergrindMusicExplorer team** — the original mod (Apache-2.0) this extension depends on.
 - **greycsont** — ULTRAKILL font reference and font mods (Fffffff / FNT_font_no_tsubasa).
 - **end_4 / Thorn** — HUD framework used by `Jukebox.ThornExtensions`.
-- **Google Fonts / Noto team** — Noto Sans JP / Noto Sans SC (SIL OFL 1.1) in release packages.
+- **Google Fonts / Noto team** — Noto Sans JP / Noto Sans SC (SIL OFL 1.1); users may install them system-wide, but no font files are bundled.
 - **SubtitlesParser, RTLTMPro, TagLib#** authors — runtime libraries.
 
 ## License / 许可证

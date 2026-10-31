@@ -12,11 +12,12 @@
   loaders: []
   dependencies:
     - BepInEx-BepInExPack-5.4.2305
+    - Flazhik-CybergrindMusicExplorer-2.3.2
     - greycsont-Fffffff-1.0.1
   incompatibilities: []
   optionalDependencies: []
   versionNumber:
-    major: 1
+    major: 2
     minor: 0
-    patch: 1
+    patch: 0
   enabled: true

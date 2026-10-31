@@ -1,21 +1,21 @@
 GitHub / 开源地址：https://github.com/klkq6r33n/LCCBmusic
 
 [EN]
-NOTICE: Disable Flazhik-CybergrindMusicExplorer (this fork reuses its plugin GUID).
-Downloader: this package does NOT support CGME's Downloader — yt-dlp / ffmpeg / ffprobe are not bundled. Use local audio files.
-Install: install this zip with r2modman / Thunderstore Mod Manager, or extract it into the ULTRAKILL folder (runtime files live under BepInEx/plugins/Claude-JukeboxLimbusCompany/).
-Prerequisite: **greycsont-Fffffff** (ULTRAKILL font fallbacks) is a required Thunderstore dependency and is installed automatically; without it some glyphs may be missing.
+Prerequisites: **CybergrindMusicExplorer (CGME) 2.3.2+** and **greycsont-Fffffff**. This package is an **add-on DLL** for CGME, not a replacement fork — keep CGME enabled. The old standalone fork (1.x) must be removed before installing this version.
+Downloader: this package ships no downloader binaries; CGME handles its own downloader.
+Install: install this zip with r2modman / Thunderstore Mod Manager, or extract it into the ULTRAKILL folder (runtime file: BepInEx/plugins/Claude-JukeboxLimbusCompany/JukeboxLimbusCompany.dll).
+Optional: **ZedDev-USTManager** is supported — F5 replacement pauses/mutes multi-segment and UST-driven soundtrack sources, and USTManager will not replace the F5 track.
 Lyrics: put Track.srt next to Track.mp3. Optional translation: also add Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt. Both lines are shown at different, non-overlapping positions.
 Songs: this mod bundles no audio. Every song is read from ULTRAKILL's built-in Cyber Grind music folder (ULTRAKILL/Cybergrind/Music); put your audio there.
 UI: default language is English. In the Jukebox menu (F4) use LANGUAGE to switch to Chinese and SETTINGS for precise numeric inputs (position, color, font size, motion, translation).
 Safety: lyrics are clamped on-screen and never overlap each other.
-Special thanks to greycsont for the ULTRAKILL font, and to Flazhik and the Jukebox / CybergrindMusicExplorer team for the original mod and source code this fork is based on.
+Special thanks to greycsont for the ULTRAKILL font, and to Flazhik and the Jukebox / CybergrindMusicExplorer team for the original mod this extension depends on.
 
 [中文]
-注意：必须禁用 Flazhik-CybergrindMusicExplorer（本 fork 沿用其插件 GUID）。
-下载器：本包**不支持 CGME 的下载器**——未附带 yt-dlp / ffmpeg / ffprobe，请使用本地音频文件。
-安装：用 r2modman / Thunderstore Mod Manager 安装本 zip，或直接解压到 ULTRAKILL 游戏根目录（运行文件位于 BepInEx/plugins/Claude-JukeboxLimbusCompany/）。
-前置：**greycsont-Fffffff**（ULTRAKILL 字体缺字回退）为必需的 Thunderstore 依赖，会随安装自动装好；缺少它部分字符可能无法显示。
+前置：**CybergrindMusicExplorer（CGME）2.3.2+** 与 **greycsont-Fffffff**。本包是 CGME 的**扩展 DLL**，不是替代 fork——请保持 CGME 启用。安装本版本前需先移除旧版 1.x 独立 fork。
+下载器：本包不附带下载器程序；下载功能由 CGME 自身负责。
+安装：用 r2modman / Thunderstore Mod Manager 安装本 zip，或直接解压到 ULTRAKILL 游戏根目录（运行文件：BepInEx/plugins/Claude-JukeboxLimbusCompany/JukeboxLimbusCompany.dll）。
+可选：**ZedDev-USTManager** 已适配——F5 取代时会暂停/静音多段与 UST 驱动的关卡音乐音源，USTManager 也不会把 F5 替代曲再替换一次。
 歌词：把 Track.srt 放在 Track.mp3 同目录。可选翻译：再放 Track.zh.srt / Track.cn.srt / Track.ja.srt / Track.trans.srt，两行歌词会在不同且不重叠的位置同时显示。
 歌曲：本 mod **不附带任何音频**，所有歌曲均读取自 ULTRAKILL 自带的电子血宫音乐文件夹（ULTRAKILL/Cybergrind/Music），把音频放进该文件夹即可。
 界面：默认英文。在 Jukebox 菜单（F4）用 LANGUAGE 切换中文，用 SETTINGS 精确填写位置、颜色、字号、动态与翻译。
@@ -32,19 +32,19 @@ Special thanks to greycsont for the ULTRAKILL font, and to Flazhik and the Jukeb
 
 **CybergrindMusicExplorer 的 LimbusCompany 歌词演出扩展 mod。**
 
-Based on the open-source **Flazhik/Jukebox (CybergrindMusicExplorer) 2.3.1** source.
-It replaces Jukebox's built-in Cyber Grind subtitle rendering with a LimbusCompany-style lyric layer: text color, outline, glow, font size/spacing, shake, fade-in, rise, random angle, pseudo-perspective and position range.
+An **add-on extension DLL** for the open-source **Flazhik/Jukebox (CybergrindMusicExplorer) 2.3.2**. CGME stays installed and enabled; this DLL only adds the LimbusCompany lyric layer and its F4/F5 UI, and blanks the original subtitle panel at runtime instead of replacing any CGME assembly.
+It renders lyrics in a LimbusCompany style: text color, outline, glow, font size/spacing, shake, fade-in, rise, random angle, pseudo-perspective and position range.
 
-> This is a **standalone mod**, not an add-on inside the original mod folder. It reuses Jukebox's assembly names and plugin GUID (Addressables bundles bind scripts by assembly name, and Thorn extensions depend on that GUID), so **you must disable `Flazhik-CybergrindMusicExplorer` in r2modman**. The two cannot be enabled at the same time.
+> **Requires CGME 2.3.2+ (enabled) and greycsont-Fffffff.** From 2.0.0 this mod is a separate extension assembly (`JukeboxLimbusCompany.dll`) with its own plugin GUID; the old 1.x standalone fork must be removed.
 >
-> **The CGME Downloader is not supported.** This package does not ship `yt-dlp`, `ffmpeg` or `ffprobe`, and the Downloader dependency was removed from the manifest; URL/YouTube downloads will not work. Use local audio files with SRT sidecars.
+> **Downloader:** this extension ships no `yt-dlp` / `ffmpeg` / `ffprobe`. URL/YouTube downloading is provided by CGME itself when its Downloader is installed.
 
-基于 **Flazhik/Jukebox (CybergrindMusicExplorer) 2.3.1 源码** 的独立 fork。
-在 Cyber Grind 里把 Jukebox 自带的字幕显示替换成 LimbusCompany 演出风格的歌词层：文字颜色、描边、辉光、字号/字距、抖动、淡入、上升、随机角度、近似透视、位置范围。
+基于开源 **Flazhik/Jukebox (CybergrindMusicExplorer) 2.3.2** 的**扩展 DLL**。CGME 保持安装并启用；本 DLL 只追加 LimbusCompany 歌词层及其 F4/F5 界面，运行时清空原版字幕面板，不替换任何 CGME 程序集。
+歌词按 LimbusCompany 演出风格渲染：文字颜色、描边、辉光、字号/字距、抖动、淡入、上升、随机角度、近似透视、位置范围。
 
-> 本包是**独立 mod**，不是原 mod 文件夹里的附属扩展。因为它复用 Jukebox 的程序集名与插件 GUID（资源包按程序集名绑定脚本，Thorn 扩展也依赖该 GUID），**必须先在 r2modman 中禁用 `Flazhik-CybergrindMusicExplorer`**，两者不能同时启用。
+> **需要 CGME 2.3.2+（保持启用）与 greycsont-Fffffff。** 从 2.0.0 起本 mod 是独立扩展程序集（`JukeboxLimbusCompany.dll`），使用自己的插件 GUID；旧版 1.x 独立 fork 必须移除。
 >
-> **不支持 CGME 的下载器。** 本包不附带 `yt-dlp`、`ffmpeg`、`ffprobe`，manifest 中也已移除 Downloader 依赖；通过 URL / YouTube 下载歌曲的功能不可用。请使用本地音频文件与 SRT 字幕。
+> **下载器：** 本扩展不附带 `yt-dlp` / `ffmpeg` / `ffprobe`；URL / YouTube 下载由 CGME 自身的 Downloader 提供。
 
 ---
 
@@ -55,23 +55,21 @@ It replaces Jukebox's built-in Cyber Grind subtitle rendering with a LimbusCompa
 `manifest.json`、`icon.png`、`README.md` 位于 zip 根目录；下列运行文件均在 `BepInEx/plugins/Claude-JukeboxLimbusCompany/` 下。
 
 ```
-Jukebox.dll                  fork main assembly (plugin GUID: dev.flazhik.jukebox, display: Jukebox LimbusCompany)
-JukeboxCore.dll              built from the same source
-Jukebox.ThornExtensions.dll  Thorn HUD modules (same GUID as upstream)
-RTLTMPro.dll / SubtitlesParser.dll / TagLibSharp.dll   runtime dependencies
-Assets/                      catalog.json + asset bundles (taken from the 2.3.2 original)
+JukeboxLimbusCompany.dll     extension assembly (plugin GUID: dev.6r3n.jukeboxlimbuscompany)
 
-No downloader binaries are included: the CGME Downloader is unsupported, so
-yt-dlp / ffmpeg / ffprobe / yt-dlp.sha256 are intentionally absent.
+Only the extension DLL is shipped. CGME's Jukebox.dll / JukeboxCore.dll /
+Jukebox.ThornExtensions.dll, its Assets/ bundles, and the RTLTMPro /
+SubtitlesParser / TagLibSharp libraries are NOT redistributed — they are
+provided by the CybergrindMusicExplorer package this mod depends on.
+No downloader binaries (yt-dlp / ffmpeg / ffprobe) and no font files are included.
 
-Jukebox.dll                  fork 主体（插件 GUID: dev.flazhik.jukebox，显示名 Jukebox LimbusCompany）
-JukeboxCore.dll              同源码编译
-Jukebox.ThornExtensions.dll  Thorn HUD 模块（沿用原 GUID）
-RTLTMPro.dll / SubtitlesParser.dll / TagLibSharp.dll   运行时依赖
-Assets/                      catalog.json 与资源 bundle（取自 2.3.2 原 mod）
+JukeboxLimbusCompany.dll     扩展程序集（插件 GUID: dev.6r3n.jukeboxlimbuscompany）
 
-不包含下载器程序：本 mod 不支持 CGME 下载器，因此刻意不附带
-yt-dlp / ffmpeg / ffprobe / yt-dlp.sha256。
+仅附带扩展 DLL。CGME 的 Jukebox.dll / JukeboxCore.dll /
+Jukebox.ThornExtensions.dll、Assets/ 资源以及 RTLTMPro /
+SubtitlesParser / TagLibSharp 均不再重新分发——它们由本 mod 依赖的
+CybergrindMusicExplorer 包提供。
+不包含 yt-dlp / ffmpeg / ffprobe 等下载器程序，也不附带字体文件。
 ```
 
 ## Configuration / 配置
@@ -130,7 +128,7 @@ While the Jukebox menu is open, the **SETTINGS / 设置** button (next to LANGUA
 - **MOTION / 动态**: shake intensity/speed, fade speed, rise speed, **typewriter on/off + chars per second**, perspective + X/Y strength, lyrics on/off, replace original subtitles
 - **VISUAL / 频谱**: audio visualizer on/off, wave size, max extent (% of screen), position (BOTTOM / TOP / LEFT / RIGHT), bar density (8–256), gradient range (0–1), gradient speed, gradient mode (FIXED 2 / RANGE x~y / MULTI RGB), colour A RGB, colour B RGB, multi RGB (space separated), X mirror — plus an in-panel usage note
 - **F5 mouse menu** (levels only; the Cyber Grind uses **F4** and F5 is ignored there): a clickable menu with MUSIC / SETTINGS / DISPLAY pages — browse `Cybergrind/Music` (the game's built-in Cyber Grind music folder; no audio is bundled), replace/restore the level BGM, switch the UI language, edit every lyric setting, toggle lyrics/now-playing, and drag/resize the cover row. The window is split: **left = controls, right = track preview** (cover on top, title and artist below). Opening it pauses the game and forcibly unlocks/shows the cursor, like the CGME menu.
-- **Now-playing frame** (top-right by default): ULK-style bordered frame around the current track's cover art, with the title and artist underneath; when the track has no cover the frame stays hollow. Cover art is read from the audio file's ID3 tag or a same-name / `cover` / `folder` image; its position and size are adjustable.
+- **Now-playing row** (bottom-left by default): one horizontal line with the cover first, then title and artist; when the track has no cover the ULK-style frame stays hollow. Cover art is read from the audio file's ID3 tag or a same-name / `cover` / `folder` image; its position and size are adjustable.
 - RESET PAGE (resets only the currently open page) / CLOSE
 
 Every change is written to `lyric_config.json` immediately; the lyric style refreshes within a second. (`replace_original` takes full effect after re-entering Cyber Grind; font family needs a restart.)
@@ -142,7 +140,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - **MOTION / 动态**：抖动强度/速度、淡入速度、上飘速度、**逐字显示开关 + 每秒字数**、透视与 X/Y 强度、歌词层开关、替换原版字幕
 - **VISUAL / 频谱**：音频可视化开关、波动大小、最大幅度（屏幕百分比）、显示位置（底部/顶部/左侧/右侧）、频谱密度（8–256）、渐变范围（0–1）、渐变强度（速度）、渐变模式（固定双色 / 区间渐变 / 多色渐变）、颜色 A RGB、颜色 B RGB、多色 RGB（空格分隔）、X 轴镜像，面板内附使用说明
 - **F5 鼠标菜单**（仅关卡可用；血宫内只用 **F4**，F5 会被忽略）：可点击的 MUSIC / SETTINGS / DISPLAY 三页——浏览 `Cybergrind/Music`（ULTRAKILL 自带的电子血宫音乐文件夹，mod 不附带音频）、取代/归还关卡 BGM、切换界面语言、修改全部歌词设置、开关歌词/曲绘行、用鼠标拖动缩放曲绘行。窗口分为**左侧功能栏**与**右侧曲目预览**（曲绘在上，曲名与作者在下）。打开时暂停游戏并强行解锁/显示鼠标，操作方式与 CGME 菜单一致。
-- **曲绘框**（默认右上角）：ULTRAKILL 风格的描边框住当前歌曲的曲绘，下方显示歌名与歌手；没有曲绘时框体镂空。曲绘从音频文件的 ID3 标签或同名 / `cover` / `folder` 图片读取，位置和大小都可调整。
+- **曲绘行**（默认左下角）：横排依次显示曲绘、曲名、作者；没有曲绘时 ULK 风格描边框体镂空。曲绘从音频文件的 ID3 标签或同名 / `cover` / `folder` 图片读取，位置和大小都可调整。
 - 重置本页（只重置当前打开的页面）/ 关闭
 
 每次改动都会立刻写回 `lyric_config.json`，歌词样式 1 秒内刷新。（`replace_original` 需要重新进入 Cyber Grind 才完全生效；字体需要重启。）
@@ -182,20 +180,22 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - **SETTINGS**: the same LAYOUT / TEXT / MOTION / TRANS / VISUAL pages as the in-Cyber-Grind menu, fully mouse-driven (inputs, toggles, per-page reset).
 - **DISPLAY**: switch **中文 / ENGLISH**, toggle lyrics and the now-playing row. The row is dragged/resized directly with the mouse while F5 is open (no separate adjustment block or shortcuts).
 - Only **F5** (open/close) and **Esc** (close) remain as keyboard shortcuts; all other shortcuts were removed.
-- **Replace** pauses the game's level music (clean / battle / boss themes) and starts the selected track on a loop. The paused level music keeps its exact position.
+- **Replace** pauses **every** level-music source under the game's `MusicManager` (clean / battle / boss, and any additional multi-segment sources), not just the currently audible one, then starts the selected track on a loop. The paused level music keeps its exact position.
+- **USTManager compatibility**: while the replacement is active the mod re-scans and pauses/mutes the game's soundtrack sources every frame, so custom USTs and multi-segment switches cannot start playing over the replacement. The replacement track's clip is given an `LCCB_` prefix so USTManager never mistakes it for a game cue and replaces it a second time. Restoring returns the sources to their previous mute/pause state.
 - **Restore** stops the replacement and unpauses the level music, which continues from the point where it was paused. Scene changes also end the replacement automatically.
 - The audio visualizer reads the replacement track while it is active, and reads the game's level music after restoration — so the spectrum works for both.
-- Only local files are used; the CGME Downloader is still unsupported.
+- Downloading (if available) is handled by CGME's own Downloader; this extension only adds the lyric layer.
 
 - 在任意关卡中按 **F5** 打开鼠标菜单。它与血宫菜单分开：**F4 只在血宫可用，F5 只在关卡可用。** 打开时暂停游戏并解锁鼠标。
 - **MUSIC**：递归列出 `Cybergrind/Music` 下所有 `.mp3` / `.ogg` / `.wav`（底部翻页）；点击曲目选中，再点 **取代关卡 BGM** 或 **归还原 BGM**。界面带**进度条**（点击/拖动跳转）、**暂停 / 继续**按钮以及已播放/总时长。顶部的分类按钮显示 **个人**（不在任何分类文件夹内的歌曲）以及所有已注册的分类文件夹，第一个是 `ULTRAKILL-OST`。点 **+** 可添加自己的分类：输入文件夹名后，mod 会创建 `Cybergrind/Music/<名称>` 并切换到该分类。分类列表保存在 `lyric_config.json` 的 `"song_categories"` 中。选中自定义分类后会出现 **删除 / DEL**，确认后会连同文件夹及其中所有歌曲一起删除；个人与 ULTRAKILL-OST 不能这样删除。mod **不附带也不会自动下载官方音频**，该文件夹用于放置从你自己游戏副本中提取的曲目。
 - **SETTINGS**：与血宫内菜单相同的 位置 / 文字 / 动态 / 翻译 / 频谱 五页，全部可用鼠标操作（输入框、开关、单页重置）。
-- **DISPLAY**：切换 **中文 / English**、开关歌词与曲绘框、移动/缩放曲绘与歌名，并点击任意按键绑定后按下新键改绑（Esc 取消）。
+- **DISPLAY**：切换 **中文 / English**、开关歌词与曲绘行，并提供 **曲绘/文字大小滑块（10–120）** 与 **重置位置与大小** 按钮；菜单打开时也可以直接用鼠标拖动曲绘小方框、滚轮缩放。
 - 仅保留 **F5**（开关）与 **Esc**（关闭）两个键盘快捷键；其余快捷键已全部移除。
-- **取代**：暂停游戏当前的关卡音乐（clean / battle / boss 三个主题），循环播放选定曲目；被暂停的关卡音乐保留准确进度。
+- **取代**：暂停游戏 `MusicManager` 下**所有**关卡音乐音源（clean / battle / boss 以及其它多段 BGM 音源），而不只是当前正在响的那一个，然后循环播放选定曲目；被暂停的关卡音乐保留准确进度。
+- **USTManager 适配**：取代期间每帧重新扫描并暂停/静音游戏音乐音源，自定义 UST 与多段切换都无法盖过替代曲目；替代曲目的 clip 会加上 `LCCB_` 前缀，避免被 USTManager 当成游戏音乐再替换一次。归还时按取代前的静音/暂停状态恢复。
 - **归还**：停止替代曲目并恢复关卡音乐，从暂停的位置继续；切换关卡时也会自动结束取代。
 - 频谱在取代期间读取替代曲目，归还后读取关卡原音乐，两种情况下都有效。
-- 只使用本地文件；CGME 下载器仍不受支持。
+- 下载功能（若已安装）由 CGME 自带的 Downloader 负责；本扩展只追加歌词层。
 
 ### Now-playing row / 曲绘行
 
@@ -206,7 +206,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - **Size / position**: F5 → DISPLAY has a **COVER / TEXT SIZE slider (10–120)** and a **RESET POSITION & SIZE** button (bottom-left, size 32). While the menu is open you can also **drag the small cover square** to move the row and **scroll the wheel over that square** to resize; the row always stays inside the screen. Changes save immediately.
 - The in-game row defaults to the **bottom-left** in `cover / title / artist` order. Like the F5 menu, it is kept inside the screen safe area (12 px margin) even after dragging or an old off-screen position. Its size and position use the **current window size** (Screen size / canvas scale), so resizing the game window or changing resolution/aspect ratio re-adapts immediately; the F5 window shrinks automatically when the window is smaller than the menu.
 - The **F5 right-hand preview** uses a vertical layout instead: the selected track's cover is shown **above** its title and author. The in-game row stays horizontal (`cover / title / artist`).
-- Config keys: `now_playing_enabled`, `cover_pos_x/y` (row anchor: right edge X and vertical center Y, in % of the screen), `cover_size` (**text/row size**, 10–120, default 32; the cover is about 1.3× this); `title_pos_x/y` are kept for old configs but are no longer used.
+- Config keys: `now_playing_enabled`, `cover_pos_x/y` (row anchor: left edge X and vertical center Y, in % of the screen), `cover_size` (**text/row size**, 10–120, default 32; the cover is about 1.3× this); `title_pos_x/y` are kept for old configs but are no longer used.
 
 - 当 Jukebox 曲目或取代的关卡曲目正在播放时，会绘制**一整行**：**曲绘 / 曲名 / 作者**。整行默认**很小**：以文字大小为基准，曲绘只比文字略大（约 1.3 倍），而不是把文字放大到曲绘那么大。曲名与作者使用**相同字号**，作者排在整行最后。
 - 曲绘外面是 ULK 风格的描边框。没有曲绘时框体镂空（只画边框）。
@@ -215,7 +215,7 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 - **大小 / 位置**：F5 → DISPLAY 有 **曲绘/文字大小滑块（10–120）** 和 **重置位置与大小** 按钮（左下角，大小 32）。菜单打开时也可以**拖动曲绘小方框**移动整行、在方框上**滚轮**缩放；整行始终保持在屏幕内。改动立即保存。
 - 游戏内曲绘行默认出现在**屏幕左下角**，顺序为 `曲绘 / 曲名 / 作者`。与 F5 菜单一样使用防出屏处理（12 像素安全边距），拖动或旧配置在屏幕外时都会被拉回可见范围。曲绘行大小与位置使用**当前窗口大小**（Screen 尺寸 / Canvas 缩放系数）计算，调整游戏窗口或切换分辨率/宽高比时会立即重新适配；F5 窗口在窗口小于菜单时会自动缩小。
 - **F5 右侧预览**使用竖排布局：选中曲目的曲绘在**上**，曲名与作者在**下**；游戏内的曲绘行仍然是横排（`曲绘 / 曲名 / 作者`）。
-- 配置项：`now_playing_enabled`、`cover_pos_x/y`（整行锚点：右边缘 X、垂直中心 Y，屏幕百分比）、`cover_size`（**文字/整行大小**，10–120，默认 32，曲绘约为它的 1.3 倍）；`title_pos_x/y` 仅为兼容旧配置保留，已不再使用。
+- 配置项：`now_playing_enabled`、`cover_pos_x/y`（整行锚点：左边缘 X、垂直中心 Y，屏幕百分比）、`cover_size`（**文字/整行大小**，10–120，默认 32，曲绘约为它的 1.3 倍）；`title_pos_x/y` 仅为兼容旧配置保留，已不再使用。
 
 ### Position safety / 位置防重叠与防出屏
 
@@ -306,34 +306,22 @@ Track_zh.srt   Track_cn.srt   Track_ja.srt    Track_trans.srt
 ## Special thanks / 特别感谢
 
 - **greycsont** — ULTRAKILL font reference and font mods (Fffffff / FNT_font_no_tsubasa).
-- **Flazhik and the Jukebox / CybergrindMusicExplorer team** — the original mod and source code; this project is a fork of their work.
+- **Flazhik and the Jukebox / CybergrindMusicExplorer team** — the original mod this extension depends on.
 - **end_4 / Thorn** — HUD framework used by `Jukebox.ThornExtensions`.
-- **Google Fonts / Noto team** — Noto Sans JP / Noto Sans SC, included under the SIL Open Font License 1.1.
-- **SubtitlesParser, RTLTMPro, TagLib#** authors — runtime libraries.
+- **Google Fonts / Noto team** — Noto Sans JP / Noto Sans SC (SIL OFL 1.1); users may install them, but no font files are bundled.
+- **SubtitlesParser, RTLTMPro, TagLib#** authors — runtime libraries supplied by CGME (not redistributed here).
 
 - **greycsont** —— ULTRAKILL 字体参考与字体 mod（Fffffff / FNT_font_no_tsubasa）。
-- **Flazhik 与 Jukebox / CybergrindMusicExplorer 团队** —— 原型 mod 与源码，本项目是其分支。
+- **Flazhik 与 Jukebox / CybergrindMusicExplorer 团队** —— 本扩展所依赖的原版 mod。
 - **end_4 / Thorn** —— `Jukebox.ThornExtensions` 使用的 HUD 框架。
-- **Google Fonts / Noto 团队** —— Noto Sans JP / Noto Sans SC，以 SIL Open Font License 1.1 随包分发。
-- **SubtitlesParser、RTLTMPro、TagLib#** 的作者 —— 运行时库。
+- **Google Fonts / Noto 团队** —— Noto Sans JP / Noto Sans SC（可由用户自行安装，本包不再附带字体文件）。
+- **SubtitlesParser、RTLTMPro、TagLib#** 的作者 —— 运行时库由 CGME 提供，本包不再分发。
 
-## Bundled fonts / 随包字体
+## Fonts / 字体
 
-`Fonts\` contains optional SIL OFL fonts for complete Japanese/Chinese glyph coverage:
+This extension ships **no font files**. Latin text uses ULTRAKILL's own TMP font (through greycsont-Fffffff / CGME); CJK text uses an installed system font turned into a dynamic TMP asset (Yu Gothic → Microsoft YaHei → DengXian → …). Install **Noto Sans JP / Noto Sans SC** on your system if you want a specific look.
 
-- `NotoSansJP-Variable.ttf` (SIL OFL 1.1)
-- `NotoSansSC-Variable.ttf` (SIL OFL 1.1)
-- `README.txt` with install steps and licence texts.
-
-Right-click → **Install**, then restart the game: the mod automatically prefers **Noto Sans JP / Noto Sans SC** when they are installed. The ULTRAKILL Latin font itself is not redistributed; install greycsont's font mods for the game-exact look.
-
-`Fonts\` 内附可选的 SIL OFL 字体，用于补全日文/中文字形：
-
-- `NotoSansJP-Variable.ttf`（SIL OFL 1.1）
-- `NotoSansSC-Variable.ttf`（SIL OFL 1.1）
-- `README.txt`（安装说明与许可证）
-
-右键 → **安装**，重启游戏后 mod 会自动优先使用 **Noto Sans JP / Noto Sans SC**。ULTRAKILL 官方英文字体不随包分发，需要官方字形请安装 greycsont 的字体 mod。
+本扩展**不附带字体文件**。英文使用 ULTRAKILL 自带的 TMP 字体（经 greycsont-Fffffff / CGME）；中日文使用系统已安装的字体动态生成（Yu Gothic → Microsoft YaHei → 等线 → …）。想要特定观感可自行在系统中安装 **Noto Sans JP / Noto Sans SC**。
 
 ## Known limitations / 已知限制
 
@@ -345,7 +333,7 @@ Right-click → **Install**, then restart the game: the mod automatically prefer
 - Diagnostics are written to `BepInEx/LogOutput.log` under `[Jukebox LimbusCompany]` (normalized text, line placement, and a warning if an overlap is still detected).
 - **The cover / title / artist row position and its window adaptation may still be inaccurate in some window sizes or aspect ratios; the author (6r3²n) lacks the computer knowledge to fully fix it.**
 - **曲绘 / 曲名 / 作者行的位置及其窗口自适应，在部分窗口尺寸或宽高比下仍可能不准确；作者（6r3²n）计算机知识不足，无法完全修复。**
-- **The CGME Downloader is not supported.** `yt-dlp`, `ffmpeg`, `ffprobe` and `yt-dlp.sha256` are not bundled, and the Downloader dependency is not declared. URL / YouTube downloads are unavailable; local audio files are required.
+- **No downloader is bundled.** `yt-dlp`, `ffmpeg`, `ffprobe` and `yt-dlp.sha256` are not included. URL / YouTube downloading is handled by CGME itself when its Downloader is installed; this extension never downloads anything.
 - **Only the lyric layer is added.** CGME's non-lyric localization extras and helper scripts are not included; the Jukebox core (player, playlists, menu) is still required and remains as-is.
 - **Known issue:** in some cases lyrics may still overlap; the author (**6r3²n**) lacks computer knowledge and made this mod with AI, but the AI used could not fix this issue.
 
@@ -356,6 +344,6 @@ Right-click → **Install**, then restart the game: the mod automatically prefer
 - 换 `font_family` 需重启游戏。
 - 歌词在运行时做 NFKC 归一化：CJK 兼容汉字（如 U+F9EC `溺` → `溺`）、变体选择符和多余控制字符会被替换/移除，避免从音乐平台复制的歌词因缺字反复闪烁。
 - 诊断信息写入 `BepInEx/LogOutput.log` 的 `[Jukebox LimbusCompany]` 下（字符归一化、每句落点，以及仍检测到重叠时的警告）。
-- **不支持 CGME 下载器。** 不附带 `yt-dlp`、`ffmpeg`、`ffprobe`、`yt-dlp.sha256`，manifest 也不再声明 Downloader 依赖；URL / YouTube 下载功能不可用，请使用本地音频文件。
+- **不附带任何下载器。** 不包含 `yt-dlp`、`ffmpeg`、`ffprobe`、`yt-dlp.sha256`。URL / YouTube 下载由 CGME 自身的 Downloader 负责（若已安装）；本扩展不会下载任何内容。
 - **本包只新增歌词层。** 不包含 CGME 的非歌词本地化内容与辅助脚本；Jukebox 核心（播放器、播放列表、菜单）仍是必需部分，保持原样。
 - **已知问题：** 部分情况下歌词仍可能重叠；作者（**6r3²n**）计算机知识不足，使用 AI 制作此 mod，但所使用的 AI 无法修复该问题。

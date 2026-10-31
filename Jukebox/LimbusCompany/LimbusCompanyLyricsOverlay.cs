@@ -124,6 +124,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private AudioSource _bgmSource;
     private Coroutine _bgmLoadRoutine;
     private readonly List<AudioSource> _pausedThemes = new();
+    private readonly Dictionary<AudioSource, bool> _themeMuteState = new();
     private AudioSource[] _musicThemesCache = Array.Empty<AudioSource>();
     private float _nextMusicThemeScan;
     public bool BgmReplacing { get; private set; }
@@ -3165,6 +3166,9 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
             var source = EnsureBgmSource();
             var old = source.clip;
+            // 加前缀，避免 USTManager 按 clip 名把 F5 替代曲误当成游戏音乐再替换一次。
+            if (!clip.name.StartsWith("LCCB_", StringComparison.Ordinal))
+                clip.name = "LCCB_" + clip.name;
             source.clip = clip;
             source.loop = true;
             source.volume = 1f;
@@ -3213,6 +3217,13 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 Destroy(clip);
         }
 
+        foreach (var pair in _themeMuteState)
+        {
+            if (pair.Key != null)
+                pair.Key.mute = pair.Value;
+        }
+        _themeMuteState.Clear();
+
         _pausedThemes.RemoveAll(src => src == null);
         foreach (var source in _pausedThemes)
         {
@@ -3227,29 +3238,31 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private void PauseGameMusic()
     {
         foreach (var source in GetGameMusicThemes())
-        {
-            if (source == null)
-                continue;
-
-            if (source.isPlaying)
-                source.Pause();
-
-            if (!_pausedThemes.Contains(source))
-                _pausedThemes.Add(source);
-        }
+            PauseGameTheme(source);
     }
 
     private void KeepGameMusicPaused()
     {
         _pausedThemes.RemoveAll(src => src == null);
-        foreach (var source in GetGameMusicThemes())
+        // 取代期间每帧重新收集，覆盖 MusicChanger/USTManager 切换出的多段 BGM 音源。
+        foreach (var source in GetGameMusicThemes(true))
+            PauseGameTheme(source);
+    }
+
+    private void PauseGameTheme(AudioSource source)
+    {
+        if (source == null)
+            return;
+
+        // 静音可以挡住 USTManager / MusicChanger 在同一帧重新 Play 的多段 BGM。
+        if (!_themeMuteState.ContainsKey(source))
+            _themeMuteState[source] = source.mute;
+        source.mute = true;
+
+        // 只记录真正在播放的音源，归还时不会把原本就暂停的音乐错误地唤醒。
+        if (source.isPlaying)
         {
-            if (source == null)
-                continue;
-
-            if (source.isPlaying)
-                source.Pause();
-
+            source.Pause();
             if (!_pausedThemes.Contains(source))
                 _pausedThemes.Add(source);
         }
@@ -3269,12 +3282,12 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     }
 
     /// <summary>反射取得 MusicManager 的 battle/clean/boss AudioSource。</summary>
-    private AudioSource[] GetGameMusicThemes()
+    private AudioSource[] GetGameMusicThemes(bool force = false)
     {
-        if (Time.unscaledTime < _nextMusicThemeScan)
+        if (!force && Time.unscaledTime < _nextMusicThemeScan)
             return _musicThemesCache;
 
-        _nextMusicThemeScan = Time.unscaledTime + 1f;
+        _nextMusicThemeScan = Time.unscaledTime + 0.25f;
 
         try
         {
@@ -3294,7 +3307,24 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             var field = type.GetField("allThemes",
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             var themes = field?.GetValue(instance) as AudioSource[];
-            return _musicThemesCache = themes ?? Array.Empty<AudioSource>();
+
+            var list = new List<AudioSource>();
+            if (themes != null)
+            {
+                foreach (var theme in themes)
+                    if (theme != null && !list.Contains(theme))
+                        list.Add(theme);
+            }
+
+            // 多段 BGM / USTManager 可能创建或替换 MusicManager 下的其它 AudioSource。
+            if (instance is Component component)
+            {
+                foreach (var source in component.GetComponentsInChildren<AudioSource>(true))
+                    if (source != null && !list.Contains(source))
+                        list.Add(source);
+            }
+
+            return _musicThemesCache = list.ToArray();
         }
         catch (Exception e)
         {

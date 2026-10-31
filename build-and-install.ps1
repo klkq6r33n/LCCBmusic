@@ -1,43 +1,35 @@
-﻿param(
-    [string]$Profile = $env:ULTRAKILL_PROFILE,
+param(
+    [string]$Profile = "C:\Users\A\AppData\Roaming\r2modmanPlus-local\ULTRAKILL\profiles\zhibo",
     [switch]$NoInstall
 )
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$packageName = "JukeboxLimbusCompany"
-$version = "1.0.1"
+$packageName = "Claude-JukeboxLimbusCompany"
+$version = "2.0.0"
 
-Write-Host "== build =="
-foreach ($proj in @(
-    "JukeboxCore\JukeboxCore.csproj",
-    "Jukebox\Jukebox.csproj",
-    "Jukebox.ThornExtensions\Jukebox.ThornExtensions.csproj"
-)) {
-    dotnet build (Join-Path $root $proj) -c Release --nologo
-    if ($LASTEXITCODE -ne 0) { throw "build failed: $proj" }
+$refDir = Join-Path $root "third_party\cgme_ref"
+foreach ($dll in @("Jukebox.dll", "JukeboxCore.dll", "Jukebox.ThornExtensions.dll", "SubtitlesParser.dll", "RTLTMPro.dll", "TagLibSharp.dll")) {
+    if (-not (Test-Path (Join-Path $refDir $dll))) {
+        throw "Missing CGME reference DLL: $refDir\$dll`nCopy the original CybergrindMusicExplorer 2.3.2 DLLs there first (see README)."
+    }
 }
 
+Write-Host "== build extension DLL =="
+$project = Join-Path $root "JukeboxLimbusCompany\JukeboxLimbusCompany.csproj"
+dotnet build $project -c Release --nologo
+if ($LASTEXITCODE -ne 0) { throw "build failed: $project" }
+
 Write-Host "== package (Thunderstore layout) =="
-# manifest.json / icon.png / README.md stay at the zip root.
-# Runtime files live under BepInEx/plugins/ so the installer preserves the folder.
+# Only the extension assembly is shipped. CGME, its libs/assets and the fonts
+# are supplied by the CybergrindMusicExplorer / Fffffff dependencies.
 $pkg = Join-Path $root "_pkg\$packageName"
 $runtime = Join-Path $pkg "BepInEx\plugins\$packageName"
 if (Test-Path $pkg) { Remove-Item $pkg -Recurse -Force }
-New-Item -ItemType Directory (Join-Path $runtime "Assets") -Force | Out-Null
-Copy-Item (Join-Path $root "_stage\plugins\Jukebox\*.dll") $runtime
-
-$thirdParty = Join-Path $root "third_party"
-if (Test-Path $thirdParty) {
-    # Runtime libraries only; the CGME Downloader (ffmpeg/ffprobe/yt-dlp) is intentionally unsupported.
-    Get-ChildItem $thirdParty -File -Filter *.dll -ErrorAction SilentlyContinue | Copy-Item -Destination $runtime -Force
-    $assets = Join-Path $thirdParty "Assets"
-    if (Test-Path $assets) { Copy-Item (Join-Path $assets "*") (Join-Path $runtime "Assets") -Recurse -Force }
-}
+New-Item -ItemType Directory $runtime -Force | Out-Null
+Copy-Item (Join-Path $root "JukeboxLimbusCompany\.bin\netstandard2.1\JukeboxLimbusCompany.dll") $runtime
 
 Copy-Item (Join-Path $root "packaging\manifest.json"), (Join-Path $root "packaging\README.md"), (Join-Path $root "packaging\icon.png") $pkg -Force
-$fontsDir = Join-Path $root "packaging\fonts"
-if (Test-Path $fontsDir) { Copy-Item $fontsDir (Join-Path $runtime "Fonts") -Recurse -Force }
 
 $zip = Join-Path $root "JukeboxLimbusCompany-$version.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
@@ -75,4 +67,4 @@ Get-ChildItem $runtime -Force | ForEach-Object {
     }
 }
 Write-Host "installed: $plugins"
-Write-Host "Keep Flazhik-CybergrindMusicExplorer disabled in r2modman."
+Write-Host "CybergrindMusicExplorer must be ENABLED. The old standalone fork DLLs must be removed."
