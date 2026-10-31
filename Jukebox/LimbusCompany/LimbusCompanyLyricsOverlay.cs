@@ -31,6 +31,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private bool _visWasShown;
     private bool _visSpectrumLogged;
     private AudioSource _visLastSource;
+    private float _nextVisStatsLog;
     private HashSet<string> _ostBgmNames;
     private bool _ostBgmNamesLoaded;
     private readonly Image[] _visBars = new Image[256];
@@ -1922,8 +1923,8 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             var scene = SceneHelper.CurrentScene;
             if (scene == "Main Menu" || scene == "Bootstrap")
                 return false;
-            if (scene == "Intro")
-                return true;
+
+            // 选关/Intro 等没有玩家的场景不显示可视化；只在真正的关卡（或血宫）显示。
             return NewMovement.Instance != null;
         }
         catch (Exception)
@@ -3852,6 +3853,24 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 $"频谱峰值: {maxSample:0.000000} (source={spectrumSource.gameObject.name})");
         }
 
+        if (Time.unscaledTime >= _nextVisStatsLog)
+        {
+            _nextVisStatsLog = Time.unscaledTime + 2f;
+            var maxSample = 0f;
+            var sumAll = 0f;
+            for (var i = 0; i < _spectrum.Length; i++)
+            {
+                var sample = _spectrum[i];
+                if (sample > maxSample)
+                    maxSample = sample;
+                sumAll += sample;
+            }
+
+            LimbusCompanyLyrics.Log?.LogInfo(
+                $"频谱统计: max={maxSample:0.000000}, avg={sumAll / _spectrum.Length:0.000000}, " +
+                $"source={spectrumSource.gameObject.name}, clip={spectrumSource.clip?.name}");
+        }
+
         var rootRect = _visRoot.GetComponent<RectTransform>();
         var size = rootRect.rect.size;
         var width = size.x > 0f ? size.x : Screen.width;
@@ -3883,7 +3902,10 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 sum += _spectrum[j];
 
             var average = sum / (end - start);
-            var value = Mathf.Clamp01(Mathf.Sqrt(average * 100f) * amplitude);
+
+            // 游戏内的 AudioSource 频谱数值普遍很小（约 1e-5 量级），
+            // 用更大的增益保证柱子有可见高度。
+            var value = Mathf.Clamp01(Mathf.Sqrt(average * 2000f) * amplitude);
             var extent = value * maxExtent;
 
             var bar = _visBars[i];
