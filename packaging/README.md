@@ -78,6 +78,40 @@ CybergrindMusicExplorer 包提供。
 不包含 yt-dlp / ffmpeg / ffprobe 等下载器程序，也不附带字体文件。
 ```
 
+## Installation / 安装
+
+**English**
+1. Install **BepInEx 5.4.23** for ULTRAKILL.
+2. Install this package with r2modman / Thunderstore Mod Manager. Its dependencies **CybergrindMusicExplorer 2.3.2+** and **greycsont-Fffffff** are installed automatically — keep **CGME enabled**.
+3. Remove any older **1.x standalone fork** (`Jukebox.dll` replacing CGME) before installing 2.x.
+4. Manual install: extract the zip into the ULTRAKILL folder. The only runtime file is `BepInEx/plugins/Claude-JukeboxLimbusCompany/JukeboxLimbusCompany.dll`.
+5. If you toggle CGME in a mod manager, let the manager handle **all** its files (DLLs **and** `Assets/`). Enabling only the DLLs can leave the game's input action asset unloaded.
+
+**中文**
+1. 为 ULTRAKILL 安装 **BepInEx 5.4.23**。
+2. 用 r2modman / Thunderstore Mod Manager 安装本包；依赖 **CybergrindMusicExplorer 2.3.2+** 与 **greycsont-Fffffff** 会自动安装，请保持 **CGME 启用**。
+3. 安装 2.x 前先移除旧版 **1.x 独立 fork**（替换 CGME 的 `Jukebox.dll`）。
+4. 手动安装：把 zip 解压到 ULTRAKILL 游戏根目录。唯一运行文件是 `BepInEx/plugins/Claude-JukeboxLimbusCompany/JukeboxLimbusCompany.dll`。
+5. 在 mod 管理器中启用/禁用 CGME 时，请让管理器处理它的**全部文件**（DLL **和** `Assets/`）。只恢复 DLL 会导致游戏输入资源未加载。
+
+## Declarations / 声明
+
+- **Independent extension / 独立扩展**：This is an unofficial add-on, not affiliated with or endorsed by Flazhik (CybergrindMusicExplorer) or greycsont. 本扩展为非官方附加组件，与 Flazhik（CybergrindMusicExplorer）及 greycsont 无隶属或背书关系。
+- **Dependencies / 依赖**：CGME 2.3.2+ and Fffffff are required and installed separately. This package does **not** redistribute CGME's `Jukebox.dll` / `JukeboxCore.dll` / `Jukebox.ThornExtensions.dll`, its `Assets/` bundles, its runtime libraries (`RTLTMPro` / `SubtitlesParser` / `TagLibSharp`), any fonts, or any downloader binaries. CGME 2.3.2+ 与 Fffffff 为必需前置并单独安装；本包不重新分发 CGME 的程序集、`Assets/`、运行库、字体或下载器。
+- **Assets / 资源**：no audio is bundled. Songs are read from `ULTRAKILL/Cybergrind/Music`. 不附带任何音频，歌曲读取自 `ULTRAKILL/Cybergrind/Music`。
+- **AI / 许可**：AI-assisted content; licensed under Apache-2.0 with the original NOTICE retained. 含 AI 辅助内容；使用 Apache-2.0 许可并保留原始 NOTICE。
+
+## Operation limits / 操作限制
+
+- **F4** is the Cyber Grind menu; **F5** is the level-only mouse menu and is ignored in the Cyber Grind. **F4 只用于血宫，F5 只在关卡使用**，血宫内忽略 F5。
+- F5 pauses the game and unlocks the cursor; **F5 / Esc** close it. If a stale pause remains, press **F5** once to force-resume. 打开 F5 会暂停游戏并解锁鼠标；F5 / Esc 关闭；若输入被残留暂停锁住，按一次 F5 强制恢复。
+- The visualizer only auto-detects **main level BGM**. A per-level BGM clip map (generated from the current game version) excludes ambient drones and Cyber Grind `(Loop)` tracks; level-select, main-menu and Intro scenes do not show it. 可视化只自动识别**关卡主 BGM**；内置每关 BGM 清单会排除环境 Drone 与血宫 `(Loop)` 特供曲；选关、主菜单、Intro 场景不显示。
+- Multi-segment level BGM is muted/volume-zeroed while an F5 replacement is active, including scene-local boss tracks (e.g. `Centaur` in 7-4); **RESTORE BGM** / scene change restores them. 取代期间会静音/零音量所有多段关卡 BGM（含 7-4 的 Centaur 等场景内 Boss 曲）；归还或切场景时恢复。
+- **USTManager** is optional (not a dependency): custom USTs are paused/muted during replacement. **USTManager 可选，不是前置**；取代期间会暂停/静音其驱动的音源。
+- The per-level BGM map is based on the game version parsed during development; a newly added or reworked level may need a mod update. 每关 BGM 清单基于开发时解析的游戏版本；新增或重做关卡可能需要更新本 mod。
+- No downloader is included; downloading is CGME's own feature. 不附带下载器；下载功能属于 CGME 自身。
+- Cover-row position/adaptation may still be imperfect in some window sizes/aspect ratios. 曲绘行的位置与窗口自适应在部分尺寸/宽高比下仍可能不完美。
+
 ## Configuration / 配置
 
 On first launch, `BepInEx/config/LimbusCompany/lyric_config.json` is created:
@@ -154,6 +188,8 @@ Every change is written to `lyric_config.json` immediately; the lyric style refr
 ### Audio visualizer / 音频可视化
 
 - Reacts to the currently playing Jukebox track or level BGM (`AudioSource.GetSpectrumData`), drawn as bars behind the lyrics.
+- **Only main level BGM is auto-detected**: a per-level BGM clip map (generated from the game's level resources and embedded in the DLL) is used first, so multi-segment boss tracks (e.g. `Centaur A-x / B-x` in 7-4) are recognized while ambient drones and Cyber Grind `(Loop)` tracks are excluded. Level-select, main-menu and Intro scenes do not show the visualizer.
+- While an F5 replacement is active, **all** level BGM sources from that per-level map (plus `MusicManager` themes) are muted/volume-zeroed, so multi-segment game music cannot play over the replacement.
 - `visualizer_enabled` (default off), `visualizer_amplitude` (wave size multiplier, 0.1–5), `visualizer_size` (max extent as % of the screen dimension, default 50, **no upper limit**), `visualizer_position` (`bottom` default / `top` / `left` / `right`), `visualizer_bars` (density, 8–256, default 96), `visualizer_gradient_range` (0 = solid start colour, 1 = full gradient spread), `visualizer_gradient_speed` (gradient animation speed; the "gradient strength"), `visualizer_gradient_mode`, `visualizer_color_a`, `visualizer_color_b`, `visualizer_colors`, `visualizer_mirror_x` (X-axis mirror).
 - **Gradient speed / strength** (`visualizer_gradient_speed`, 0–2, default `0.08`): how fast the colours move; `0` freezes the gradient.
 - **Gradient modes** (`visualizer_gradient_mode`) — every mode animates per bar, so different frequency blocks change colour independently:

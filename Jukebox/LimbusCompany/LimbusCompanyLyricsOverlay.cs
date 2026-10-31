@@ -32,7 +32,6 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
     private bool _visWasShown;
     private bool _visSpectrumLogged;
     private AudioSource _visLastSource;
-    private float _nextVisStatsLog;
     private HashSet<string> _ostBgmNames;
     private bool _ostBgmNamesLoaded;
     private static Dictionary<string, HashSet<string>> _levelBgmMap;
@@ -3474,19 +3473,30 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (!force && Time.unscaledTime < _nextSceneThemeScan)
             return;
 
-        _nextSceneThemeScan = Time.unscaledTime + 0.5f;
+        _nextSceneThemeScan = Time.unscaledTime + 0.25f;
 
         try
         {
+            RefreshCurrentLevelBgm();
+            RefreshMusicChangerClips();
+
             foreach (var source in FindObjectsOfType<AudioSource>())
             {
                 if (source == null || source.clip == null)
                     continue;
 
                 var clipName = source.clip.name ?? string.Empty;
-                if (!clipName.Equals("CleanTheme", StringComparison.OrdinalIgnoreCase) &&
-                    !clipName.Equals("BattleTheme", StringComparison.OrdinalIgnoreCase) &&
-                    !clipName.Equals("BossTheme", StringComparison.OrdinalIgnoreCase))
+                var isThemeName =
+                    clipName.Equals("CleanTheme", StringComparison.OrdinalIgnoreCase) ||
+                    clipName.Equals("BattleTheme", StringComparison.OrdinalIgnoreCase) ||
+                    clipName.Equals("BossTheme", StringComparison.OrdinalIgnoreCase);
+
+                // 7-4 等多段关卡的主 BGM 是场景内普通 AudioSource（Centaur 等），
+                // 需要按“当前关卡 BGM 表”把它们也加入暂停列表。
+                var isLevelBgm = IsCurrentLevelBgmClip(source.clip);
+                var isChangerBgm = _musicChangerClips.Contains(source.clip);
+
+                if (!isThemeName && !isLevelBgm && !isChangerBgm)
                     continue;
 
                 if (!_sceneThemeSources.Contains(source))
@@ -4049,23 +4059,6 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 $"频谱峰值: {maxSample:0.000000} (source={spectrumSource.gameObject.name})");
         }
 
-        if (Time.unscaledTime >= _nextVisStatsLog)
-        {
-            _nextVisStatsLog = Time.unscaledTime + 2f;
-            var maxSample = 0f;
-            var sumAll = 0f;
-            for (var i = 0; i < _spectrum.Length; i++)
-            {
-                var sample = _spectrum[i];
-                if (sample > maxSample)
-                    maxSample = sample;
-                sumAll += sample;
-            }
-
-            LimbusCompanyLyrics.Log?.LogInfo(
-                $"频谱统计: max={maxSample:0.000000}, avg={sumAll / _spectrum.Length:0.000000}, " +
-                $"source={spectrumSource.gameObject.name}, clip={spectrumSource.clip?.name}");
-        }
 
         var rootRect = _visRoot.GetComponent<RectTransform>();
         var size = rootRect.rect.size;
@@ -4098,10 +4091,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                 sum += _spectrum[j];
 
             var average = sum / (end - start);
-
-            // 游戏内的 AudioSource 频谱数值普遍很小（约 1e-5 量级），
-            // 用更大的增益保证柱子有可见高度。
-            var value = Mathf.Clamp01(Mathf.Sqrt(average * 2000f) * amplitude);
+            var value = Mathf.Clamp01(Mathf.Sqrt(average * 100f) * amplitude);
             var extent = value * maxExtent;
 
             var bar = _visBars[i];

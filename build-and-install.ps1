@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $packageName = "Claude-JukeboxLimbusCompany"
-$version = "2.0.0"
+$version = "1.0.0"
 
 $refDir = Join-Path $root "third_party\cgme_ref"
 foreach ($dll in @("Jukebox.dll", "JukeboxCore.dll", "Jukebox.ThornExtensions.dll", "SubtitlesParser.dll", "RTLTMPro.dll", "TagLibSharp.dll")) {
