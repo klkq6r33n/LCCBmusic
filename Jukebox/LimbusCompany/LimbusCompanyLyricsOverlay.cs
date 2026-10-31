@@ -3612,23 +3612,93 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
             }
         }
 
-        // 多段关卡 BGM 可能不在 MusicManager 下：补扫场景主题音源。
-        if (best == null)
+        // 多段关卡 BGM 可能不在 MusicManager 下：先补扫场景主题音源。
+        RefreshSceneThemeSources();
+        foreach (var source in _sceneThemeSources)
         {
-            RefreshSceneThemeSources();
-            foreach (var source in _sceneThemeSources)
-            {
-                if (source == null || !source.isPlaying)
-                    continue;
+            if (source == null || !source.isPlaying)
+                continue;
 
-                if (source.volume > bestVolume)
-                {
-                    best = source;
-                    bestVolume = source.volume;
-                }
+            if (source.volume > bestVolume)
+            {
+                best = source;
+                bestVolume = source.volume;
             }
         }
 
+        // 再退回“场景内正在循环的长音频”：只选 BGM 长度（>=8 秒）的音源，
+        // 避免枪声/脚步等短音效；环境长循环可能被误判，日志会列出候选。
+        if (best == null)
+            best = FindLongLoopingMusicSource();
+
+        return best;
+    }
+
+    private AudioSource _cachedLoopMusic;
+    private float _nextLoopMusicScan;
+
+    /// <summary>在场景里寻找正在播放的循环长音频（BGM 兜底）。</summary>
+    private AudioSource FindLongLoopingMusicSource()
+    {
+        if (_cachedLoopMusic != null && _cachedLoopMusic.isPlaying)
+            return _cachedLoopMusic;
+
+        if (Time.unscaledTime < _nextLoopMusicScan)
+            return null;
+
+        _nextLoopMusicScan = Time.unscaledTime + 1f;
+
+        AudioSource best = null;
+        var bestScore = 0.05f;
+        var candidates = new List<string>();
+
+        try
+        {
+            foreach (var source in FindObjectsOfType<AudioSource>())
+            {
+                if (source == null || !source.isPlaying || source.clip == null)
+                    continue;
+                if (source == _bgmSource)
+                    continue;
+                if (_player != null && source == _player.Source)
+                    continue;
+
+                var length = source.clip.length;
+                if (length < 8f)
+                    continue;
+
+                var name = ((source.gameObject.name ?? "") + " " + (source.clip.name ?? ""))
+                    .ToLowerInvariant();
+                if (name.Contains("sfx") || name.Contains("effect") || name.Contains("ambient"))
+                    continue;
+
+                if (candidates.Count < 12)
+                {
+                    candidates.Add($"{source.gameObject.name}|clip={source.clip.name}|len={length:0.0}|" +
+                                   $"loop={source.loop}|vol={source.volume:0.00}|play={source.isPlaying}");
+                }
+
+                var score = source.volume + (source.loop ? 0.25f : 0f);
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    best = source;
+                }
+            }
+
+            if (best == null && candidates.Count > 0)
+                LimbusCompanyLyrics.Log?.LogInfo("BGM 候选(未选中): " + string.Join("; ", candidates));
+            else if (best != null)
+                LimbusCompanyLyrics.Log?.LogInfo(
+                    $"BGM 候选: {best.gameObject.name}|clip={best.clip.name}|len={best.clip.length:0.0}|" +
+                    $"loop={best.loop}|vol={best.volume:0.00}");
+        }
+        catch (Exception e)
+        {
+            LimbusCompanyLyrics.Log?.LogWarning("扫描关卡 BGM 失败: " + e.Message);
+        }
+
+        _cachedLoopMusic = best;
         return best;
     }
 
@@ -3639,17 +3709,14 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
 
         var s = LimbusCompanyLyrics.Settings;
         var spectrumSource = GetVisualizerSource(s);
-
-        // 多段关卡（如 7-4）可能拿不到具体 AudioSource；此时退回 AudioListener 的总输出频谱。
-        var useListener = spectrumSource == null && IsInPlayableLevel();
-        var show = s != null && s.VisualizerEnabled && (spectrumSource != null || useListener);
+        var show = s != null && s.VisualizerEnabled && spectrumSource != null;
 
         if (show != _visWasShown || spectrumSource != _visLastSource)
         {
             _visWasShown = show;
             _visLastSource = spectrumSource;
             LimbusCompanyLyrics.Log?.LogInfo(
-                $"音频可视化: show={show}, enabled={s?.VisualizerEnabled}, listener={useListener}, " +
+                $"音频可视化: show={show}, enabled={s?.VisualizerEnabled}, " +
                 $"source={(spectrumSource != null ? spectrumSource.gameObject.name : "(null)")}, " +
                 $"clip={(spectrumSource?.clip != null ? spectrumSource.clip.name : "(null)")}, " +
                 $"playing={spectrumSource?.isPlaying}, volume={spectrumSource?.volume}, " +
@@ -3667,10 +3734,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
         if (!_visRoot.activeSelf)
             _visRoot.SetActive(true);
 
-        if (spectrumSource != null)
-            spectrumSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
-        else
-            AudioListener.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
+        spectrumSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
 
         if (!_visSpectrumLogged)
         {
@@ -3681,7 +3745,7 @@ public class LimbusCompanyLyricsOverlay : MonoBehaviour
                     maxSample = _spectrum[i];
 
             LimbusCompanyLyrics.Log?.LogInfo(
-                $"频谱峰值: {maxSample:0.000000} (source={(spectrumSource != null ? spectrumSource.gameObject.name : "AudioListener")})");
+                $"频谱峰值: {maxSample:0.000000} (source={spectrumSource.gameObject.name})");
         }
 
         var rootRect = _visRoot.GetComponent<RectTransform>();
